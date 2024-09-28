@@ -1,0 +1,98 @@
+<div class="content">
+  <div class="titulo">
+    <h2 id="titulo">Consumo</h2>
+  </div>
+  <div class="toolbar-pasos">
+    <app-toolbar-pasos [currentStep]="currentStep"></app-toolbar-pasos>
+  </div>
+
+  <div class="info-container">
+    <div class="informacion">
+      <div class="info-inicio">
+        <div class="titulo-container">
+          <div class="icono-inicio">
+            <img
+              src="assets/icon-tarifa.png"
+              id="marca"
+              alt="Icono de tarifa"
+            />
+          </div>
+          <div class="titulo-inicio-advertencia">
+            <h2>TARIFA CONTRATADA</h2>
+            <div class="advertencia">
+              <span id="span-general" (click)="showInstructions()">Ayuda</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-cargar" #categoriaSelect>
+          <app-tarifa
+            (isCategorySelected)="onCategorySelected($event)"
+          ></app-tarifa>
+        </div>
+      </div>
+
+      <div class="info-inicio">
+        <div class="titulo-container-slider">
+          <div class="icono-titulo">
+            <div class="icono-inicio">
+              <img
+                src="assets/icon-electricidad.png"
+                id="marca"
+                alt="Icono de rayo"
+              />
+            </div>
+            <div class="titulo-inicio">
+              <h2>CONSUMO ENERGÉTICO</h2>
+            </div>
+          </div>
+
+          <div class="slide">
+            <mat-slide-toggle
+              #manualToggle
+              [disabled]="!allFieldsFilled && !isEditable"
+              ><p>Carga manual</p></mat-slide-toggle
+            >
+          </div>
+        </div>
+
+        <div class="info-cargar-consumo" #consumoContainer>
+          <app-consumo
+            (allFieldsCompleted)="onAllFieldsCompleted($event)"
+            [isDisabled]="isFieldsDisabled"
+            [isEditable]="isEditable"
+          ></app-consumo>
+        </div>
+
+        <div class="total">
+          <app-total></app-total>
+        </div>
+      </div>
+
+      <div class="button-container">
+        <div class="boton">
+          <button id="boton-volver-paso2" (click)="goBack()">
+            <span class="material-icons">chevron_left</span> Volver
+          </button>
+          <br />
+          <button
+            id="boton-siguiente"
+            #botonSiguiente
+            (click)="goToPaso3()"
+            [disabled]="
+              !isCategorySelected || !allFieldsFilled 
+            "
+            (mouseenter)="showTooltip()"
+          >
+            Realizar Cálculo <span class="material-icons">chevron_right</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <app-instrucciones
+    [isVisible]="showInstructionsModal"
+    (closed)="handleInstructionsClosed()"
+  ></app-instrucciones>
+</div>

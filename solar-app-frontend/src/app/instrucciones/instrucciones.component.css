@@ -1,0 +1,109 @@
+.modal-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 500px;
+    position: relative;
+}
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 2em;
+    color: var(--dark-green);
+    cursor: pointer;
+}
+
+.close-button:hover {
+    color: var(--medium-green);
+}
+
+.tutorial-title {
+    font-size: 1.8em;
+    color: var(--dark-green);
+    text-align: center;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.instrucciones-content {
+    max-height: 400px;
+    overflow-y: auto;
+    margin: 5px 0;
+    padding: 5px;
+}
+
+/* Sección de subtítulos de nivel 3 */
+.tutorial-section {
+    font-size: 1.2em;
+    color: var(--font-light);
+    margin-top: 20px;
+    text-decoration: underline;
+}
+
+/* Texto general */
+.tutorial-text {
+    font-size: 1em;
+    color: var(--font-light);
+    margin-bottom: 15px;
+    line-height: 1.8;
+}
+
+/* Enlaces */
+.tutorial-link {
+    color: var(--font-light);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.tutorial-link:hover {
+    text-decoration: underline;
+}
+
+/********************************/
+/* Estilos personalizados para el scroll */
+.content-scroll::-webkit-scrollbar {
+    width: 8px !important;
+}
+
+.content-scroll::-webkit-scrollbar-track {
+    background: #f1f1f1 !important;
+}
+
+.content-scroll::-webkit-scrollbar-thumb {
+    background: #b8b6b6;
+    border-radius: 4px !important;
+}
+
+.content-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--dark-green) !important;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+    .tutorial-title {
+        font-size: 1.8em;
+    }
+
+    .tutorial-section {
+        font-size: 1.1em;
+    }
+
+    .tutorial-text {
+        font-size: 0.95em;
+    }
+}

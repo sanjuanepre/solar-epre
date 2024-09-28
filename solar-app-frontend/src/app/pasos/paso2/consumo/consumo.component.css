@@ -1,0 +1,106 @@
+
+.consumo-container {
+  width: 98%;
+  background-color: white;
+  padding: 5px;
+  border-radius: 8px;
+  border: 2px solid var(--light-background);
+  height: 16vh;
+  overflow-y: scroll;
+  overflow-x: hidden; 
+}
+
+@media only screen and (min-width: 1399px) {
+  .consumo-container{
+    height: auto;
+  }
+}
+
+ /* Estilos para personalizar la barra de desplazamiento vertical */
+.consumo-container::-webkit-scrollbar {
+  width: 8px; 
+}
+
+.consumo-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.consumo-container::-webkit-scrollbar-thumb {
+  background: #b8b6b6; 
+  border-radius: 4px; 
+}
+
+.consumo-container::-webkit-scrollbar-thumb:hover {
+  background: var(--dark-green); 
+}
+
+.meses-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr; 
+  gap: 1.1vh;
+}
+
+.mes {
+ background-color: var(--gris);
+  border: 2px solid #e2eee1;
+  padding:2px;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mes.completado {
+  border-color: var(--medium-green); 
+  background-color: var(--light-background);
+}
+
+.mes.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.mes, span {
+  color: var(--dark-green);
+}
+
+.custom-icon {
+  width: 20px;
+  height: auto;
+}
+
+.consumo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.consumo input[type="number"] {
+  width: 100px;
+  height: auto;
+  border: 2px solid #c1d2c0;
+  border-radius: 4px;
+  padding: 2px;
+  box-sizing: border-box;
+  transition: border-color 0.3s ease;
+}
+
+.consumo input[type="number"]:focus {
+  outline: none;
+  border-color: var(--medium-green);
+}
+
+#kWh-text {
+  color:var(--dark-green);
+  font-weight: bold;
+}
+
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+
+input[type=number] {
+  appearance: none;
+}

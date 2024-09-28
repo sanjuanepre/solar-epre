@@ -1,0 +1,27 @@
+<div class="resultados-paso3">
+  <div class="component-container-borde">
+    <div class="titulo-general">
+      <p>Energía generada anual</p>
+    </div>
+
+    <div class="informacion-general">      
+      <div class="datos">
+
+        <div class="icono">
+          <img
+            src="assets/icon-sol.png"
+            class="tamaño-icon"
+            alt="Icono de energia"
+          />
+        </div>
+  
+        <div class="resultado-centro">
+          <p class="resultado">  {{ currentYearlyEnergy | number : "1.0-0" }} </p>
+          <p class="unidad">kWh-año</p>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>

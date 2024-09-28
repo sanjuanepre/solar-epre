@@ -1,0 +1,128 @@
+.toolbar {
+    display: flex;
+    align-items: center; 
+}
+
+#toolbar-content {
+    height: 100%; 
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-left: 100px;
+    padding-right: 100px;
+    background-color: white;
+    border-bottom: 2px solid #8ab4ac;
+}
+
+span {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.epre, .logo-varios {
+    display: flex;
+    align-items: center;
+}
+
+#epre, #solar, #conicet, #sanjuan {
+    display: block;
+    margin: 0; 
+    padding: 0;
+   
+}
+
+#epre{
+    max-width: 140px;
+    margin-right: 70px;
+    cursor: pointer;
+}
+
+#solar{
+    max-width: 260px;
+    margin-right: 50px;
+}
+
+#conicet{
+    max-width: 275px;
+    margin-right: 50px;
+    margin-top: 3px;
+    cursor: pointer;
+}
+
+#sanjuan{
+    max-width: 200px;
+    cursor: pointer; 
+}
+
+/* Resoluciones mayores a 1600px */
+@media (max-width: 1600px) {
+    #toolbar-content {
+        padding-left: 80px;
+        padding-right: 80px;
+    }
+    #epre {
+        max-width: 120px;
+        margin-right: 50px;
+    }
+    #solar {
+        max-width: 220px;
+        margin-right: 40px;
+    }
+    #conicet {
+        max-width: 240px;
+        margin-right: 40px;
+    }
+    #sanjuan {
+        max-width: 180px;
+    }
+}
+
+/* Resoluciones entre 1200px y 1600px */
+@media (max-width: 1200px) {
+    #toolbar-content {
+        padding-left: 60px;
+        padding-right: 60px;
+    }
+    #epre {
+        max-width: 100px;
+        margin-right: 40px;
+    }
+    #solar {
+        max-width: 180px;
+        margin-right: 30px;
+    }
+    #conicet {
+        max-width: 200px;
+        margin-right: 30px;
+    }
+    #sanjuan {
+        max-width: 160px;
+    }
+}
+
+/* Resoluciones entre 900px y 1200px */
+@media (max-width: 900px) {
+    #toolbar-content {
+        padding-left: 40px;
+        padding-right: 40px;
+    }
+    #epre {
+        max-width: 80px;
+        margin-right: 30px;
+    }
+    #solar {
+        max-width: 150px;
+        margin-right: 20px;
+    }
+    #conicet {
+        max-width: 160px;
+        margin-right: 20px;
+    }
+    #sanjuan {
+        max-width: 140px;
+    }
+}
+

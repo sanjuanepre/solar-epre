@@ -1,0 +1,26 @@
+
+<div class="resultados-paso3">
+    <div class="component-container-borde">
+      <div class="titulo-general-long">
+        <p>Recupero de la inversión</p>
+      </div>
+  
+      <div class="informacion-general">      
+        <div class="datos">
+  
+            <div class="icono">
+                <img src="assets/dinero-tiempo.png"  
+                class="tamaño-icon" 
+                alt="Icono de retorno">
+            </div>
+    
+            <div class="resultado-centro">
+              <p class="resultado">{{plazoRecuperoTexto}} </p> <!-- Actualizar aquí -->
+              <p class="unidad" *ngIf="!isOutRecupero">meses</p> <!-- Mostrar solo si no es mayor a 20 años -->
+            </div>
+  
+        </div>
+      </div>
+  
+    </div>
+  </div>

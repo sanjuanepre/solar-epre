@@ -1,0 +1,71 @@
+<div class="modal-container" *ngIf="isVisible">
+  <div class="modal-content">
+    <span class="close-button" (click)="closeModal()">×</span>
+    <h2>Términos y Condiciones</h2>
+    <div class="terms-content  content-scroll" #termsContent (scroll)="onScroll($event)">
+      <!-- Contenido de los términos y condiciones -->
+      <p>La aplicación de la web “Generación Solar Distribuida San Juan”, como parte del sitio web del E.P.R.E. San Juan, proporciona estimaciones aproximadas sobre el costo y el retorno de inversión de la implementación de energía solar, haciendo uso de datos de la Solar API de Google, del “Laboratorio Nacional de Energía Renovable de EEUU (NREL)” y otras variables relevantes.</p>
+      <br>
+
+      <p id="sub-titulo-terminos">⦁	Exactitud de la Información</p>
+      <p>Es importante tener en cuenta que los resultados generados por esta aplicación son únicamente orientativos y pueden contener márgenes de error debido a la naturaleza de los mismos y los métodos de cálculo empleados. E.P.R.E. San Juan no garantiza la exactitud, integridad o actualidad de la información presentada. En tal sentido, diversas variables han sido supuestas, a efectos de obtener resultados orientativos.
+        <br>
+        La responsabilidad por el uso de los datos y los resultados recaen exclusivamente en la persona usuaria.
+        </p>
+        <br>
+
+      <p id="sub-titulo-terminos">⦁	Responsabilidad</p> 
+      <p>E.P.R.E. San Juan no se responsabiliza por decisiones tomadas en base a los resultados obtenidos a través de esta aplicación. Se recomienda a las personas usuarias consultar con un profesional calificado para obtener asesoramiento específico y detallado sobre la implementación de sistemas de energía solar.
+      </p>
+      <br>
+      <p id="sub-titulo-terminos">⦁	Protección de Datos y Privacidad</p> 
+      <p>La aplicación no almacena datos personales identificables de las personas usuarias. Todas las consultas realizadas se registran de manera anónima para fines estadísticos y de mejora del servicio. Se recopilan métricas y analíticas que nos ayudan a mejorar la experiencia de la persona usuaria y optimizar nuestros servicios, siempre respetando la privacidad y anonimato de los datos.
+      </p>
+      <br>
+      <p id="sub-titulo-terminos">⦁	Jurisdicción y Ley Aplicable</p> 
+      <p>Este Aviso Legal se rige por las Leyes de la República Argentina. Cualquier controversia que surja en relación con el uso de esta aplicación será sometida a la jurisdicción exclusiva de los tribunales competentes de la Provincia de San Juan.
+      </p>
+      <br>
+      <p id="sub-titulo-terminos">⦁	Modificaciones del Aviso Legal</p> 
+      <p>E.P.R.E. San Juan se reserva el derecho de modificar este Aviso Legal en cualquier momento. Las modificaciones serán publicadas en esta página y entrarán en vigor a partir del momento de su publicación.
+      </p>
+      
+      <br>
+      <p id="sub-titulo-contacto">Contacto</p> 
+      <p id="texto-contacto">Si tiene alguna pregunta sobre estos Términos y Condiciones, puede contactarnos a través de los siguientes medios:
+      </p>
+      <br>
+      <p id="contactos">WhatsApp</p>
+      <p id="contactos">264 567 7184</p>
+      <br>
+
+      <p id="contactos">Teléfonos</p>
+      <p id="contactos">0800 333 6666</p>
+      <p id="contactos">264 429 1800</p>
+      <br>
+      <p id="contactos">Correo</p>
+      <p id="contactos">appsolar&#64;epresanjuan.gob.ar</p>
+      <br>
+      <p id="contactos">Dirección</p>
+      <p id="contactos">Laprida 12 Este</p>
+      <p id="contactos">Ciudad de San Juan - CP J5400</p>
+      <br>
+      <p id="contactos">Horarios de atención</p>
+      <p id="contactos">Lunes a Viernes de 7:30 a 14:00 hs</p>
+      
+    </div>
+   
+    <div class="check">
+      <input type="checkbox" id="acceptTerms" [(ngModel)]="isTermsAccepted" (change)="toggleAcceptButton($event)" [disabled]="!isCheckboxEnabled" />
+      <label for="acceptTerms">Acepto los términos y condiciones</label>
+      <p>Lea los Términos y Condiciones hasta el final para continuar.</p>
+    </div>
+    
+    <div class="button-group">  
+      <button id="cerrar" (click)="closeModal()">Cerrar</button>
+      <button id="aceptar" [disabled]="!isTermsAccepted" (click)="acceptTerms()">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+

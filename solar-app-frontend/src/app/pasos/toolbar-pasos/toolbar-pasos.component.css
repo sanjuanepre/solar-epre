@@ -1,0 +1,43 @@
+
+.toolbar {
+    height: 45px;
+    width: 100%;
+}
+
+#toolbar-3 {
+    background-color: var(--light-background);
+    justify-content: space-between;
+    display: flex;
+    align-items: center;
+    height: 45px;
+    padding-left: 15%;
+    padding-right: 15%;
+    padding-top: 2%;
+    padding-bottom: 2%;
+}
+
+.inner-circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: rgb(189, 187, 187);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1em;
+    font-family:  'Encode Sans', sans-serif;
+    font-weight: 300;
+    transition: background-color 0.3s, transform 0.3s, color 0.3s;
+}
+
+.inner-circle.selected {
+    background-color: var(--dark-green);
+    transform: scale(1.1);
+}
+
+#span-pasos {
+    color: white; 
+    text-decoration: none;
+    font-weight: 300;
+    font-size: 15px;
+}

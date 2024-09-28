@@ -1,0 +1,12 @@
+runtime: nodejs16
+instance_class: F1
+env: standard
+
+handlers:
+  - url: /
+    static_files: dist/epre/index.html
+    upload: dist/epre/index.html
+
+  - url: /(.*)
+    static_files: dist/epre/\1
+    upload: dist/epre/(.*)

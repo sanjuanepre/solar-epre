@@ -1,0 +1,19 @@
+<div class="resultado-container">
+  <div class="icon-container">
+    <img
+      src="assets/icon-electricidad.png"
+      id="marca"
+      class="custom-icon"
+      alt="Icono de electricidad"
+    />
+  </div>
+
+  <div class="texto-container">
+    <p class="titulo">Total consumo anual</p>
+    <p class="texto-inferior">Calculado según los datos ingresados</p>
+  </div>
+
+  <div class="resultado">
+    <p class="consumo">{{ totalConsumo | number:'1.0-0'}} <span class="unidad">kWh</span></p>
+  </div>
+</div>

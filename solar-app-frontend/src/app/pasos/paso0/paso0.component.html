@@ -1,0 +1,104 @@
+<div class="content content-paso-cero">
+  <div class="titulo">
+    <h2 id="titulo">información</h2>
+  </div>
+  <div class="info-container">
+    <p id="sub-titulo">Por favor, tenga a mano la siguiente información:</p>
+
+    <div class="informacion">
+      <div class="texto-container">
+        <div class="icono">
+          <img
+            src="assets/icon-lugar.png"
+            class="custom-icon"
+            alt="Icono de ubicación"
+          />
+        </div>
+        <div class="info-inicio font">
+          <h2 id="ubicacion">UBICACIÓN</h2>
+          <p>La ubicación exacta donde se realizaría la instalación.</p>
+          <p>
+            Puede utilizar la dirección exacta o bien las coordenadas
+            geográficas.
+          </p>
+        </div>
+      </div>
+      <div class="texto-container">
+        <div class="icono">
+          <img
+            src="assets/icon-electricidad.png"
+            class="custom-icon"
+            alt="Icono de electricidad"
+          />
+        </div>
+        <div class="info-inicio font">
+          <h2 id="consumo">CONSUMO</h2>
+          <p>El consumo en kWh de los últimos 12 meses.</p>
+          <p id="consumoAdvertencia">
+            Podrá consultar el consumo de los últimos 12 meses en el sitio web
+            oficial de su proveedor de energía eléctrica.
+          </p>
+          <p>
+            Si necesita ayuda para encontrar esta información,
+            <span id="span-general" (click)="showInstructions()">
+              haga click aquí.
+            </span>
+          </p>
+        </div>
+      </div>
+      <div class="texto-container">
+        <div class="icono">
+          <img
+            src="assets/icon-dinero.png"
+            class="custom-icon"
+            alt="Icono de dinero"
+          />
+        </div>
+        <div class="info-inicio font">
+          <h2>TARIFA CONTRATADA</h2>
+          <p>Podrá encontrar esta información en su factura de servicios.</p>
+          <p>
+            Si necesita ayuda para encontrar esta información,
+            <span id="span-general" (click)="showInstructions()">
+              haga click aquí.
+            </span>
+          </p>
+        </div>        
+      </div>
+
+      <div class="terminos">
+        <button id="ver-terminos" (click)="showTerms()">
+          Ver Términos y Condiciones
+        </button>
+        <app-terminos
+          [isVisible]="showModal"
+          (accepted)="handleAccepted($event)"
+        ></app-terminos>
+      </div>
+
+      <div class="button-container">
+        <div class="boton">
+          <button id="boton-volver" (click)="goBack()">
+            <span class="material-icons">chevron_left</span> Volver
+          </button>
+          <br />
+          <button
+            id="boton-siguiente"
+            (mouseenter)="showTooltip()"
+            (click)="goToPaso1()"
+            [disabled]="!isTermsAccepted"
+          >
+            Siguiente <span class="material-icons">chevron_right</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+ 
+  <app-instrucciones
+    [isVisible]="showInstructionsModal"
+    (closed)="handleInstructionsClosed()"
+  ></app-instrucciones>
+</div>
+

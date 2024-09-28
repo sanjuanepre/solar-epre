@@ -1,0 +1,33 @@
+<div class="tarifa-container">
+  <select
+    #tarifaSelect
+    [(ngModel)]="tarifaContratada"
+    (change)="onTarifaChange()"
+  >
+    <option value="" disabled selected>Selecciones su tipo de tarifa</option>
+    <option *ngFor="let tarifa of tarifas" [value]="tarifa.value">
+      {{ tarifa.viewValue }}
+    </option>
+  </select>
+</div>
+<br />
+<div class="potencia-contratada" *ngIf="tarifaContratada">
+  <div class="potencia-content">
+    <p [innerHTML]="getRangoPotenciaMensaje()"></p>
+    <mat-slider
+      *ngIf="!isPotenciaMaxDisabled()"
+      [min]="getPotenciaMinimakW()"
+      [max]="getPotenciaMaximakW()"
+      step="1"
+      (change)="onSliderChange($event)"
+      discrete
+      [displayWith]="formatLabel"
+    >
+      <input matSliderThumb #slider [(ngModel)]="potenciaMaxAsignadakW" />
+    </mat-slider>
+    <span class="unidad-component-simple-panel" *ngIf="!isPotenciaMaxDisabled()"
+      >{{ potenciaMaxAsignadakW | number:'1.0-0' }} kW</span
+    >
+  </div>
+</div>
+

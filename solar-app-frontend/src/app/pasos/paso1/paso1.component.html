@@ -1,0 +1,96 @@
+<div class="content content-paso-uno">
+  <div class="titulo">
+    <h2 id="titulo">Ubicación</h2>
+  </div>
+
+  <div class="toolbar-pasos">
+    <app-toolbar-pasos [currentStep]="currentStep"></app-toolbar-pasos>
+  </div>
+
+  <div class="info-container">
+    <p id="sub-titulo">Ubicación donde realizaría la instalación.</p>
+
+    <div class="informacion">
+      <div class="info-inicio">
+        <div class="titulo-container">
+          <div class="icono-inicio">
+            <img
+              src="assets/icon-lugar.png"
+              id="marca"
+              alt="Icono de ubicación"
+            />
+          </div>
+          <div class="titulo-inicio">
+            <h2>UBICACIÓN</h2>
+          </div>
+        </div>
+
+        <div class="input-boton">
+          <input
+            id="pac-input"
+            class="controls"
+            type="text"
+            placeholder="Ubicación"
+            #pacInput 
+          />
+          <button id="buscar" (click)="buscarUbicacion(pacInput.value)">
+            Buscar
+            <span class="material-icons">search</span>
+          </button>
+        </div>
+
+        <div class="advertencia">
+          <p id="recomendacion">
+            Puede utilizar la dirección exacta o bien las coordenadas
+            geográficas. También puede ajustar el mapa manualmente hasta la
+            ubicación deseada.
+          </p>
+        </div>
+      </div>
+
+      <div class="info-inicio">
+        <div class="titulo-container">
+          <div class="icono-inicio">
+            <img
+              src="assets/icon-modificar.png"
+              id="marca"
+              alt="Icono de dibujar"
+            />
+          </div>
+          <div class="titulo-inicio">
+            <h2>Marca punto por punto</h2>
+          </div>
+        </div>
+
+        <div class="botones">
+          <button id="marcar" (click)="enableDrawingMode()">Marcar
+            <span class="material-icons">edit</span>
+          </button>
+
+          <button id="borrar" (click)="clearDrawing()">Borrar dibujo
+            <span class="material-icons">delete</span>
+          </button>
+        </div>
+        <div class="advertencia">
+          <p id="recomendacion">
+            Marcando punto por punto dibuje el área donde instalaría los paneles
+            solares .
+          </p>
+        </div>
+      </div>
+   
+     <div class="button-container">
+      <div class="boton">
+        <button id="boton-volver" (click)="goBack()">
+          <span class="material-icons">chevron_left</span> Volver</button>
+        <br />
+        <button id="boton-siguiente" [disabled]="!areaMarked" (click)="goToPaso2()"  (mouseenter)="showTooltip()">Siguiente
+          <span class="material-icons">chevron_right</span>
+        </button> 
+      </div>
+    </div>
+
+  </div>
+
+  </div>
+</div>

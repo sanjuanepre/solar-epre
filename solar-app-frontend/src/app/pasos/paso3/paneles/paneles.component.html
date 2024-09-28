@@ -1,0 +1,61 @@
+<div class="info-inicio">
+  <div class="titulo-container">
+    <div class="icono-inicio">
+      <img src="assets/icon-panel.png" id="marca" alt="Icono de tarifa" />
+    </div>
+    <div class="titulo-inicio">
+      <h2>PANELES A INSTALAR</h2>
+    </div>
+  </div>
+
+  <div class="info-component-panel">
+    <div class="cantidad-paneles">
+      <h3>Cantidad de paneles</h3>
+      <div class="cantidad-paneles-contenido">
+        <div class="slider">
+          <mat-slider
+            class="custom-slider"
+            min="4"
+            step="1"
+            [max]="maxPanelsArea$"
+            (change)="onSliderChange()"
+            discrete
+            [displayWith]="formatLabel"
+          >
+            <input matSliderThumb [(ngModel)]="panelesSelectCount" #slider />
+          </mat-slider>
+        </div>
+        <div class="unidad-component-simple-panel">
+          <p class="resultado-panel">{{ panelesSelectCount }}</p>
+        </div>
+      </div>
+    </div>
+   
+
+    <div class="potencia-paneles">
+      <h3 id="titulo-potencia">Potencia de paneles</h3>
+      <div class="seleccion-potencia" >
+        <select id="power-select" [formControl]="potenciaPanelesControl">
+          <option value="400" selected>400 W</option>
+          <!-- <option value="450">450 W</option>
+          <option value="500">500 W</option>
+          <option value="600">600 W</option>
+          <option value="700">700 W</option> -->
+        </select>
+      </div>
+    </div>
+  </div>
+  <hr />
+
+  <div class="texto-inferior-panel">
+    <div class="titulo-detalle">
+      <p>
+        Dimensiones del panel: 
+        <span id="dimension-panel"
+          >{{ dimensionPanel.height * 100 | number:'1.2-2'}} x
+          {{ dimensionPanel.width * 100 | number:'1.2-2'}}cm</span>
+      </p>
+    </div>
+  </div>
+</div>
+

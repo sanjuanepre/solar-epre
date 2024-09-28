@@ -1,0 +1,29 @@
+<div class="dialog-container">
+  `
+  <h2 mat-dialog-title>Potencia excedida</h2>
+  <mat-dialog-content>
+    La superficie seleccionada permitiría la instalación de
+    {{ data.potenciaInstalada | number : "1.0-2" }} kW en paneles fotovoltaicos.
+    Dicho valor supera la potencia máxima admisible de
+    {{ data.potenciaMaxAsignada | number : "1.0-2" }} kW para la categoría
+    {{ data.tarifaContratada }} seleccionada. Presione aceptar para adecuar la
+    superficie seleccionada, o cancelar para volver al paso anterior y elegir
+    otra superficie.
+  </mat-dialog-content>
+  <mat-dialog-actions>
+    <div class="botones-modal">
+      <button mat-button (click)="onCancel()" class="btn-cancel">
+        Cancelar
+      </button>
+      <button
+        mat-button
+        [mat-dialog-close]="true"
+        cdkFocusInitial
+        class="btn-confirm"
+      >
+        Aceptar
+      </button>
+    </div>
+  </mat-dialog-actions>
+  `
+</div>

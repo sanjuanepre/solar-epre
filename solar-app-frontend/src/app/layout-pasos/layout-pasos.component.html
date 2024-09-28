@@ -1,0 +1,33 @@
+
+<div class="contenido-general">
+  <div class="toolbar">
+    <app-toolbar></app-toolbar>
+  </div>
+  
+  <div class="content-total">
+    
+    <div class="mapa">
+      <app-mapa></app-mapa>
+    </div>
+    <div class="custom-loader" *ngIf="isLoading"></div>
+    <div class="paso" [class.collapsed]="isCollapsed" [ngClass]="{'expanded': isPaso3 && !isCollapsed}">
+      
+      <div class="toggle-tab" (click)="toggleCollapse()">
+        <mat-icon>{{ isCollapsed ? 'chevron_left' : 'chevron_right' }}</mat-icon>
+      </div>
+      <div [@menuCollapsed]="isCollapsed ? 'expand' : 'collapsed'">
+        <ng-container>
+          <router-outlet></router-outlet>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+

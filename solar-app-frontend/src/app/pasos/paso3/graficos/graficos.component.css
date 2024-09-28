@@ -1,0 +1,142 @@
+/*COLORES*/
+:root {
+  --dark-green: #1e3932;
+  --medium-green: #006241;
+  --light-green: #00754a;
+  --light-background: #d4e9e2;
+  --golden: #cba258;
+  --gris: #edebe9;
+  --font-dark: #000000de;
+  --font-light: #424242;
+  --bordes: #a9b8ad;
+
+  /*colores de graficos*/
+  --verde:#96c0b2;
+  --gris:#424242;
+  --amarillo:#e4c58d;
+  --verde-punto:#499b80;
+  --celeste:#008ae3;
+}
+
+.container-graficos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(470px, 1fr));
+  gap: 10px;
+}
+
+.item-grafico {
+  background-color: rgb(189, 185, 185);
+ /* min-width: 350px;*/
+ /* height: auto;*//********************************************************/
+  height: 400px;
+  min-width: 470px;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+}
+
+.item-grafico {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.item-grafico:hover {
+  transform: scale(1.01);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.grafico-container-borde {
+ /* width: 100%;
+  height: 100%;*/
+  height: 400px;/**********/
+  min-width: 470px;/*********/
+  border-radius: 8px;
+  position: relative;
+}
+
+.head {
+  background-color: #96c0b2;
+  border-radius: 8px 8px 0 0;
+  color: var(--dark-green);
+  width: 100%;
+ /* height: 20%;*/
+  height: 50px;
+  font-size: 1.1em;
+  padding-left: 10px;
+  padding-right: 10px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.head p {
+  margin: 0%;
+}
+
+.icono {
+  width: 12%;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.tamaño-icon {
+  width: 35px;
+  height: 35px;
+}
+
+.titulo {
+  color: var(--dark-green);
+  width: 60%;
+  text-align: center;
+}
+
+.titulo p {
+  font-size: 16px;
+  color: var(--dark-green);
+  line-height: 1.1;
+}
+
+.informacion-general {
+  width: 100%;
+ /* height: 80%;*/
+ /* height: auto;*/
+  height: 100%;
+  height: 350px;
+  box-sizing: border-box;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-bottom: 10px;
+  border-radius: 0 0 8px 8px;
+  display: block;
+  flex-direction: column;
+  border-left: 2px solid var(--light-background);
+  border-right: 2px solid var(--light-background);
+  border-bottom: 2px solid var(--light-background);
+  background-color: white;
+}
+
+.grafico-component {
+  width: 100%;
+ /* height: 100%;*/
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: white;
+}
+
+
+
+
+/*****************************************************/
+@media (max-width: 1200px) {
+  .titulo p {
+    font-size: 14px;
+  }
+
+  .resultado {
+    font-size: 20px;
+  }
+}
+

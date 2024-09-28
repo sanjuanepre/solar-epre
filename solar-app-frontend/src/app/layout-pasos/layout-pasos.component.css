@@ -1,0 +1,105 @@
+
+  .contenido-general {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .content-total {
+    box-sizing: border-box;
+    background-color: white;
+    height: calc(100% - 90px); 
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    position: relative;
+  }
+  
+  .mapa {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .paso {
+    width: 589px; 
+    height: 100%; 
+    position: absolute;
+    right: 0;
+    top: 0;
+    transition: width 0.3s ease; /* Transición para el colapso */
+    display: flex;
+    flex-direction: row;
+  }
+  
+  .paso.collapsed {
+    width: 30px; 
+    overflow: hidden;
+    right: 0;
+  }
+  
+  .paso.expanded {
+    width: 55%; 
+    visibility: visible;
+  }
+
+ 
+  .toggle-tab mat-icon {
+    width: 30px; 
+    height: 80px; 
+    background-color: var(--light-background);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transform: translateY(350%); 
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px; 
+  }
+  
+  .toggle-tab mat-icon {
+    font-size: 24px;
+    color: var(--dark-green);
+  }
+  
+  .paso-content {
+    flex-grow: 1;
+  }
+  
+  .custom-loader {
+    position: absolute;
+    top: 45vh;
+    left: 45vw;
+    width: 50px;
+    height: 50px;
+    display: grid;
+    border:4px solid #0000;
+    border-radius: 50%;
+    border-color:#E4E4ED #0000;
+    animation: s6 1s infinite linear;
+    z-index: 10000;
+  }
+  .custom-loader::before,
+  .custom-loader::after {    
+    content:"";
+    grid-area: 1/1;
+    margin:2px;
+    border:inherit;
+    border-radius: 50%;
+  }
+  .custom-loader::before {
+    border-color:#259e7c #0000;
+    animation:inherit; 
+    animation-duration: .5s;
+    animation-direction: reverse;
+  }
+  .custom-loader::after {
+    margin:8px;
+  }
+  
+  @keyframes s6 { 
+    100%{transform: rotate(1turn)}
+  }
+
+

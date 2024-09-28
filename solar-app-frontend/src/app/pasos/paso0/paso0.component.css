@@ -1,0 +1,165 @@
+
+.content-paso-cero {
+  .info-container {
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 10px;
+    flex: 1; 
+    overflow: hidden; 
+  }
+  
+  .toolbar-pasos {
+    width: 100%;
+    margin-top: 0%;
+  }
+  
+  .informacion {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    margin-top: 0%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    overflow-x:hidden; 
+    padding: 5px;
+  }
+
+  .texto-container {
+    height: auto;
+    display: flex;
+    border-radius: 8px;
+    padding: 7px;
+    gap: 10px;
+    background-color: var(--light-background);
+  }
+
+  .icono {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 10%;
+  }
+
+  .info-inicio {
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .info-inicio p {
+    color: var(--font-light);
+    font-weight: 400;
+    margin: 2px;
+    font-size: 13px;
+    font-family: 'Sodo Sans', sans-serif;
+  }
+
+  .info-inicio h2 {
+    text-transform: uppercase;
+    font-size: 17px;
+    font-weight: bold;
+    margin-bottom: 0px;
+    margin-right: 0px;
+    color: var(--dark-green);
+    font-family: 'Sodo Sans', sans-serif;
+  }
+
+  .terminos {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #ver-terminos {
+    background-color: var(--dark-green);
+    border: none;
+    height: 40px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 300;
+    color: white;
+    font-family: 'Sodo Sans', sans-serif;
+  }
+
+  #ver-terminos:hover {
+    background-color: var(--medium-green);
+    color: white;
+  }
+
+  #acceptTerms {
+    margin-top: 4px;
+  }
+
+  .check {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+ :is(label) {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--font-light);
+    margin-left: 5px;
+  }
+
+  :is(input) {
+    width: 15px;
+    height: 15px;
+  }
+
+}
+
+/******************************************************************/
+ /* Estilos para personalizar la barra de desplazamiento vertical */
+ .informacion::-webkit-scrollbar {
+  width: 8px; 
+}
+
+.informacion::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+}
+
+.informacion::-webkit-scrollbar-thumb {
+  background: #b8b6b6; 
+  border-radius: 4px; 
+}
+
+.informacion::-webkit-scrollbar-thumb:hover {
+  background: var(--dark-green); 
+}
+
+.texto-container {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.texto-container:hover {
+  transform: scale(1.01); 
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); 
+}
+
+/**************************************************/
+@media only screen and (min-width: 1400px) {
+  .info-inicio p {
+    font-size: 17px!important;
+  }
+
+  .info-inicio h2 {
+    font-size: 19px;
+  }
+  #span-general {
+    font-size: 17px; 
+  }
+}
+
+
+
+
+

@@ -1,0 +1,269 @@
+.content-paso-uno {
+  .info-container {
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 10px;
+    flex: 1; 
+    overflow: hidden; 
+  }
+ 
+  .toolbar-pasos {
+    width: 100%;
+    margin-top: 0px;
+  }
+ 
+  .informacion {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    margin-top: 0%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto; 
+    overflow-x:hidden; 
+    padding: 5px;
+  }
+
+  .advertencia #recomendacion {
+    text-align: left;
+    color: var(--font-light);
+    font-size: 14px;
+    font-family: 'Sodo Sans', sans-serif;
+    font-weight: 400;
+    margin: 0px;
+  }
+
+  .info-inicio {
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border: 2px solid var(--light-background);
+    border-radius: 8px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 15px;
+    padding-top: 15px;
+    text-align: left;
+    gap: 10px;
+  }
+
+  .titulo-container {
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+  }
+
+  #marca {
+    width: 30px;
+    height: 30px;
+  }
+
+  .info-inicio h2 {
+    text-transform: uppercase;
+    font-size: 17px;
+    font-weight: bold;
+    color: var(--dark-green);
+    margin-bottom: 0px;
+    margin-right: 0px;
+    font-family: "Sodo Sans", sans-serif;
+  }
+ 
+  .input-boton {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 38px;
+  }
+ 
+  #pac-input {
+    width: 100%;
+    height: 35px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 2px solid #ccc;
+    box-sizing: border-box;
+    font-size: 14px;
+    font-family: 'Sodo Sans', sans-serif;
+    background-color: var(--gris);
+    color: var(--font-light);
+  }
+
+  #pac-input::placeholder {
+    color: var(--font-light);
+  }
+
+  #pac-input:focus {
+    border-color: var(--medium-green);
+    outline: none;
+  }
+
+  .pac-item,
+  .pac-item:hover {
+    background-color: #ffffff !important; 
+    color: #3c763d !important; 
+  }
+
+  #buscar {
+    background-color: var(--dark-green);
+    color: white;
+    font-weight: 300;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+  }
+
+  #buscar .material-icons {
+    margin-left: 8px; 
+    color: white; 
+    font-size: 18px; 
+  }
+
+  #buscar:hover {
+    background-color: var(--medium-green);
+  }
+ 
+  .botones {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+  }
+
+  #borrar {
+    background-color: white;
+    color: var(--dark-green);
+    font-weight: 300;
+    border: 2px solid var(--dark-green); 
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+  }
+
+  #borrar .material-icons {
+    margin-left: 8px;
+    color: var(
+      --dark-green
+    ); 
+    font-size: 18px; 
+  }
+
+  #borrar:hover {
+    border-color: var(
+      --medium-green
+    ); 
+    color: var(
+      --medium-green
+    );
+  }
+
+  #borrar:hover .material-icons {
+    color: var(
+      --medium-green
+    ); 
+  }
+
+  #marcar {
+    background-color: var(--dark-green);
+    color: white;
+    font-weight: 300;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+  }
+
+  #marcar .material-icons {
+    margin-left: 8px; 
+    color: white; 
+    font-size: 16px; 
+  }
+
+  #marcar:hover {
+    background-color: var(--medium-green);
+  }
+
+  #marcar:hover .material-icons {
+    color: white; 
+  }
+
+  
+  :is(button[disabled]) {
+    background-color: #d3d3d3; 
+    color: #a9a9a9; 
+    cursor: not-allowed; 
+    opacity: 0.6; 
+  }
+}
+
+
+.info-inicio {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.info-inicio:hover {
+  transform: scale(1.01); 
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); 
+}
+
+
+ /* Estilos para personalizar la barra de desplazamiento vertical */
+ .informacion::-webkit-scrollbar {
+  width: 8px; 
+}
+
+.informacion::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+}
+
+.informacion::-webkit-scrollbar-thumb {
+  background: #b8b6b6; 
+  border-radius: 4px; 
+}
+
+.informacion::-webkit-scrollbar-thumb:hover {
+  background: var(--dark-green); 
+}
+
+
+/********************************************************/
+@media only screen and (min-width: 1400px) {
+  .informacion{
+    gap: 25px;
+  }
+  
+  .advertencia #recomendacion{
+    font-size: 17px;
+  }
+  
+  .info-inicio {
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 25px !important;
+    padding-top: 25px !important;
+    text-align: left;
+    gap: 20px;
+  }
+
+  .info-inicio h2 {
+    font-size: 21px !important;
+  }
+  
+  #pac-input {
+    font-size: 16px !important;
+  }
+
+}
+

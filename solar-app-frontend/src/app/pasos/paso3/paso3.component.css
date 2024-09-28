@@ -1,0 +1,359 @@
+
+  .info-container {
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 10px;
+    flex: 1;
+    overflow: hidden; 
+  }
+  
+  .toolbar-pasos {
+    width: 100%;
+    margin-top: 0%;
+  }
+  
+  .informacion {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+    overflow-y: auto;
+    overflow-x:hidden; 
+    padding:5px;
+  }
+
+/*cards*/
+:root {
+  --gris: #edebe9;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(235px, 1fr));
+  gap: 10px;
+}
+
+.item {
+  background-color: var(--gris);
+  min-width: 235px;
+  min-height:100px ;
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+}
+
+.container-hipotesis{
+  background-color: rgb(240, 237, 237);
+  padding: 10px;
+  border: 1px solid gray;
+}
+#titulo-hipotesis{
+  color: var(--font-light);
+  font-weight: bold;
+}
+#texto-hipotesis{
+  color: var(--font-light);
+}
+
+
+.hipotesis{
+  color: var(--font-light);
+}
+
+  /*************************************************************************/
+  /* Estilos para personalizar la barra de desplazamiento vertical */
+  .informacion::-webkit-scrollbar {
+    width: 8px; 
+  }
+
+  .informacion::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  
+  .informacion::-webkit-scrollbar-thumb {
+    background: #b8b6b6;
+    border-radius: 4px; 
+  }
+  
+  .informacion::-webkit-scrollbar-thumb:hover {
+    background-color: var(--dark-green);
+  }
+  
+/************************************************************************/  
+/* Estilos para los botones secundarios  EDITAR/DESCARGAR/ENVIAR*/
+.action-buttons{
+  width: 100%;
+  height: 40px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+.descargar-enviar-component{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 3px;
+}
+
+#downloadButton{
+  background-color: white;
+  color: var(--dark-green);
+  border: 2px solid var(--dark-green); 
+  padding: 5px 13px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center; 
+  box-sizing: border-box; 
+}
+
+#emailButton{
+  background-color:white;
+  color: var(--dark-green);
+  border: 2px solid var(--dark-green); 
+  padding: 5px 11px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center; 
+  box-sizing: border-box; 
+}
+
+#emailButton:hover {
+  border-color: var(--medium-green); 
+  color: var(--medium-green); 
+}
+
+#downloadButton:hover {
+  border-color: var(--medium-green); 
+  color: var(--medium-green); 
+}
+
+#boton-editar {
+  color: white;
+  background-color: var(--dark-green);
+  font-weight: bold;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  border-right: 2px solid #000;
+  border-bottom: 2px solid #000;
+  border-top: none;
+  border-left: none;
+}
+
+#boton-editar .material-icons {
+  margin-left: 8px; 
+  color:white; 
+  font-size: 16px; 
+}
+
+#boton-editar:hover {
+  border-right: 2px solid var(--dark-green); 
+  border-bottom: 2px solid var(--dark-green); 
+  background-color: var(--medium-green);
+  color: white; 
+}
+
+#boton-editar:hover .material-icons {
+  color: white; 
+}
+
+/**********************************************************/
+/* Estilos para el modal */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-contenido {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 5px;
+  text-align: center;
+  color: var(--font-light);
+}
+
+.botones-modal {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.modal.mostrar {
+  display: flex;
+}
+
+/********************************************/
+/*efecto de las tarjetas al pasar el mouse*/
+.item {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.item:hover {
+  transform: scale(1.01); 
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); 
+}
+
+/**********************************************************/
+/* Modal de correo electronico */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-container {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 350px; 
+}
+
+.modal-container h2 {
+ color: var(--dark-green);
+}
+
+.modal-container p {
+  color: var(--font-light);
+ }
+
+
+.input-container {
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+#email {
+  width: 100%; 
+  padding: 10px;
+  border: 2px solid gray; 
+  border-radius: 4px; 
+  font-size: 16px; 
+  outline: none; 
+  box-sizing: border-box; 
+}
+
+#email:focus {
+  border-color: var(--medium-green); 
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+
+/**********************************************************/
+@media (max-width: 1200px) {
+  .valor-mostrado {
+    display: none;
+  }
+
+  .visible-container{
+    margin-top: 5px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .valor-mostrado-bis {
+      display: block;
+  }
+  .valor-mostrado-bis{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding-left: 10px;
+    padding-right: 10px;
+    border-bottom:2px solid var(--light-background);
+    box-shadow:0 4px 10px -2px rgba(0, 98, 65, 0.3); 
+    padding-top: 8px;
+    height: 35px;
+  }
+  #valor-bis{
+    font-size: 15px;
+    color: var(--font-light);
+    font-weight: 400;
+    margin: 0%;
+  }
+  
+}
+
+@media only screen and (min-width: 1367px) {
+  .content-scroll{
+    height: 70vh;
+  }
+
+}
+
+
+.custom-loader {
+  position: absolute;
+  top: 7%;
+  left: 50% ;
+  width: 50px;
+  height: 50px;
+  display: grid;
+  border:4px solid #0000;
+  border-radius: 50%;
+  border-color:#E4E4ED #0000;
+  animation: s6 1s infinite linear;
+  z-index: 10000;
+}
+.custom-loader::before,
+.custom-loader::after {    
+  content:"";
+  grid-area: 1/1;
+  margin:2px;
+  border:inherit;
+  border-radius: 50%;
+}
+.custom-loader::before {
+  border-color:#259e7c #0000;
+  animation:inherit; 
+  animation-duration: .5s;
+  animation-direction: reverse;
+}
+.custom-loader::after {
+  margin:8px;
+}
+
+@keyframes s6 { 
+  100%{transform: rotate(1turn)}
+}
+
+#botonEdit, #boton-volver-paso3 {
+  visibility: hidden;
+}
