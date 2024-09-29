@@ -1,7 +1,0 @@
-steps:
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/solarapp-429316/nestjs-backend', '.']
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/solarapp-429316/nestjs-backend']
-  - name: 'gcr.io/cloud-builders/gcloud'
-    args: ['run', 'deploy', 'nestjs-backend', '--image', 'gcr.io/solarapp-429316/nestjs-backend', '--platform', 'managed', '--region', 'us-central1', '--allow-unauthenticated']
