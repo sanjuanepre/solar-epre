@@ -156,10 +156,7 @@ export class TarifaComponent implements OnInit, AfterViewInit, OnDestroy {
       .subscribe((count) => {
         if (count > 0 && this.potenciaMaxAsignadakW) {
           console.log('Nuevo conteo de paneles recibido:', count);
-          /* if (!this.isDialogOpen) {
-            console.log('Verificando potencia excedida');
-            this.checkPotenciaExcedida();
-          } */
+          
         }
       });
 
@@ -535,6 +532,7 @@ export class TarifaComponent implements OnInit, AfterViewInit, OnDestroy {
           ? 'Potencia máxima no asignada'
           : 'Potencia instalada no excede el máximo'
       );
+      this.mapService.reDrawPanels(this.potenciaMaxAsignadakW / (this.sharedService.getPanelCapacityW() / 1000));
     }
   }
 }

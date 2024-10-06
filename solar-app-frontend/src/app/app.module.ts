@@ -61,6 +61,7 @@ import { TarifaDialogComponent } from './pasos/paso2/tarifa/tarifa-dialog/tarifa
 import { DecimalPipe, registerLocaleData } from '@angular/common';
 import localeEs from '@angular/common/locales/es';
 import { RefreshHandlerComponent } from './refresh-handler/refresh-handler.component';
+import { ServiceUnavailableComponent } from './service-unavailable/service-unavailable.component';
 
 export function initializeApp(environmentService: EnvironmentService): () => Promise<void> {
   return (): Promise<void> => firstValueFrom(environmentService.loadGoogleMapsApiKey());
@@ -96,7 +97,8 @@ registerLocaleData(localeEs, 'es');
     InstruccionesComponent,
     CustomNumberPipe,
     TarifaDialogComponent,
-    RefreshHandlerComponent 
+    RefreshHandlerComponent,
+    ServiceUnavailableComponent 
   ],
   
   imports: [

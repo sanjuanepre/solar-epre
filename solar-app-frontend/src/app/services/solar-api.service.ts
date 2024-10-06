@@ -11,6 +11,7 @@ import { MapService } from './map.service';
 import { SharedService } from './shared.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { SolarDataFront } from '../interfaces/solar-data-front';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root',
@@ -30,8 +31,7 @@ export class SolarApiService implements OnDestroy {
     private readonly resultadoService: ResultadoService,
     private consumoService: ConsumoService,
     private sharedService: SharedService,
-
-
+    private router: Router,
     private snackBar: MatSnackBar
   ) { }
 
@@ -49,7 +49,6 @@ export class SolarApiService implements OnDestroy {
 
   resetApplication() {
     console.log('Reiniciando la aplicación');
-
     // Reiniciar servicios
     this.sharedService.resetAll();
 
@@ -148,6 +147,9 @@ export class SolarApiService implements OnDestroy {
 
         if (!response.ok) {
           console.error('Error en la respuesta del servidor:', response.status);
+          if (response.status === 503) {
+            this.router.navigate(['/503']);
+          }
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
@@ -168,11 +170,6 @@ export class SolarApiService implements OnDestroy {
             mensajeError = `Error del servidor: ${error.status} - ${error.message}`;
           }
         }
-
-        this.snackBar.open(mensajeError, 'Cerrar', {
-          duration: 2000,
-          panelClass: ['error-snackbar'],
-        });
 
         // Resetear la aplicación después de un breve retraso
         setTimeout(() => {

@@ -8,6 +8,7 @@ import { LayoutPasosComponent } from './layout-pasos/layout-pasos.component';
 import { Paso0Component } from './pasos/paso0/paso0.component';
 import { RefreshHandlerComponent } from './refresh-handler/refresh-handler.component';
 import { NotFoundComponent } from './not-found/not-found.component';
+import { ServiceUnavailableComponent } from './service-unavailable/service-unavailable.component';
 
 
 const routes: Routes = [
@@ -24,6 +25,7 @@ const routes: Routes = [
     ]
   },
   { path: '404', component: NotFoundComponent }, // Página para rutas no encontradas
+  { path: '503', component: ServiceUnavailableComponent }, // Página para servicios no disponibles
   { path: '**', redirectTo: '404' } // Redirige todas las rutas no encontradas a la página 404
 ];
 
