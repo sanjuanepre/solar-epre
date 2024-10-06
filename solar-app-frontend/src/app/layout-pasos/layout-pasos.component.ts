@@ -87,4 +87,5 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit {
     this.isCollapsed = false;
     this.cdr.detectChanges();
   }
+
 }

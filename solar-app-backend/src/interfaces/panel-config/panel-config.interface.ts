@@ -3,5 +3,5 @@ import { RoofSegmentSummary } from '../roof-segment-summary/roof-segment-summary
 export interface PanelConfig {
   panelsCount: number;
   yearlyEnergyDcKwh: number;
-  roofSegmentSummaries: RoofSegmentSummary[];
+  roofSegmentSummaries?: RoofSegmentSummary[];
 }

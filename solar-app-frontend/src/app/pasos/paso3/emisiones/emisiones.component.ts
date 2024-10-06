@@ -35,7 +35,7 @@ export class EmisionesComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log('carbonOffsetFactorTnPerMWh:', this.carbonOffsetFactorTnPerMWh);
     
     this.sharedService.factorPotencia$
-    .pipe(takeUntil(this.destroy$), distinctUntilChanged())
+    .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
     .subscribe((newFactorPotencia: number) => {
       console.log('Nuevo valor de factorPotencia recibido:', newFactorPotencia);
       this.factorPotencia = newFactorPotencia;

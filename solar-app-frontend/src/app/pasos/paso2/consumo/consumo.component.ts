@@ -3,11 +3,12 @@ import {
   ElementRef,
   EventEmitter,
   Input,
+  OnDestroy,
   OnInit,
   Output,
   ViewChild,
 } from '@angular/core';
-import { Subject, Subscription, takeUntil } from 'rxjs';
+import { distinctUntilChanged, Subject, Subscription, takeUntil } from 'rxjs';
 import { MesesConsumo } from 'src/app/interfaces/mesesConsumo';
 import { ResultadoCalculo } from 'src/app/interfaces/resultado-calculo';
 import { ConsumoService } from 'src/app/services/consumo.service';
@@ -18,7 +19,7 @@ import { SharedService } from 'src/app/services/shared.service';
   templateUrl: './consumo.component.html',
   styleUrls: ['./consumo.component.css'],
 })
-export class ConsumoComponent implements OnInit {
+export class ConsumoComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   @Output() allFieldsCompleted = new EventEmitter<boolean>();
   allCompleted: boolean = false;
@@ -51,7 +52,7 @@ export class ConsumoComponent implements OnInit {
     private sharedService: SharedService
   ) {
     this.subscription = this.sharedService.consumosMensuales$
-      .pipe(takeUntil(this.destroy$))
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((consumos: number[]) => {
         this.updateConsumosMensuales(consumos);
       });

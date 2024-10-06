@@ -1,4 +1,5 @@
 import {
+  AfterViewInit,
   ChangeDetectorRef,
   Component,
   Input,
@@ -19,7 +20,7 @@ import { SharedService } from 'src/app/services/shared.service';
   templateUrl: './paneles.component.html',
   styleUrls: ['./paneles.component.css'],
 })
-export class PanelesComponent implements OnInit, OnDestroy {
+export class PanelesComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() dimensionPanel!: DimensionPanel;
   @Input() panelCapacityW: number = 0; // Capacidad de paneles en Watts
 
@@ -31,8 +32,6 @@ export class PanelesComponent implements OnInit, OnDestroy {
   maxPanelsArea$: number = 0; // Máximo número de paneles basado en el área
   panelesSelectCount: number = 4; // Número de paneles seleccionados
   plazoRecuperoInversion!: number; // Plazo de recuperación de inversión
-  private maxPanelsPerAreaSubscription!: Subscription;
-  private plazoInversionSubscription!: Subscription;
 
   // Observable para gestionar la destrucción del componente
   private destroy$ = new Subject<void>();
@@ -55,43 +54,20 @@ export class PanelesComponent implements OnInit, OnDestroy {
       this.panelCapacityW.toString() || '400'
     );
 
-    // Subscripción para obtener el máximo número de paneles permitido por el área
-    this.maxPanelsPerAreaSubscription =
-      this.sharedService.maxPanelsPerSuperface$.subscribe((value) => {
+    // Subscripción al plazo de recuperación de la inversión
+    this.sharedService.plazoInversion$
+    .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((plazo) => {
         console.log(
-          'PanelesComponent: Nuevo valor de maxPanelsPerSuperface:',
-          value
+          'PanelesComponent: Nuevo plazo de recuperación de inversión:',
+          plazo
         );
-        this.maxPanelsArea$ = value;
-        const maxPotenciaInstalacion = this.sharedService.getPotenciaMaxAsignadaValue();
-        const maxAllowedPanels = Math.floor(maxPotenciaInstalacion / this.panelCapacityW);
-
-        const maxPanelesPermitidos = Math.min(maxAllowedPanels, this.maxPanelsArea$);
-
-        this.panelesSelectCount = Math.max(4, Math.min(this.panelesSelectCount, maxPanelesPermitidos))
-
-        this.sharedService.setPanelsCountSelected(this.panelesSelectCount)
-
-        if(this.slider) {
-          this.slider.max = maxPanelesPermitidos;
-        }
-        // this.updateMaxPanels();
+        this.plazoRecuperoInversion = plazo;
       });
-    
-      // Subscripción al plazo de recuperación de la inversión
-    this.plazoInversionSubscription = this.sharedService.plazoInversion$
-    .pipe(takeUntil(this.destroy$), distinctUntilChanged())
-    .subscribe((plazo) => {
-      console.log(
-        'PanelesComponent: Nuevo plazo de recuperación de inversión:',
-        plazo
-      );
-      this.plazoRecuperoInversion = plazo;
-    });
 
     // Suscribirse al cambio de la capacidad de los paneles
     this.potenciaPanelesControl.valueChanges
-    .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((value: any) => {
         console.log(
           'PanelesComponent: Cambio en potenciaPanelesControl:',
@@ -101,7 +77,7 @@ export class PanelesComponent implements OnInit, OnDestroy {
         this.sharedService.setPanelCapacityW(panelCapacity);
         this.panelCapacityW = panelCapacity;
 
-        const maxPotenciaInstalacion = this.sharedService.getPotenciaMaxAsignadaValue();
+        const maxPotenciaInstalacion = this.sharedService.getPotenciaMaxAsignadaW();
         const maxAllowedPanels = Math.floor(maxPotenciaInstalacion / panelCapacity);
 
         if (this.panelesSelectCount > maxAllowedPanels) {
@@ -115,22 +91,9 @@ export class PanelesComponent implements OnInit, OnDestroy {
         // this.mapService.reDrawPanels(this.panelesSelectCount);
       });
 
-    // Subscripción para obtener el máximo número de paneles permitido por el área
-    this.maxPanelsPerAreaSubscription =
-      this.sharedService.maxPanelsPerSuperface$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((value) => {
-        console.log(
-          'PanelesComponent: Nuevo valor de maxPanelsPerSuperface:',
-          value
-        );
-        this.maxPanelsArea$ = value;
-        this.updateMaxPanels();
-      });
-
     // Subscripción al plazo de recuperación de la inversión
-    this.plazoInversionSubscription = this.sharedService.plazoInversion$
-    .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
+    this.sharedService.plazoInversion$
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((plazo) => {
         console.log(
           'PanelesComponent: Nuevo plazo de recuperación de inversión:',
@@ -142,34 +105,23 @@ export class PanelesComponent implements OnInit, OnDestroy {
 
   ngAfterViewInit(): void {
     console.log('PanelesComponent: ngAfterViewInit iniciado');
-    // Redibujar paneles al inicializar la vista
-    this.updateMaxPanels();
-    // this.panelesSelectCount = this.slider.max;
+    if(this.slider) {
+      this.slider.max = this.panelesSelectCount;
+    }
   }
 
   ngOnDestroy(): void {
     console.log('PanelesComponent: ngOnDestroy iniciado');
     // Cancelar las suscripciones al destruir el componente
-    this.maxPanelsPerAreaSubscription?.unsubscribe();
-    this.plazoInversionSubscription?.unsubscribe();
     this.destroy$.next();
     this.destroy$.complete();
   }
 
   onSliderChange() {
     console.log('PanelesComponent: onSliderChange iniciado');
-    // Actualizar el número de paneles seleccionados y redibujar
-    const maxPotenciaInstalacion = this.sharedService.getPotenciaMaxAsignadaValue();
-    const panelCapacity = this.panelCapacityW;
-
-    const maxAllowedPanels = Math.floor(maxPotenciaInstalacion/panelCapacity);
-    this.slider.max = Math.min(maxAllowedPanels, this.maxPanelsArea$);
-
-    if ( this.panelesSelectCount > this.slider.max) {
+    if (this.panelesSelectCount > this.slider.max) {
       this.panelesSelectCount = this.slider.max;
     }
-
-    this.panelesSelectCount = Math.max(4, Math.min(this.panelesSelectCount, this.slider.max));
 
     this.mapService.reDrawPanels(this.panelesSelectCount);
     this.sharedService.setPanelsCountSelected(this.panelesSelectCount);
@@ -230,12 +182,12 @@ export class PanelesComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
     console.debug('updateMaxPanels: Cambio detectado y aplicado');
   }
-  
+
   formatLabel(value: number): string {
     // Formatear etiquetas del slider
     const formattedValue =
       value >= 1000 ? Math.round(value / 1000) + 'k' : `${value}`;
-    console.log('PanelesComponent: Etiqueta formateada:', formattedValue);
+    /* console.log('PanelesComponent: Etiqueta formateada:', formattedValue); */
     return formattedValue;
   }
 }

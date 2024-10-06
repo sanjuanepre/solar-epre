@@ -90,7 +90,7 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.sharedService.yearlyEnergyAckWh$
-      .pipe(takeUntil(this.destroy$), distinctUntilChanged())
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe({
         next: (yearlyEnergy) => {
           this.yearlyEnergy = yearlyEnergy;
@@ -102,7 +102,7 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
       });
 
     this.sharedService.plazoInversion$
-      .pipe(takeUntil(this.destroy$), distinctUntilChanged())
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe({
         next: (newPlazoRecupero) => {
           if (this.recuperoInversionMeses === 0) {
@@ -114,7 +114,7 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
       });
 
     this.sharedService.carbonOffSetTnAnual$
-      .pipe(takeUntil(this.destroy$), distinctUntilChanged())
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe({
         next: (newEmisionesGeiEvitadas) => {
           this.carbonOffSet = newEmisionesGeiEvitadas;

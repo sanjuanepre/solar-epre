@@ -5,7 +5,6 @@ import { CalculadoraService } from 'src/calculadora/calculadora.service';
 import { SolarData } from 'src/interfaces/solar-data/solar-data.interface';
 import { PanelConfig } from 'src/interfaces/panel-config/panel-config.interface';
 import { ResultadosDto } from 'src/interfaces/resultados-dto/resultados-dto.interface';
-import { YearlyAnualConfigurations } from 'src/interfaces/yearly-anual-configurations/yearly-anual-configurations.interface';
 
 @Injectable()
 export class SolarService {
@@ -37,12 +36,12 @@ export class SolarService {
       // Realiza la petición utilizando fetch
       const response = await fetch(url, {
         method: 'GET',
-        cache: 'no-cache', 
+        cache: 'no-cache',
         headers: {
-          'Pragma': 'no-cache',
+          Pragma: 'no-cache',
           'Cache-Control': 'no-cache',
-          'Accept-Encoding': 'gzip, deflate, br' 
-        }
+          'Accept-Encoding': 'gzip, deflate, br',
+        },
       });
 
       // Verifica si la respuesta es exitosa
@@ -61,7 +60,7 @@ export class SolarService {
           );
         }
       }
-    
+
       // Si la respuesta es exitosa, convierte los datos a JSON
       const data = await response.json();
       return data;
@@ -75,33 +74,47 @@ export class SolarService {
   }
 
   async calculateSolarSavings(dto: SolarCalculationDto): Promise<any> {
+   /*  console.log('Iniciando cálculo de ahorro solar');
+    console.log('Datos de entrada:', JSON.stringify(dto, null, 2)); */
+
     const { latitude, longitude } = this.calculateCentroid(
       dto.polygonCoordinates,
     );
+   /*  console.log(
+      `Centroide calculado: Latitud ${latitude}, Longitud ${longitude}`,
+    ); */
 
     const solarDataApi = await this.getSolarData(latitude, longitude);
+    // console.log('Datos solares obtenidos de la API:', solarDataApi);
 
     const solarPanelConfig: PanelConfig = this.calculatePanelConfig(
       solarDataApi.solarPotential,
-      dto.panelsSupported,
       dto.panelsSelected,
     );
+   /*  console.log(
+      'Configuración de paneles calculada:',
+      JSON.stringify(solarPanelConfig, null, 2),
+    ); */
 
-    const yearlysAnualConfigurations = solarDataApi.solarPotential.solarPanelConfigs.map(
-      (item: any) => {
+    const yearlysAnualConfigurations =
+      solarDataApi.solarPotential.solarPanelConfigs.map((item: any) => {
         return {
           panelsCount: item.panelsCount,
           yearlyEnergyDcKwh: item.yearlyEnergyDcKwh,
         };
-      },
-    );
-    
+      });
+    // console.log('Configuraciones anuales:', JSON.stringify(yearlysAnualConfigurations, null, 2));
+
+    const yearlyEnergyAcKwh =
+      solarPanelConfig.yearlyEnergyDcKwh *
+      dto.parametros.caracteristicasSistema.eficienciaInstalacion;
+    // console.log(`Energía AC anual calculada: ${yearlyEnergyAcKwh} kWh`);
+
     const solarData: SolarData = {
       annualConsumption: dto.annualConsumption,
-      yearlyEnergyAcKwh: solarPanelConfig.yearlyEnergyDcKwh * dto.parametros.caracteristicasSistema.eficienciaInstalacion,
+      yearlyEnergyAcKwh: yearlyEnergyAcKwh,
       panels: {
         panelsCountApi: solarPanelConfig.panelsCount,
-        maxPanelsPerSuperface: dto.panelsSupported,
         panelsSelected: dto.panelsSelected,
         panelCapacityW: solarDataApi.solarPotential.panelCapacityWatts,
         panelSize: {
@@ -114,8 +127,16 @@ export class SolarService {
         solarDataApi.solarPotential.carbonOffsetFactorKgPerMwh,
       tarifaCategory: dto.categoriaSeleccionada,
     };
+    // console.log('Datos solares preparados:', JSON.stringify(solarData, null, 2));
 
-    return await this.calculadoraService.calculateEnergySavings(solarData, dto);
+    // console.log('Calculando ahorros de energía...');
+    const result = await this.calculadoraService.calculateEnergySavings(
+      solarData,
+      dto,
+    );
+    // console.log('Resultado del cálculo de ahorros:', JSON.stringify(result, null, 2));
+
+    return result;
   }
 
   // Método para calcular el centroide de una superficie
@@ -148,27 +169,111 @@ export class SolarService {
 
   private calculatePanelConfig(
     solarPotential: { solarPanelConfigs: any },
-    panelsSupported: number,
-    panelsSelected?: number,
+    panelsSelected: number,
   ): PanelConfig {
-    if (panelsSupported < 4) {
-      panelsSupported = 4;
+    // console.log('Iniciando cálculo de configuración de paneles');
+    // console.log(`Número de paneles seleccionados: ${panelsSelected}`);
+
+    if (panelsSelected < 4) {
+      panelsSelected = 4;
+      // console.log('Ajustando número de paneles a 4 (mínimo requerido)');
     }
+
     const configs = solarPotential.solarPanelConfigs;
-    const panelsCount = panelsSelected ?? panelsSupported;
+    // console.log('Configuraciones disponibles:', JSON.stringify(configs));
+
+    const panelsCount = panelsSelected;
     const index = configs.findIndex(
       (element: PanelConfig) => element.panelsCount === panelsCount,
     );
-    // Si no se encuentra ningún elemento que cumpla con la condición, devuelve null
+    console.log(`Índice de configuración encontrada: ${index}`);
+
     if (index === -1) {
-      return configs[configs.length - 1];
+      console.log(
+        'Configuración exacta no encontrada, procediendo a interpolar',
+      );
+      
+      const recalculatedConfig = {
+        panelsCount: panelsSelected,
+        yearlyEnergyDcKwh: this.calculateYearlyEnergyDCkWh(
+          configs,
+          panelsSelected,
+        ),
+      };
+      console.log(
+        'Configuración interpolada:',
+        JSON.stringify(recalculatedConfig),
+      );
+      return recalculatedConfig;
     }
 
     if (index === 0) {
+      console.log('Usando primera configuración disponible');
       return configs[0];
     }
 
+    console.log(
+      'Usando configuración encontrada:',
+      JSON.stringify(configs[index]),
+    );
     return configs[index];
+  }
+  private calculateYearlyEnergyDCkWh(
+    panelConfigs: PanelConfig[],
+    panelsSelected: number,
+  ) {
+    // console.log('Iniciando cálculo de energía anual DC');
+    // console.log('Configuraciones de paneles:', panelConfigs);
+    // console.log('Número de paneles seleccionados:', panelsSelected);
+
+    const { slope, intercept } = this.calculateLinearRegression(panelConfigs);
+    // console.log('Pendiente calculada:', slope);
+    // console.log('Intersección calculada:', intercept);
+
+    const result = slope * panelsSelected + intercept;
+    // console.log('Energía anual DC calculada:', result);
+
+    return result;
+  }
+
+  private calculateLinearRegression(panelConfigs: PanelConfig[]): {
+    slope: number;
+    intercept: number;
+  } {
+    // console.log('Iniciando cálculo de regresión lineal');
+    // console.log('Configuraciones de paneles:', panelConfigs);
+
+    const N = panelConfigs.length;
+    // console.log('Número de configuraciones:', N);
+
+    let sumX = 0,
+      sumY = 0,
+      sumXY = 0,
+      sumX2 = 0;
+
+    // Calcular las sumas necesarias
+    panelConfigs.forEach((point, index) => {
+      // console.log(`Procesando punto ${index + 1}:`, point);
+      sumX += point.panelsCount;
+      sumY += point.yearlyEnergyDcKwh;
+      sumXY += point.panelsCount * point.yearlyEnergyDcKwh;
+      sumX2 += point.panelsCount * point.panelsCount;
+    });
+
+    // console.log('Suma de X:', sumX);
+    // console.log('Suma de Y:', sumY);
+    // console.log('Suma de XY:', sumXY);
+    // console.log('Suma de X^2:', sumX2);
+
+    // Calcular la pendiente (a)
+    const slope = (N * sumXY - sumX * sumY) / (N * sumX2 - sumX * sumX);
+    // console.log('Pendiente calculada:', slope);
+
+    // Calcular la intersección (b)
+    const intercept = (sumY - slope * sumX) / N;
+    // console.log('Intersección calculada:', intercept);
+
+    return { slope, intercept };
   }
 
   async calculateSolarSavingsNearby(
@@ -176,10 +281,10 @@ export class SolarService {
   ): Promise<ResultadosDto> {
     const {
       yearlyEnergyAcKwh,
-      panels: { panelsCountApi, maxPanelsPerSuperface },
+      panels: { panelsCountApi, panelsSelected },
     } = solarDataNearby;
-    // Calcular la proporción entre maxPanelsPerSuperface y panelsCountApi
-    const proportion = maxPanelsPerSuperface / panelsCountApi;
+    // Calcular la proporción entre panelsSelected y panelsCountApi
+    const proportion = panelsSelected / panelsCountApi;
 
     // Ajustar el valor de yearlyEnergyAcKwh en función de la proporción
     const adjustedYearlyEnergyAcKwh = yearlyEnergyAcKwh * proportion;

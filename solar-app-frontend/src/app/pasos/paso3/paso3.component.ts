@@ -76,7 +76,7 @@ export class Paso3Component implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {
     console.log('Iniciando constructor de Paso3Component');
-   
+
     this.actualizarFecha();
     console.log('Fecha actualizada:', this.fechaActual);
   }
@@ -84,13 +84,13 @@ export class Paso3Component implements OnInit, OnDestroy {
   ngOnInit(): void {
     console.log('Iniciando ngOnInit de Paso3Component');
     this.sharedService.isLoading$
-    .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
-    .subscribe({
-      next: (value) => {
-        console.log('Valor de isLoading actualizado:', value);
-        this.isLoading = value;
-      },
-    });
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe({
+        next: (value) => {
+          console.log('Valor de isLoading actualizado:', value);
+          this.isLoading = value;
+        },
+      });
     this.subscribeToSharedServiceData();
     console.log('Suscripción a SharedService completada');
 
@@ -218,13 +218,13 @@ export class Paso3Component implements OnInit, OnDestroy {
       this.sharedService.calculateAreaPanelsSelected(this.panelesCantidad);
     } catch (error) {
       console.error('Error en initializeGeneralData:', error);
-      
+
       this.handleInitializationGeneralDataError(error);
     }
     console.log('Finalizado initializeGeneralData');
   }
 
-  
+
   private handleInitializationGeneralDataError(error: unknown): void {
     if (error instanceof Error) {
       // Loguear el error para depuración
@@ -399,7 +399,7 @@ export class Paso3Component implements OnInit, OnDestroy {
       console.log('Tasa de crecimiento tarifas y de descuento USD:', this.tasaInflacionUsd);
 
       this.potenciaContratadaHip =
-        this.sharedService.getPotenciaMaxAsignadaValue();
+        this.sharedService.getPotenciaMaxAsignadaW();
       console.log(
         'Potencia contratada hipotética:',
         this.potenciaContratadaHip
@@ -436,8 +436,8 @@ export class Paso3Component implements OnInit, OnDestroy {
       this.isDownloading = true;
       this.pdfService
         .generatePDF(true)
-        .then(() => {})
-        .catch(() => {})
+        .then(() => { })
+        .catch(() => { })
         .finally(() => (this.isDownloading = false));
     }
   }
@@ -643,7 +643,7 @@ export class Paso3Component implements OnInit, OnDestroy {
     console.log('Iniciando suscripciones en Paso 3');
 
     this.sharedService.tarifaContratada$
-      .pipe(takeUntil(this.destroy$), distinctUntilChanged())
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe({
         next: (tarifa) => {
           this.categoriaTarifa = tarifa;
@@ -652,28 +652,28 @@ export class Paso3Component implements OnInit, OnDestroy {
       });
 
     this.sharedService.potenciaMaxAsignadaW$
-      .pipe(takeUntil(this.destroy$), distinctUntilChanged())
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((potencia) => {
         this.potenciaMaxAsignadaW = potencia;
         console.log('Paso 3: Potencia máxima asignada actualizada:', potencia);
       });
 
     this.sharedService.panelsCountSelected$
-      .pipe(takeUntil(this.destroy$), distinctUntilChanged())
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((panels) => {
         this.panelesCantidad = panels;
         console.log('Paso 3: Cantidad de paneles actualizada:', panels);
       });
 
     this.sharedService.potenciaInstalacionW$
-      .pipe(takeUntil(this.destroy$), distinctUntilChanged())
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((potencia) => {
         this.potenciaInstalacionW = potencia;
         console.log('Paso 3: Potencia de instalación actualizada:', potencia);
       });
 
     this.consumoService.totalConsumo$
-      .pipe(takeUntil(this.destroy$), distinctUntilChanged())
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe({
         next: (value) => {
           this.consumoTotalAnual = value;
@@ -682,7 +682,7 @@ export class Paso3Component implements OnInit, OnDestroy {
       });
 
     this.sharedService.panelCapacityW$
-      .pipe(takeUntil(this.destroy$), distinctUntilChanged())
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe({
         next: (capacity) => (this.potenciaPanelHip = capacity),
       });
@@ -693,7 +693,7 @@ export class Paso3Component implements OnInit, OnDestroy {
 
   onRecalculoIniciado(event: boolean): void {
     console.log('Recalculo iniciado, mostrando loader:', event);
-    if(!this.isLoading){
+    if (!this.isLoading) {
       this.isCalculating = event; // Muestra el loader
     }
   }

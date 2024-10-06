@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { distinctUntilChanged, Subject, Subscription, takeUntil } from 'rxjs';
 import { SharedService } from 'src/app/services/shared.service';
 
@@ -7,7 +7,7 @@ import { SharedService } from 'src/app/services/shared.service';
   templateUrl: './costo.component.html',
   styleUrls: ['./costo.component.css'],
 })
-export class CostoComponent implements OnInit, OnDestroy {
+export class CostoComponent implements OnInit, AfterViewInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   costoInstalacionInitial: number = 0;
@@ -24,7 +24,7 @@ export class CostoComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     console.log('ngOnInit: Iniciando componente CostoComponent');
     this.sharedService.factorPotencia$
-    .pipe(takeUntil(this.destroy$), distinctUntilChanged())
+    .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
     .subscribe((newFactorPotencia: number) => {
       console.log(
         'Nuevo valor de factorPotencia recibido:',
@@ -34,7 +34,7 @@ export class CostoComponent implements OnInit, OnDestroy {
     });
     console.log('Suscribiéndose a costoInstalacion$');
     this.sharedService.costoInstalacion$
-      .pipe(takeUntil(this.destroy$), distinctUntilChanged())
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((newCostoInstalacion) => {
         console.log(
           'Nuevo valor de costoInstalacion recibido:',
@@ -59,7 +59,7 @@ export class CostoComponent implements OnInit, OnDestroy {
 
     console.log('Suscribiéndose a yearlyEnergyAckWh$');
     this.sharedService.yearlyEnergyAckWh$
-      .pipe(takeUntil(this.destroy$), distinctUntilChanged())
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((yearlyValue) => {
         console.log('Nuevo valor de yearlyEnergyAckWh recibido:', yearlyValue);
 

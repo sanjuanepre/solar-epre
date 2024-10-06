@@ -10,7 +10,9 @@ import { Router } from '@angular/router';
   providedIn: 'root',
 })
 export class SharedService {
- 
+  private maxPanelsPerMaxPotenciaSubject = new BehaviorSubject<number>(0);
+  maxPanelsPerMaxPotencia$ = this.maxPanelsPerMaxPotenciaSubject.asObservable();
+
   private updateSubject = new BehaviorSubject<boolean>(false);
   update$ = this.updateSubject.asObservable();
 
@@ -68,7 +70,7 @@ export class SharedService {
   resultadosFront$ = this.resultadosFrontSubject.asObservable();
 
   private factorPotenciaSubject = new BehaviorSubject<number>(1);
-  factorPotencia$= this.factorPotenciaSubject.asObservable();
+  factorPotencia$ = this.factorPotenciaSubject.asObservable();
 
   private maxPanelsPerSuperfaceSubject = new BehaviorSubject<number>(0);
   maxPanelsPerSuperface$ = this.maxPanelsPerSuperfaceSubject.asObservable();
@@ -86,7 +88,6 @@ export class SharedService {
     yearlysAnualConfigurations: [],
     yearlyEnergyAckWh: 0,
     panelsCountSelected: 4,
-    dimensionPanels: { height: 0, width: 0 },
     panelCapacityW: 400,
     eficienciaInstalacion: 0,
     costoInstalacion: 0,
@@ -94,11 +95,11 @@ export class SharedService {
     tarifaIntercambioUsdkWh: 0,
     potenciaMaxAsignadaW: 0
   };
-  
+
 
   constructor(private router: Router,) {
     console.log("Se instancia el shared service...");
-    
+
   }
 
 
@@ -213,7 +214,7 @@ export class SharedService {
     this.potenciaMaxAsignadaSubject.next(potenciaMaxAsignada);
   }
 
-  getPotenciaMaxAsignadaValue(): number {
+  getPotenciaMaxAsignadaW(): number {
     const value = this.potenciaMaxAsignadaSubject.getValue();
     console.log('Obteniendo potencia máxima asignada en W:', value);
     return value;
@@ -386,7 +387,7 @@ export class SharedService {
   getCostoEquipoDeMedicion() {
     const resultados = this.getResultadosFront();
     let costo: number;
-    if(this.getTarifaContratada().includes("T1-R")) {
+    if (this.getTarifaContratada().includes("T1-R")) {
       costo = 782.30;
     } else {
       costo = 646.53;
@@ -397,7 +398,7 @@ export class SharedService {
   getCostoUsdWp() {
     const resultados = this.getResultadosFront();
     let costo: number;
-    if(this.getTarifaContratada().includes("T1-R")) {
+    if (this.getTarifaContratada().includes("T1-R")) {
       costo = 1.5;
     } else {
       costo = 1.24;
@@ -439,7 +440,7 @@ export class SharedService {
     });
     console.log('Valores reseteados:', this.initialState);
     // Redirigir al inicio de la aplicación
-     // Recargar la página para asegurar un estado limpio
+    // Recargar la página para asegurar un estado limpio
     // redirigir a pasos/1 y recargar mapa
     this.router.navigate(['/pasos/1'], { replaceUrl: true }).then(() => {
       console.log('Redirigiendo a /pasos/1');
@@ -456,4 +457,13 @@ export class SharedService {
     console.log('Obteniendo factor de potencia:', value);
     return value;
   }
+  
+  setMaxPanelsPerMaxPotencia(maxPanels: number) {
+    this.maxPanelsPerMaxPotenciaSubject.next(maxPanels);
+  }
+  
+  getMaxPanelsPerMaxPotencia() {
+    return this.maxPanelsPerMaxPotenciaSubject.getValue();
+  }
+
 }

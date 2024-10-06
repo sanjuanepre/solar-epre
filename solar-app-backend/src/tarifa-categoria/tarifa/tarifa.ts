@@ -52,7 +52,7 @@ export class Tarifa {
       });
 
       if (cuadro) {
-        console.log("cuadro tarifario ", cuadro);
+        // console.log("cuadro tarifario ", cuadro);
         
         return {
           consumo: cuadro.cargoVariableConsumoArsKWh,

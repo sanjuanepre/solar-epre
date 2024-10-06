@@ -6,8 +6,7 @@ export interface SolarData {
     yearlyEnergyAcKwh: number,
     panels: {
         panelsCountApi: number,
-        maxPanelsPerSuperface: number,
-        panelsSelected?: number,
+        panelsSelected: number,
         panelCapacityW: number,
         panelSize: {
             height: number,

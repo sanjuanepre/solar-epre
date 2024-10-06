@@ -35,13 +35,13 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnInit(): void {
     this.sharedService.tutorialShown$
-      .pipe(takeUntil(this.destroy$))
+    .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((shown) => {
         this.tutorialShown = shown;
       });
 
     this.mapService.overlayComplete$()
-      .pipe(takeUntil(this.destroy$), distinctUntilChanged())
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((value) => {
         this.areaMarked = value;
         if (value) {

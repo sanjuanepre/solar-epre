@@ -1,4 +1,10 @@
-import { ChangeDetectorRef, Component, Input, OnInit, OnDestroy } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  Input,
+  OnInit,
+  OnDestroy,
+} from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil, distinctUntilChanged } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
@@ -34,30 +40,42 @@ export class PotenciaComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    console.log('PotenciaComponent: Iniciando ngOnInit - Configurando suscripciones');
+    console.log(
+      'PotenciaComponent: Iniciando ngOnInit - Configurando suscripciones'
+    );
 
     try {
       this.sharedService.factorPotencia$
-      .pipe(takeUntil(this.destroy$), distinctUntilChanged())
-      .subscribe((newFactorPotencia: number) => {
-        console.log('Nuevo valor de factorPotencia recibido:', newFactorPotencia);
-        this.factorPotencia = newFactorPotencia;
-      }); 
+        .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
+        .subscribe((newFactorPotencia: number) => {
+          console.log(
+            'Nuevo valor de factorPotencia recibido:',
+            newFactorPotencia
+          );
+          this.factorPotencia = newFactorPotencia;
+        });
       // Suscripción para la potencia máxima asignada
       this.sharedService.potenciaMaxAsignadaW$
-        .pipe(takeUntil(this.destroy$), distinctUntilChanged())
+        .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
         .subscribe({
           next: (potenciaMaxW) => {
-            console.log(`PotenciaComponent: Nueva potencia máxima asignada recibida: ${potenciaMaxW} W.`);
+            console.log(
+              `PotenciaComponent: Nueva potencia máxima asignada recibida: ${potenciaMaxW} W.`
+            );
 
             // Validación: Verificar si potenciaMaxW es un número válido
             if (isNaN(potenciaMaxW) || potenciaMaxW <= 0) {
-              console.warn('PotenciaComponent: potenciaMaxW no es válida:', potenciaMaxW);
+              console.warn(
+                'PotenciaComponent: potenciaMaxW no es válida:',
+                potenciaMaxW
+              );
               return;
             }
 
             this.potenciaMaxCategoriaSelectkW = potenciaMaxW / 1000;
-            console.log(`Potencia máxima convertida a kW: ${this.potenciaMaxCategoriaSelectkW} kW.`);
+            console.log(
+              `Potencia máxima convertida a kW: ${this.potenciaMaxCategoriaSelectkW} kW.`
+            );
             this.verificarYActualizarPaneles();
           },
           error: (err) => {
@@ -67,14 +85,19 @@ export class PotenciaComponent implements OnInit, OnDestroy {
 
       // Suscripción para el número de paneles seleccionados
       this.sharedService.panelsCountSelected$
-        .pipe(takeUntil(this.destroy$), distinctUntilChanged())
+        .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
         .subscribe({
           next: (value) => {
-            console.log(`Nuevo número de paneles seleccionados recibido: ${value}`);
+            console.log(
+              `Nuevo número de paneles seleccionados recibido: ${value}`
+            );
 
             // Validación: Verificar si el número de paneles seleccionados es válido
             if (isNaN(value) || value <= 0) {
-              console.warn('Número de paneles seleccionados no es válido:', value);
+              console.warn(
+                'Número de paneles seleccionados no es válido:',
+                value
+              );
               return;
             }
 
@@ -88,7 +111,7 @@ export class PotenciaComponent implements OnInit, OnDestroy {
 
       // Suscripción para la capacidad de un panel en W
       this.sharedService.panelCapacityW$
-        .pipe(takeUntil(this.destroy$), distinctUntilChanged())
+        .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
         .subscribe({
           next: (value) => {
             console.log(`Nueva capacidad de panel recibida: ${value} W.`);
@@ -107,26 +130,36 @@ export class PotenciaComponent implements OnInit, OnDestroy {
           },
         });
 
-        this.instalacionPotenciakW = this.sharedService.getPanelCapacityW() * this.sharedService.getPanelsSelected() / 1000;
+      this.instalacionPotenciakW =
+        (this.sharedService.getPanelCapacityW() *
+          this.sharedService.getPanelsSelected()) /
+        1000;
       this.cdr.markForCheck();
     } catch (error) {
       console.error('Error en ngOnInit de PotenciaComponent:', error);
     }
 
-    console.log('PotenciaComponent: ngOnInit finalizado - Todas las suscripciones configuradas');
+    console.log(
+      'PotenciaComponent: ngOnInit finalizado - Todas las suscripciones configuradas'
+    );
   }
 
   ngAfterViewInit(): void {
     //Called after ngAfterContentInit when the component's view has been initialized. Applies to components only.
     //Add 'implements AfterViewInit' to the class.
-    this.instalacionPotenciakW = this.sharedService.getPanelCapacityW() * this.sharedService.getPanelsSelected() / 1000;
+    this.instalacionPotenciakW =
+      (this.sharedService.getPanelCapacityW() *
+        this.sharedService.getPanelsSelected()) /
+      1000;
     this.cdr.detectChanges();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    console.log('PotenciaComponent: ngOnDestroy ejecutado - Limpieza de suscripciones completada');
+    console.log(
+      'PotenciaComponent: ngOnDestroy ejecutado - Limpieza de suscripciones completada'
+    );
   }
 
   private updateInstalacionPotencia(): void {
@@ -134,7 +167,9 @@ export class PotenciaComponent implements OnInit, OnDestroy {
 
     // Validación: Asegurarse de que tanto panelsCountSelected como panelCapacityW sean válidos
     if (!this.isValoresInicializados()) {
-      console.warn('No se puede actualizar la potencia de instalación: valores no inicializados');
+      console.warn(
+        'No se puede actualizar la potencia de instalación: valores no inicializados'
+      );
       return;
     }
 
@@ -167,7 +202,9 @@ export class PotenciaComponent implements OnInit, OnDestroy {
   private actualizarSharedService(): void {
     const potenciaW = this.instalacionPotenciakW * 1000;
     this.sharedService.setPotenciaInstalacionW(potenciaW);
-    console.log(`Potencia de instalación actualizada en SharedService: ${potenciaW} W`);
+    console.log(
+      `Potencia de instalación actualizada en SharedService: ${potenciaW} W`
+    );
   }
 
   private actualizarVista(): void {
@@ -180,7 +217,9 @@ export class PotenciaComponent implements OnInit, OnDestroy {
 
     // Validación: Asegurarse de que los valores necesarios estén inicializados
     if (!this.isValoresInicializados()) {
-      console.warn('No se puede verificar los paneles: valores no inicializados');
+      console.warn(
+        'No se puede verificar los paneles: valores no inicializados'
+      );
       return;
     }
 
@@ -198,7 +237,9 @@ export class PotenciaComponent implements OnInit, OnDestroy {
 
   private calcularPotenciaTotal(): number {
     const potenciaTotal = this.panelsCountSelected * this.panelCapacityW;
-    console.log(`Potencia total actual: ${potenciaTotal} W (${this.panelsCountSelected} paneles x ${this.panelCapacityW} W)`);
+    console.log(
+      `Potencia total actual: ${potenciaTotal} W (${this.panelsCountSelected} paneles x ${this.panelCapacityW} W)`
+    );
     return potenciaTotal;
   }
 
@@ -206,10 +247,15 @@ export class PotenciaComponent implements OnInit, OnDestroy {
     return this.potenciaMaxCategoriaSelectkW * 1000;
   }
 
-  private excedePotenciaMaxima(potenciaTotal: number, potenciaMaximaPermitida: number): boolean {
+  private excedePotenciaMaxima(
+    potenciaTotal: number,
+    potenciaMaximaPermitida: number
+  ): boolean {
     const excede = potenciaTotal > potenciaMaximaPermitida;
     if (excede) {
-      console.log(`La potencia total (${potenciaTotal} W) excede el máximo permitido (${potenciaMaximaPermitida} W).`);
+      console.log(
+        `La potencia total (${potenciaTotal} W) excede el máximo permitido (${potenciaMaximaPermitida} W).`
+      );
     }
     return excede;
   }
@@ -219,15 +265,23 @@ export class PotenciaComponent implements OnInit, OnDestroy {
     console.log(`Número máximo de paneles calculado: ${maxPanels}`);
     this.panelsCountSelected = maxPanels;
     this.sharedService.setPanelsCountSelected(this.panelsCountSelected);
-    console.log(`Nuevo número de paneles establecido en SharedService: ${this.panelsCountSelected}`);
+    console.log(
+      `Nuevo número de paneles establecido en SharedService: ${this.panelsCountSelected}`
+    );
   }
 
   private actualizarPanelesEnMapa(): void {
     this.mapService.reDrawPanels(this.panelsCountSelected);
-    console.log(`Solicitada redibujación de ${this.panelsCountSelected} paneles en el mapa`);
+    console.log(
+      `Solicitada redibujación de ${this.panelsCountSelected} paneles en el mapa`
+    );
   }
 
   private isValoresInicializados(): boolean {
-    return this.panelsCountSelected > 0 && this.panelCapacityW > 0 && this.potenciaMaxCategoriaSelectkW > 0;
+    return (
+      this.panelsCountSelected > 0 &&
+      this.panelCapacityW > 0 &&
+      this.potenciaMaxCategoriaSelectkW > 0
+    );
   }
 }

@@ -39,7 +39,7 @@ export class NearbyLocationService {
           width: this.panelWidthMeters,
         },
         panelsCountApi: this.location.cantidadDePaneles,
-        maxPanelsPerSuperface: this.sharedService.getMaxPanelsPerSuperface(),
+        panelsSelected: this.location.cantidadDePaneles,
       },
       tarifaCategory: this.sharedService.getTarifaContratada(),
       yearlyEnergyAcKwh: this.location.energiaGeneradaAnual,

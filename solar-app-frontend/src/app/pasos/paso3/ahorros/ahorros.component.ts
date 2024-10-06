@@ -31,13 +31,13 @@ export class AhorrosComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit(): void {
     console.log('ngOnInit: Iniciando componente AhorrosComponent');
     this.sharedService.factorPotencia$
-    .pipe(takeUntil(this.destroy$), distinctUntilChanged())
+    .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
     .subscribe((newFactorPotencia: number) => {
       console.log('Nuevo valor de factorPotencia recibido:', newFactorPotencia);
       this.factorPotencia = newFactorPotencia;
     });
     this.sharedService.ahorroAnualUsd$
-      .pipe(takeUntil(this.destroy$))
+    .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((ahorro) => {
         this.ahorrosUsd = ahorro;
       });

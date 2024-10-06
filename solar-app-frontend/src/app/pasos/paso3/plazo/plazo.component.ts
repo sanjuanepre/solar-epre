@@ -31,14 +31,17 @@ export class PlazoComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     this.sharedService.factorPotencia$
-      .pipe(takeUntil(this.destroy$), distinctUntilChanged())
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((newFactorPotencia: number) => {
-        console.log('Nuevo valor de factorPotencia recibido:', newFactorPotencia);
+        console.log(
+          'Nuevo valor de factorPotencia recibido:',
+          newFactorPotencia
+        );
         this.factorPotencia = newFactorPotencia;
       });
 
     this.sharedService.plazoInversion$
-      .pipe(takeUntil(this.destroy$), distinctUntilChanged())
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((newPlazoRecupero) => {
         if (newPlazoRecupero < 1) {
           this.isOutRecupero = true;
@@ -49,11 +52,11 @@ export class PlazoComponent implements OnInit, AfterViewInit, OnDestroy {
         this.plazoRecuperoTexto = this.plazoRecupero.toFixed(0); // Convertir a texto
         this.isOutRecupero = false;
       });
-      
   }
-  ngAfterViewInit(): void {
+  ngAfterViewInit(): void {}
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
-
-  ngOnDestroy(): void {}
-
 }

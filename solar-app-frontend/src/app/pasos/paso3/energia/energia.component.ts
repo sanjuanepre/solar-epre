@@ -6,6 +6,7 @@ import {
   ChangeDetectorRef,
   Output,
   EventEmitter,
+  AfterViewInit,
 } from '@angular/core';
 import { distinctUntilChanged, Subject, takeUntil } from 'rxjs';
 import { RecalculateService } from 'src/app/services/recalculate.service';
@@ -16,13 +17,15 @@ import { SharedService } from 'src/app/services/shared.service';
   templateUrl: './energia.component.html',
   styleUrls: ['./energia.component.css'],
 })
-export class EnergiaComponent implements OnInit, OnDestroy {
+export class EnergiaComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() yearlyEnergyAckWhInitial!: number; // Valor inicial recibido como input
   private yearlyEnergyAckWh!: number; // Valor interno calculado
   private potenciaOriginalW!: number; // Potencia original en watts
   private destroy$ = new Subject<void>(); // Para limpiar las suscripciones
-  @Output() recalculoIniciado: EventEmitter<boolean> = new EventEmitter<boolean>();
-  @Output() recalculoTerminado: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Output() recalculoIniciado: EventEmitter<boolean> =
+    new EventEmitter<boolean>();
+  @Output() recalculoTerminado: EventEmitter<boolean> =
+    new EventEmitter<boolean>();
   factorPotencia: number = 1;
 
   constructor(
@@ -38,14 +41,17 @@ export class EnergiaComponent implements OnInit, OnDestroy {
       this.yearlyEnergyAckWhInitial
     );
     this.sharedService.factorPotencia$
-    .pipe(takeUntil(this.destroy$), distinctUntilChanged())
-    .subscribe((newFactorPotencia: number) => {
-      console.log('Nuevo valor de factorPotencia recibido:', newFactorPotencia);
-      this.factorPotencia = newFactorPotencia;
-    });
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((newFactorPotencia: number) => {
+        console.log(
+          'Nuevo valor de factorPotencia recibido:',
+          newFactorPotencia
+        );
+        this.factorPotencia = newFactorPotencia;
+      });
     // Asignamos el valor inicial de energía anual
     this.sharedService.yearlyEnergyAckWh$
-      .pipe(takeUntil(this.destroy$))
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((yearlyEnergyAckWh) => {
         if (!this.yearlyEnergyAckWhInitial) {
           this.yearlyEnergyAckWhInitial = yearlyEnergyAckWh;
@@ -59,26 +65,21 @@ export class EnergiaComponent implements OnInit, OnDestroy {
       'potenciaOriginalW obtenida desde sharedService:',
       this.potenciaOriginalW
     );
-
-    
   }
 
   ngAfterViewInit(): void {
     console.log('ngAfterViewInit: La vista ha sido inicializada');
 
     // Nos suscribimos al observable de potencia de instalación
-    this.sharedService.potenciaInstalacionW$
-      .pipe(takeUntil(this.destroy$), distinctUntilChanged())
-      .subscribe((potencia) => {
+    this.sharedService.panelsCountSelected$
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((panelsCountSelected) => {
         console.log(
-          'Suscripción potenciaInstalacionW$: Recibido nueva potencia:',
-          potencia
+          'Suscripción panelsCountSelected$: Recibido nueva potencia:',
+          panelsCountSelected
         );
         this.updateYearlyEnergy(); // Llamamos a la función de actualización de energía
       });
-
-    // Forzamos la detección de cambios para evitar posibles errores en la visualización
-    this.cdr.detectChanges();
   }
 
   ngOnDestroy(): void {
@@ -91,12 +92,11 @@ export class EnergiaComponent implements OnInit, OnDestroy {
 
   // Función para actualizar la energía anual basada en la nueva potencia
   private async updateYearlyEnergy(): Promise<void> {
-    
-    if(!this.sharedService.getIsLoading()) this.recalculoIniciado.emit(true);
+    if (!this.sharedService.getIsLoading()) this.recalculoIniciado.emit(true);
     const panelCapacity = this.sharedService.getPanelCapacityW();
     let panels400WCount = this.sharedService.getPanelsSelected();
-    const factorPotencia = 400/400;
-    
+    const factorPotencia = 400 / 400;
+
     await this.recalculateService
       .recalculateyearlyEnergyACkWh(panels400WCount, factorPotencia)
       .then((recalculoOk) => {
@@ -105,7 +105,8 @@ export class EnergiaComponent implements OnInit, OnDestroy {
       })
       .catch((recalculoFail) => {
         console.log('recalculoFail:', recalculoFail);
-      }).finally(() => {
+      })
+      .finally(() => {
         this.recalculoTerminado.emit(false);
       });
   }

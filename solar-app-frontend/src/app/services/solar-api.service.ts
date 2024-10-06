@@ -2,18 +2,15 @@ import { Injectable, Injector, OnDestroy } from '@angular/core';
 import {
   HttpClient,
   HttpErrorResponse,
-  HttpHeaders,
 } from '@angular/common/http';
-import { lastValueFrom, Subject, Subscription, takeUntil } from 'rxjs';
+import { lastValueFrom, Subject } from 'rxjs';
 import { ResultadoService } from './resultado.service';
 import { ResultadosFrontDTO } from '../interfaces/resultados-front-dto';
 import { ConsumoService } from './consumo.service';
 import { MapService } from './map.service';
 import { SharedService } from './shared.service';
-import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { SolarDataFront } from '../interfaces/solar-data-front';
-import { DatosNuevaPeticion } from '../interfaces/datos-nueva-peticion';
 
 @Injectable({
   providedIn: 'root',
@@ -23,9 +20,8 @@ export class SolarApiService implements OnDestroy {
   // private readonly apiUrl: string = 'https://0l5cvs6h-3000.brs.devtunnels.ms';
   private _resultados!: ResultadosFrontDTO;
   annualConsumption: number = 0;
-  panelsSupported: number = 0;
   private mapService!: MapService;
-  potenciaMaxAsignada!: number;
+  potenciaMaxAsignadaW!: number;
   private destroy$ = new Subject<void>(); // Subject para destruir observables
 
   constructor(
@@ -35,9 +31,9 @@ export class SolarApiService implements OnDestroy {
     private consumoService: ConsumoService,
     private sharedService: SharedService,
 
-   
+
     private snackBar: MatSnackBar
-  ) {}
+  ) { }
 
   ngOnDestroy() {
     this.destroy$.next();
@@ -57,7 +53,7 @@ export class SolarApiService implements OnDestroy {
     // Reiniciar servicios
     this.sharedService.resetAll();
 
-    
+
   }
 
   async calculate(panels400WCount?: number, factorPotencia?: number): Promise<any> {
@@ -80,18 +76,11 @@ export class SolarApiService implements OnDestroy {
       this.annualConsumption = this.consumoService.getTotalConsumo();
       console.log('Consumo anual obtenido:', this.annualConsumption, 'kWh');
 
-      this.panelsSupported = panels400WCount ?? this.sharedService.getMaxPanelsPerSuperface();
-      console.log(
-        'Capacidad máxima de paneles obtenida:',
-        this.panelsSupported,
-        'paneles'
-      );
-
-      this.potenciaMaxAsignada =
-        this.sharedService.getPotenciaMaxAsignadaValue();
+      this.potenciaMaxAsignadaW =
+        this.sharedService.getPotenciaMaxAsignadaW();
       console.log(
         'Potencia máxima asignada obtenida:',
-        this.potenciaMaxAsignada,
+        this.potenciaMaxAsignadaW,
         'W'
       );
 
@@ -101,8 +90,7 @@ export class SolarApiService implements OnDestroy {
       if (!polygonCoordinates) missingFields.push('Coordenadas del polígono');
       if (!polygonArea) missingFields.push('Área del polígono');
       if (!categoriaSeleccionada) missingFields.push('Categoría seleccionada');
-      if (!this.panelsSupported) missingFields.push('Paneles soportados');
-      if (!this.potenciaMaxAsignada)
+      if (!this.potenciaMaxAsignadaW)
         missingFields.push('Potencia máxima asignada');
 
       try {
@@ -136,9 +124,8 @@ export class SolarApiService implements OnDestroy {
         polygonCoordinates,
         categoriaSeleccionada,
         polygonArea,
-        panelsSupported: this.panelsSupported,
         panelsSelected: this.sharedService.getPanelsSelected(),
-        potenciaMaxAsignada: this.potenciaMaxAsignada,
+        potenciaMaxAsignada: this.potenciaMaxAsignadaW,
         factorPotencia: factorPotencia ?? 1,
       };
       console.log('Datos que se envían al endpoint:', datosCalculo);
@@ -248,8 +235,8 @@ export class SolarApiService implements OnDestroy {
         this.sharedService.setYearlyEnergyAckWh(resultadosProcesados.periodoVeinteanalGeneracionFotovoltaica[0].generacionFotovoltaicaKWh);
         this.sharedService.setAhorroAnualUsd(resultadosProcesados.ahorroUsd);
         const plazoInversionInicial =
-        resultadosProcesados.resultadosFinancieros.indicadoresFinancieros
-          .payBackMonths;
+          resultadosProcesados.resultadosFinancieros.indicadoresFinancieros
+            .payBackMonths;
         this.sharedService.setPlazoInversion(plazoInversionInicial);
         this.sharedService.calculateAreaPanelsSelected(panels400WCount);
         console.log('Plazo de inversión inicial establecido:', plazoInversionInicial);

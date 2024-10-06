@@ -1,22 +1,31 @@
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { driver } from 'driver.js';
 import { MatDialog } from '@angular/material/dialog';
 import { SharedService } from 'src/app/services/shared.service';
+import { distinctUntilChanged, Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-paso0',
   templateUrl: './paso0.component.html',
   styleUrls: ['./paso0.component.css'],
 })
-export class Paso0Component implements OnInit, AfterViewInit {
+export class Paso0Component implements OnInit, AfterViewInit, OnDestroy {
   showModal: boolean = false;
   isTermsAccepted: boolean = false;
   driverObjInit: any;
   tutorialShown: boolean = false;
-  showInstructionsModal: boolean = false;  
- 
+  showInstructionsModal: boolean = false;
+  private destroy$ = new Subject<void>();
+
   constructor(
     private router: Router,
     private snackBar: MatSnackBar,
@@ -35,7 +44,7 @@ export class Paso0Component implements OnInit, AfterViewInit {
             side: 'left',
             align: 'start',
             nextBtnText: 'Siguiente',
-          prevBtnText: 'Anterior',
+            prevBtnText: 'Anterior',
             doneBtnText: 'Terminar',
           },
         },
@@ -92,14 +101,14 @@ export class Paso0Component implements OnInit, AfterViewInit {
         },
       ],
     });
-    
   }
 
   ngOnInit(): void {
-    this.sharedService.tutorialShown$.subscribe((shown) => {
-      this.tutorialShown = shown;
-    });
-
+    this.sharedService.tutorialShown$
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((shown) => {
+        this.tutorialShown = shown as boolean;
+      });
   }
 
   ngAfterViewInit(): void {
@@ -108,7 +117,11 @@ export class Paso0Component implements OnInit, AfterViewInit {
         this.driverObjInit.drive();
       }, 50);
     }
-   
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   goBack() {
@@ -158,6 +171,4 @@ export class Paso0Component implements OnInit, AfterViewInit {
   hideTooltip(event: MouseEvent) {
     this.snackBar.dismiss();
   }
-
- 
 }

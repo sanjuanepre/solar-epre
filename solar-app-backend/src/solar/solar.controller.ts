@@ -33,8 +33,8 @@ export class SolarController {
     @Req() request: Request,
     @Res() res: Response, 
   ): Promise<void> {
-    console.log('Información completa de la solicitud:', request.body);
-    console.log('Headers:', request.headers);
+    /* console.log('Información completa de la solicitud:', request.body);
+    console.log('Headers:', request.headers); */
     try {
       const isOnline = await this.sheetsService.isCalculadoraOnline();
 

@@ -424,10 +424,10 @@ export class MapService {
         }
       }
     }
-    let panelesMaximos = isReDraw ? maxPanels : totalPanels;
+    // let panelesMaximos = isReDraw ? maxPanels : totalPanels;
     this.sharedService.setMaxPanelsPerSuperface(maxPanelsEfectivos);
-    this.sharedService.setPanelsCountSelected(panelesMaximos);
-    this.sharedService.calculateAreaPanelsSelected(panelesMaximos);
+    this.sharedService.setPanelsCountSelected(totalPanels);
+    this.sharedService.calculateAreaPanelsSelected(totalPanels);
   }
 
   reDrawPanels(panelesCantidad: number) {
@@ -440,7 +440,7 @@ export class MapService {
   }
   private redrawAux(
     polygon: google.maps.Polygon,
-    maxPanels: number = Infinity,
+    maxPanels: number,
   ) {
     const margin: number = 0.1;
     this.clearPanels();
@@ -522,7 +522,7 @@ export class MapService {
         }
       }
     }
-    this.sharedService.setMaxPanelsPerSuperface(maxPanelsEfectivos);
+    this.sharedService.setPanelsCountSelected(totalPanels);
   }
 
   getPolygons() {
