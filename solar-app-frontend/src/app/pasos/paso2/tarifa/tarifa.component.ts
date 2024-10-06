@@ -31,7 +31,7 @@ export class TarifaComponent implements OnInit, AfterViewInit, OnDestroy {
   potenciaMaxAsignadakW!: number;
   inputPotenciaContratada: number | null = null;
   private isDialogOpen: boolean = false;
-
+  private maxPanelsAllowed!: number;
   @Output() isCategorySelected = new EventEmitter<boolean>(false);
   @ViewChild('tarifaSelect') tarifaSelect!: ElementRef;
   tarifas: Tarifa[] = [
@@ -93,7 +93,7 @@ export class TarifaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     console.log('Iniciando ngOnInit en TarifaComponent');
-
+    this.maxPanelsAllowed = this.sharedService.getPanelsSelected();
     this.sharedService.tarifaContratada$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((tarifa) => {
@@ -532,7 +532,14 @@ export class TarifaComponent implements OnInit, AfterViewInit, OnDestroy {
           ? 'Potencia máxima no asignada'
           : 'Potencia instalada no excede el máximo'
       );
-      this.mapService.reDrawPanels(this.potenciaMaxAsignadakW / (this.sharedService.getPanelCapacityW() / 1000));
+      const maxPanelsPerPotentiaMax = this.potenciaMaxAsignadakW / (this.sharedService.getPanelCapacityW() / 1000);
+      console.log('Máximo de paneles por potencia máxima:', maxPanelsPerPotentiaMax);
+      const maxPanelsPerSurface = this.maxPanelsAllowed;
+      console.log('Máximo de paneles por superficie:', maxPanelsPerSurface);
+      
+      this.mapService.reDrawPanels(
+        Math.min(maxPanelsPerPotentiaMax, maxPanelsPerSurface)
+      );
     }
   }
 }

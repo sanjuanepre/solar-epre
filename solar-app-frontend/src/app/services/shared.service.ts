@@ -442,8 +442,8 @@ export class SharedService {
     // Redirigir al inicio de la aplicación
     // Recargar la página para asegurar un estado limpio
     // redirigir a pasos/1 y recargar mapa
-    this.router.navigate(['/503'], { replaceUrl: true }).then(() => {
-      console.log('Redirigiendo a /pasos/1');
+    this.router.navigate(['/'], { replaceUrl: true }).then(() => {
+      console.log('Redirigiendo al inicio de la aplicación');
     });
   }
 

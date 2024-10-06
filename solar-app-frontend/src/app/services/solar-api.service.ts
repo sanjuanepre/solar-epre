@@ -51,8 +51,6 @@ export class SolarApiService implements OnDestroy {
     console.log('Reiniciando la aplicación');
     // Reiniciar servicios
     this.sharedService.resetAll();
-
-
   }
 
   async calculate(panels400WCount?: number, factorPotencia?: number): Promise<any> {
