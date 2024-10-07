@@ -7,14 +7,10 @@ import { GmailModule } from './gmail/gmail.module';
 import { CalculadoraModule } from './calculadora/calculadora.module';
 import { TarifaCategoriaModule } from './tarifa-categoria/tarifa-categoria.module';
 import { VariablesOnlineService } from './google-sheets/variables-online/variables-online.service';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
+import { HealthController } from './health/health.controller';
 
 @Module({
   imports: [
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'), // Directorio donde se encuentran los archivos de Angular
-    }),
     SolarModule,
     ConfigModule.forRoot({
       envFilePath: ['.env', '.env.sheets'],
@@ -26,7 +22,7 @@ import { join } from 'path';
     CalculadoraModule,
     TarifaCategoriaModule
   ],
-  controllers: [],
+  controllers: [HealthController], // Registra el controlador aquí
   providers: [VariablesOnlineService],
 })
 export class AppModule { }

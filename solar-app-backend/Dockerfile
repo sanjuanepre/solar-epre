@@ -7,11 +7,13 @@ WORKDIR /app
 # Copia el package.json y package-lock.json al directorio de trabajo
 COPY package*.json ./
 
-# Instala las dependencias incluyendo las de desarrollo
+# Instala las dependencias
 RUN npm install
 
-# Copia el resto de los archivos de la aplicación
+# Crea el directorio adicional si es necesario
 RUN mkdir -p /app/dist/google-sheets
+
+# Copia el resto de los archivos de la aplicación
 COPY . .
 
 # Construye la aplicación
@@ -21,4 +23,4 @@ RUN npm run build
 EXPOSE 8080
 
 # Comando para ejecutar la aplicación
-CMD ["npm", "run", "start:prod"]
+CMD ["node", "dist/main"]

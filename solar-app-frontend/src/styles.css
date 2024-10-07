@@ -1,16 +1,16 @@
 /*FUENTES*/
 @font-face {
   font-family: "Sodo Sans";
-  src: url("./assets/font/SodoSans-Regular.woff2") format("woff2"),
-    url("./assets/font/SodoSans-Regular.woff") format("woff");
+  src: url("/assets/font/SoDoSans-Regular.woff2") format("woff2"),
+    url("/assets/font/SoDoSans-Regular.woff") format("woff");
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: "Sodo Sans";
-  src: url("./assets/font/SodoSans-Bold.woff2") format("woff2"),
-    url("./assets/font/SodoSans-Bold.woff") format("woff");
+  src: url("/assets/font/SoDoSans-Bold.woff2") format("woff2"),
+    url("/assets/font/SoDoSans-Bold.woff") format("woff");
   font-weight: bold;
   font-style: normal;
 }

@@ -6,8 +6,7 @@ import { PdfService } from './pdf.service';
   providedIn: 'root',
 })
 export class GmailService {
-  // private apiUrl = 'http://localhost:3000';
-  private apiUrl = 'https://0l5cvs6h-3000.brs.devtunnels.ms';
+  private apiUrl = 'http://35.247.209.224';
   constructor(private http: HttpClient, private pdfService: PdfService) {}
 
   async sendEmailWithResults(email: string): Promise<void> {
