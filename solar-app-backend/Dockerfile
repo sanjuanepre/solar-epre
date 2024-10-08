@@ -12,6 +12,7 @@ RUN npm install
 
 # Crea el directorio adicional si es necesario
 RUN mkdir -p /app/dist/google-sheets
+COPY ./src/config/credentials.json ./src/config/credentials.json
 
 # Copia el resto de los archivos de la aplicación
 COPY . .

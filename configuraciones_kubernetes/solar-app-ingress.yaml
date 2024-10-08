@@ -1,0 +1,51 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: solar-app-ingress
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    networking.gke.io/managed-certificates: "solar-app-cert"
+    ingress.gcp.kubernetes.io/pre-shared-cert: "solar-app-cert"
+  labels:
+    app: solar-app
+spec:
+  rules:
+  - host: backend.solar.epresanjuan.gob.ar
+    http:
+      paths:
+      - path: /.well-known/acme-challenge/*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: cm-acme-http-solver-qzlvq  # Nombre correcto del solver backend
+            port:
+              number: 8089
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: solar-app-backend-service
+            port:
+              number: 80
+  - host: frontend.solar.epresanjuan.gob.ar
+    http:
+      paths:
+      - path: /.well-known/acme-challenge/*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: cm-acme-http-solver-8x4p2  # Nombre correcto del solver frontend
+            port:
+              number: 8089
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: solar-app-frontend-service
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - backend.solar.epresanjuan.gob.ar
+    - frontend.solar.epresanjuan.gob.ar
+    secretName: solar-app-cert-secret

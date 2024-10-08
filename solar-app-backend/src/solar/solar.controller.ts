@@ -38,7 +38,7 @@ export class SolarController {
     try {
       const isOnline = await this.sheetsService.isCalculadoraOnline();
 
-      if (isOnline) {
+      if (true) {
         const solarCalculationWithParameters: SolarCalculationDto =
           await this.sheetsService.addParametersToSolarCalculationDto(
             solarCalculationDto,

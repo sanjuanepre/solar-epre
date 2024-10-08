@@ -1,0 +1,14 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: solar-app-cert
+  namespace: default
+spec:
+  secretName: solar-app-cert-secret
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: "frontend.solar.epresanjuan.gob.ar"
+  dnsNames:
+  - "frontend.solar.epresanjuan.gob.ar"
+  - "backend.solar.epresanjuan.gob.ar"

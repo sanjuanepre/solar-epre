@@ -17,7 +17,7 @@ import { Router } from '@angular/router';
   providedIn: 'root',
 })
 export class SolarApiService implements OnDestroy {
-  private readonly apiUrl: string = 'http://35.247.209.224'; // Backend
+  private readonly apiUrl: string = 'https://app.solar.epresanjuan.gob.ar/api'; // Backend
   private _resultados!: ResultadosFrontDTO;
   annualConsumption: number = 0;
   private mapService!: MapService;

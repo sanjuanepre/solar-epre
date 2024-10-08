@@ -101,10 +101,10 @@ export class SendEmailController {
     <p>En caso de recibir este correo por error, por favor desestimar el mismo.</p>
     <p>Si tienes alguna duda y/o consulta no dudes en comunicarte con el E.P.R.E. a través de nuestros canales de atención, detallados en el sitio web: <a href="https://epresanjuan.gob.ar/contacto-2/">https://epresanjuan.gob.ar/contacto-2/</a>.</p>
 
-    <a href="http://solar.epresanjuan.gob.ar" class="button">Visita nuestro sitio</a>
+    <a href="https://solar.epresanjuan.gob.ar" class="button">Visita nuestro sitio</a>
 
     <div class="footer">
-      <p>&copy; 2024 Solar EPRE San Juan | Todos los derechos reservados</p>
+      <p>&copy; 2024 GSDSJ - E.P.R.E. San Juan</p>
     </div>
   </div>
 </body>
@@ -120,7 +120,7 @@ export class SendEmailController {
   ) {
     await this.mailService.sendEmail(
       email,
-      'Generación Solar Distribuida San Juan - RESULTADOS DE TU SIMULACIÓN',
+      'Generación Solar Distribuida San Juan - RESULTADOS DE TU SIMULACIÓN',
       this.body,
       file,
     );
@@ -135,7 +135,7 @@ export class SendEmailController {
     @Query('newPanelCapacityW') newPanelCapacityW: number,
   ) {
     await this.mailService.sendEmail(
-      'spereyra.jus@gmail.com',
+      'epresjsolar@gmail.com',
       'Información de actualización',
       `<h1>Actualización cambio en API solar</h1><p>Google ha actualizado la potencia de los paneles como base para sus calculos solares.</p><p>La nueva potencia es de ${newPanelCapacityW} w`,
     );

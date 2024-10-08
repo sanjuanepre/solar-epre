@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: frontend-ingress
+spec:
+  ingressClassName: gce  # Aquí cambiaste la anotación por este campo
+  tls:
+  - secretName: solar-app-cert-secret
+    hosts:
+    - frontend.solar.epresanjuan.gob.ar
+    - www.frontend.solar.epresanjuan.gob.ar
+  rules:
+  - host: frontend.solar.epresanjuan.gob.ar
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: solar-app-frontend-service
+            port:
+              number: 80
+  - host: www.frontend.solar.epresanjuan.gob.ar
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: solar-app-frontend-service
+            port:
+              number: 80

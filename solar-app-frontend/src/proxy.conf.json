@@ -1,0 +1,9 @@
+{
+    "/api": {
+      "target": "https://api.ipify.org",
+      "secure": true,
+      "changeOrigin": true,
+      "logLevel": "debug"
+    }
+  }
+  

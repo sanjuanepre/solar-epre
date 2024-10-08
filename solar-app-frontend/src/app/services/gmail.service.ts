@@ -6,7 +6,7 @@ import { PdfService } from './pdf.service';
   providedIn: 'root',
 })
 export class GmailService {
-  private apiUrl = 'http://35.247.209.224';
+  private apiUrl = 'https://app.solar.epresanjuan.gob.ar/api';
   constructor(private http: HttpClient, private pdfService: PdfService) {}
 
   async sendEmailWithResults(email: string): Promise<void> {

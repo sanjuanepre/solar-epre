@@ -87,7 +87,8 @@
               "browserTarget": "gsdsj-front:build:production"
             },
             "development": {
-              "browserTarget": "gsdsj-front:build:development"
+              "browserTarget": "gsdsj-front:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

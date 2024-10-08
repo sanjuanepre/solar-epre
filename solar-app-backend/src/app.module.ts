@@ -8,6 +8,7 @@ import { CalculadoraModule } from './calculadora/calculadora.module';
 import { TarifaCategoriaModule } from './tarifa-categoria/tarifa-categoria.module';
 import { VariablesOnlineService } from './google-sheets/variables-online/variables-online.service';
 import { HealthController } from './health/health.controller';
+import { IpController } from './ip/ip.controller'; // Importa el nuevo controlador
 
 @Module({
   imports: [
@@ -20,9 +21,9 @@ import { HealthController } from './health/health.controller';
     GoogleSheetsModule,
     GmailModule,
     CalculadoraModule,
-    TarifaCategoriaModule
+    TarifaCategoriaModule,
   ],
-  controllers: [HealthController], // Registra el controlador aquí
+  controllers: [HealthController, IpController], // Registra el controlador aquí
   providers: [VariablesOnlineService],
 })
 export class AppModule { }
