@@ -46,7 +46,8 @@ Este proyecto permite calcular el ahorro en el consumo eléctrico basandose en l
     npm run start:prod
 ### Documentación de la API
     Acceder a la documentación en Swagger a través de /api/docs cuando el servidor esté corriendo.
-
+### El backend recaba parámetros establecidos desde  la hoja sheet
+   https://docs.google.com/spreadsheets/d/1tM7vKpwCt11VAPN1Nl1nW6WtzpUYbUBH-RC5Jhp1xqM/edit?pli=1&gid=578452678#gid=578452678
 ### Frontend
 ## Configuración del Entorno
     Clonar el repositorio.
