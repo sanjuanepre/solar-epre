@@ -39,6 +39,4 @@ testem.log
 
 # System files
 .DS_Store
-Thumbs.db
-# Ignore environments folder
-/src/environments/
+Thumbs.db
