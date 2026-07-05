@@ -52,7 +52,6 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
 
     this.mapService.clearDrawing();
     this.areaMarked = false;
-    this.mapService.hideDrawingControl();
   }
 
   ngOnDestroy(): void {
@@ -249,7 +248,7 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
 
     const polygons = this.mapService.getPolygons();
     polygons[0].setEditable(false);
-    this.mapService.setDrawingMode(null);
+    this.mapService.disableDrawingMode();
 
     this.sharedService.setTarifaContratada('');
     this.router.navigate(['/pasos/2']);

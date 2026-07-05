@@ -57,7 +57,6 @@ export class Paso2Component implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.mapService.hideDrawingControl();
     this.sharedService.tutorialShown$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((shown) => {

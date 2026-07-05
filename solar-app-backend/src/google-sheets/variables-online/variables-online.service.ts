@@ -54,7 +54,10 @@ export class VariablesOnlineService {
         throw new Error('No se encontraron datos en el rango especificado.');
       }
 
-      const cuadroTarifario: CuadroTarifario[] = rows.map((row, index) => {
+      // Filter rows that have a valid tariff name (skip empty rows and header rows)
+      const dataRows = rows.filter(row => row[0] && row[0].match(/^T[0-9]|^TRA/));
+
+      const cuadroTarifario: CuadroTarifario[] = dataRows.map((row, index) => {
         return {
           nombre: row[0] as CuadroTarifario['nombre'],
           cargoVariableConsumoArsKWh: this.parseFloatWithFormat(row[1]),
@@ -90,25 +93,32 @@ export class VariablesOnlineService {
       }
       const categoriaSeleccionada = solarCalculationDto.categoriaSeleccionada;
       const tipoCambioArs = economicas.tipoCambioArs;
+
+      const costoUsdWpConIva = this.parseFloatWithFormat(rows[0][1]);
+      const equipoMedicionUsd = this.parseFloatWithFormat(rows[2][1]);
+      const mantenimientoUsd = this.parseFloatWithFormat(rows[5][1]);
+
+      const equipoDeMedicionUsdAplicado = categoriaSeleccionada.includes('T1-R')
+        ? equipoMedicionUsd * (1 + economicas.IVA)
+        : equipoMedicionUsd;
+
       const inversionYCostos: InversionCostos = {
-        costoUsdWpConIva: this.parseFloatWithFormat(rows[0][1]),
+        costoUsdWpConIva,
         costoUsdWpAplicado: categoriaSeleccionada.includes('T1-R')
-          ? this.parseFloatWithFormat(rows[0][1])
-          : this.parseFloatWithFormat(rows[0][1]) / (1 + economicas.IVA),
-        equipoDeMedicionArsSinIva: this.parseFloatWithFormat(rows[2][1]),
-        equipoDeMedicionUsdAplicado: categoriaSeleccionada.includes('T1-R')
-          ? (this.parseFloatWithFormat(rows[2][1]) / tipoCambioArs) *
-            (1 + economicas.IVA)
-          : this.parseFloatWithFormat(rows[2][1]) / tipoCambioArs,
-        mantenimiento: this.parseFloatWithFormat(rows[4][1]),
+          ? costoUsdWpConIva
+          : costoUsdWpConIva / (1 + economicas.IVA),
+        equipoDeMedicionArsSinIva: equipoMedicionUsd * tipoCambioArs,
+        equipoDeMedicionUsdAplicado,
+        mantenimiento: mantenimientoUsd,
         costoDeMantenimientoInicialUsd: 0,
         inversion: 0,
       };
 
       return inversionYCostos;
     } catch (error) {
+      console.error('Error in getInversionYCostos:', error);
       throw new Error(
-        'No se pudieron obtener las características del sistema.',
+        'No se pudieron obtener los datos de inversion y costos.',
       );
     }
   }
@@ -137,6 +147,7 @@ export class VariablesOnlineService {
 
       return caracteristicasSistema;
     } catch (error) {
+      console.error('Error in getCaracteristicasSistema:', error);
       throw new Error(
         'No se pudieron obtener las características del sistema.',
       );
@@ -189,12 +200,19 @@ export class VariablesOnlineService {
 
   private parseFloatWithFormat(value: string): number {
     if (!value) return 0;
-    const formattedValue = value
-      .replace('%', '')
-      .replace('.', '')
-      .replace(',', '.')
-      .trim();
-    const parsedValue = parseFloat(formattedValue);
-    return isNaN(parsedValue) ? 0 : parsedValue;
+    let clean = value.replace('%', '').trim();
+    if (clean.includes('.') && clean.includes(',')) {
+      const lastDot = clean.lastIndexOf('.');
+      const lastComma = clean.lastIndexOf(',');
+      if (lastComma > lastDot) {
+        clean = clean.replace(/\./g, '').replace(',', '.');
+      } else {
+        clean = clean.replace(/,/g, '');
+      }
+    } else if (clean.includes(',')) {
+      clean = clean.replace(',', '.');
+    }
+    const parsed = parseFloat(clean);
+    return isNaN(parsed) ? 0 : parsed;
   }
 }

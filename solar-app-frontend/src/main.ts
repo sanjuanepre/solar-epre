@@ -17,7 +17,7 @@ function loadGoogleMapsScript(): Promise<void> {
     }
 
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${environment.googleMapsApiKey}&libraries=drawing,places,marker&loading=async&v=weekly`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${environment.googleMapsApiKey}&libraries=places,marker,geometry&loading=async&v=weekly`;
     script.async = true;
     script.defer = true;
     script.onload = () => resolve();

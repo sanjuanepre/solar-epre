@@ -471,7 +471,6 @@ export class Paso3Component implements OnInit, OnDestroy {
   confirmarSalir(): void {
     this.mostrarModal = false;
 
-    this.mapService.hideDrawingControl();
     this.mapService.clearDrawing();
     this.consumoTarifaService.updateConsumosMensuales([]);
     this.consumoService.setTotalConsumo(0);
@@ -505,8 +504,6 @@ export class Paso3Component implements OnInit, OnDestroy {
   }
 
   goBack() {
-    this.mapService.hideDrawingControl();
-
     this.sharedService.setTutorialShown(true);
     this.router.navigate(['pasos/2']);
   }
@@ -570,7 +567,7 @@ export class Paso3Component implements OnInit, OnDestroy {
   enabledDrawing() {
     this.polygons = this.mapService.getPolygons();
     this.polygons[0].setEditable(true);
-    this.mapService.setDrawingMode(null);
+    this.mapService.disableDrawingMode();
 
     // Mostrar el snackbar
     this.snackBar.open('Superficie editable', '', {

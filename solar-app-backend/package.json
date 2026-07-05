@@ -41,7 +41,6 @@
     "passport-local": "^1.0.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
-    "solar-app-backend": "file:",
     "swagger-ui-express": "^4.1.2"
   },
   "devDependencies": {

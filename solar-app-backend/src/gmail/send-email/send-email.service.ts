@@ -9,8 +9,8 @@ export class MailService {
     this.transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 'epresjsolar@gmail.com',
-        pass: process.env.PASS_GMAIL,
+        user: process.env.USER_GMAIL || 'epresjsolar@gmail.com',
+        pass: process.env.PASS_GMAIL ? process.env.PASS_GMAIL.replace(/\s+/g, '') : undefined,
       },
     });
   }
@@ -24,7 +24,7 @@ export class MailService {
     const transporter = this.transporter;
 
     const mailOptions: nodemailer.Options = {
-      from: 'epresjsolar@gmail.com',
+      from: process.env.USER_GMAIL || 'epresjsolar@gmail.com',
       to,
       subject,
       html: htmlContent,

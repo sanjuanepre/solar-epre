@@ -135,7 +135,7 @@ export class SendEmailController {
     @Query('newPanelCapacityW') newPanelCapacityW: number,
   ) {
     await this.mailService.sendEmail(
-      'epresjsolar@gmail.com',
+      process.env.USER_GMAIL || 'epresjsolar@gmail.com',
       'Información de actualización',
       `<h1>Actualización cambio en API solar</h1><p>Google ha actualizado la potencia de los paneles como base para sus calculos solares.</p><p>La nueva potencia es de ${newPanelCapacityW} w`,
     );

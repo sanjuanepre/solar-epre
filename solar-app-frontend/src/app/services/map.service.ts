@@ -9,7 +9,6 @@ import { SharedService } from './shared.service';
 })
 export class MapService {
   private map!: google.maps.Map;
-  private drawingManager!: google.maps.drawing.DrawingManager;
   private center: google.maps.LatLngLiteral = { lat: -31.5364, lng: -68.50639 };
   private zoomInicial = 13;
   zoom: number = this.zoomInicial;
@@ -29,6 +28,15 @@ export class MapService {
   private panelWidthMeters = 1.045;
   private panelHeightMeters = 1.879;
   polygonAux!: google.maps.Polygon;
+
+  // --- Estado para dibujo manual de polígonos ---
+  private isDrawing = false;
+  private drawingVertices: google.maps.LatLng[] = [];
+  private vertexMarkers: google.maps.marker.AdvancedMarkerElement[] = [];
+  private drawingPolyline: google.maps.Polyline | null = null;
+  private mapClickListener: google.maps.MapsEventListener | null = null;
+  private mapDblClickListener: google.maps.MapsEventListener | null = null;
+  private drawingInitialized = false;
 
   constructor(
     private locationService: LocationService,
@@ -170,137 +178,285 @@ export class MapService {
     }
   }
 
-  getDrawingManager(): google.maps.drawing.DrawingManager {
-    return this.drawingManager;
-  }
+  // --- Dibujo manual de polígonos (reemplaza DrawingManager) ---
 
   initializeDrawingManager() {
-    console.log('Iniciando initializeDrawingManager');
-    this.drawingManager = new google.maps.drawing.DrawingManager({
-      drawingMode: null,
-      drawingControl: false,
-      drawingControlOptions: {
-        position: google.maps.ControlPosition.TOP_CENTER,
-        drawingModes: [google.maps.drawing.OverlayType.POLYGON],
-      },
-      polygonOptions: {
-        fillColor: '#808080',
-        fillOpacity: 0.5,
-        strokeWeight: 3,
-        strokeColor: '#00FF00',
-        clickable: true,
-        editable: true,
-        zIndex: 1,
-        geodesic: true,
-        strokePosition: google.maps.StrokePosition.OUTSIDE
-      },
+    console.log('Iniciando initializeDrawingManager (modo manual)');
+    this.drawingInitialized = true;
+    console.log('Dibujo manual inicializado correctamente');
+  }
+
+  /**
+   * Activa el modo de dibujo: escucha clics en el mapa para agregar vértices.
+   */
+  enableDrawingMode() {
+    if (!this.map) return;
+
+    // Limpiar dibujo anterior
+    this.clearDrawingState();
+
+    this.isDrawing = true;
+    this.map.setOptions({ draggableCursor: 'crosshair' });
+
+    // Listener de clic en el mapa para agregar vértices
+    this.mapClickListener = this.map.addListener('click', (event: google.maps.MapMouseEvent) => {
+      if (!this.isDrawing || !event.latLng) return;
+      this.addVertex(event.latLng);
     });
-    console.log('DrawingManager configurado:', this.drawingManager);
-    this.drawingManager.setMap(this.map);
-    console.log('DrawingManager asignado al mapa');
 
-    // Listener para overlaycomplete
-    google.maps.event.addListener(
-      this.drawingManager,
-      'overlaycomplete',
-      (event: any) => {
-        console.log('Evento overlaycomplete disparado:', event);
-        if (event.type === google.maps.drawing.OverlayType.POLYGON) {
-          console.log('Tipo de overlay: POLYGON');
-          this.clearPolygons();
-          this.clearPanels();
+    // Listener de doble-clic para cerrar el polígono
+    this.mapDblClickListener = this.map.addListener('dblclick', (event: google.maps.MapMouseEvent) => {
+      if (!this.isDrawing || this.drawingVertices.length < 3) return;
+      // Prevenir que el doble clic agregue un vértice extra y haga zoom
+      event.stop();
+      this.closePolygon();
+    });
 
-          const newPolygon = event.overlay as google.maps.Polygon;
-          console.log('Nuevo polígono creado:', newPolygon);
-          this.polygons.push(newPolygon);
-
-          // Validar el área inicial
-          if (!this.validateArea(newPolygon)) {
-            console.log('Área no válida, limpiando dibujo');
-            this.clearDrawing();
-            return;
-          }
-
-          const path = newPolygon.getPath();
-          console.log('Path del polígono:', path.getArray());
-          const isLocationValid = this.locationService.validatePolygonLocation(
-            newPolygon,
-            this.map
-          );
-          console.log('¿Ubicación válida?', isLocationValid);
-
-          if (isLocationValid) {
-            const area = google.maps.geometry.spherical.computeArea(path);
-            console.log('Área calculada:', area);
-            this.areaSubject.next(area);
-
-            // Listener para el evento set_at en el polígono (cuando se edita)
-            const updatePolygonAfterEdit = () => {
-              console.log('Polígono editado, actualizando...');
-              const newPolygonEdit = event.overlay as google.maps.Polygon;
-              const updatedArea =
-                google.maps.geometry.spherical.computeArea(path);
-              console.log('Nueva área después de edición:', updatedArea);
-              if (this.validateArea(newPolygonEdit)) {
-                console.log('Área válida después de edición');
-                newPolygonEdit.setMap(this.map);
-                this.polygons[0] = newPolygonEdit;
-                this.drawPanels(newPolygonEdit);
-                this.overlayCompleteSubject.next(true);
-                this.disableDrawingMode();
-                return;
-              } else {
-                console.log('Área no válida después de edición');
-              }
-            };
-
-            google.maps.event.addListener(
-              path,
-              'set_at',
-              updatePolygonAfterEdit
-            );
-            google.maps.event.addListener(
-              path,
-              'insert_at',
-              updatePolygonAfterEdit
-            );
-
-            // Dibuja los paneles
-            console.log('Dibujando paneles');
-            this.drawPanels(newPolygon);
-            this.overlayCompleteSubject.next(true);
-            this.disableDrawingMode();
-            // Obtener el centro del polígono para recentrar el mapa
-            const bounds = new google.maps.LatLngBounds();
-            path.forEach((latLng) => bounds.extend(latLng));
-            const polygonCenter = bounds.getCenter();
-            console.log('Centro del polígono:', polygonCenter.toString());
-
-            this.map.panTo(polygonCenter);
-            console.log('Mapa centrado en el polígono');
-            return;
-          } else {
-            console.log('Ubicación no válida, mostrando mensaje de error');
-            this.snackBar.open(
-              'La ubicación seleccionada se encuentra fuera de la Provincia de San Juan, no se puede procesar.',
-              '',
-              {
-                duration: 5000,
-                panelClass: ['custom-snackbar'],
-                horizontalPosition: 'center',
-                verticalPosition: 'top',
-              }
-            );
-            this.map.panTo(this.center);
-            this.map.setZoom(13);
-            this.clearDrawing();
-            this.areaSubject.next(0);
-            this.overlayCompleteSubject.next(false);
-          }
-        }
+    this.snackBar.open(
+      'Haga clic en el mapa para marcar los vértices del área. Cierre el polígono haciendo clic en el primer punto o doble-clic.',
+      '',
+      {
+        duration: 5000,
+        panelClass: ['custom-snackbar'],
+        horizontalPosition: 'center',
+        verticalPosition: 'top',
       }
     );
-    console.log('Listener de overlaycomplete configurado');
+  }
+
+  /**
+   * Agrega un vértice al polígono en construcción.
+   */
+  private async addVertex(latLng: google.maps.LatLng) {
+    // Si hacemos clic cerca del primer vértice y ya hay al menos 3 puntos, cerrar el polígono
+    if (this.drawingVertices.length >= 3) {
+      const firstVertex = this.drawingVertices[0];
+      const distance = google.maps.geometry.spherical.computeDistanceBetween(latLng, firstVertex);
+      // Si está a menos de 5 metros del primer punto, cerrar
+      if (distance < 5) {
+        this.closePolygon();
+        return;
+      }
+    }
+
+    this.drawingVertices.push(latLng);
+
+    // Crear marcador visual para el vértice
+    const { AdvancedMarkerElement } = (await google.maps.importLibrary('marker')) as google.maps.MarkerLibrary;
+
+    const pinElement = document.createElement('div');
+    pinElement.style.width = '14px';
+    pinElement.style.height = '14px';
+    pinElement.style.borderRadius = '50%';
+    pinElement.style.backgroundColor = this.drawingVertices.length === 1 ? '#00FF00' : '#FFFFFF';
+    pinElement.style.border = '2px solid #00FF00';
+    pinElement.style.cursor = 'pointer';
+    pinElement.style.boxShadow = '0 0 4px rgba(0,0,0,0.5)';
+
+    const marker = new AdvancedMarkerElement({
+      position: latLng,
+      map: this.map,
+      content: pinElement,
+      gmpClickable: true,
+    });
+
+    // Si es el primer vértice, agregar listener para cerrar al hacer clic
+    if (this.drawingVertices.length === 1) {
+      marker.addListener('gmp-click', () => {
+        if (this.isDrawing && this.drawingVertices.length >= 3) {
+          this.closePolygon();
+        }
+      });
+    }
+
+    this.vertexMarkers.push(marker);
+
+    // Actualizar la polyline de previsualización
+    this.updateDrawingPolyline();
+  }
+
+  /**
+   * Actualiza la línea de previsualización que conecta los vértices.
+   */
+  private updateDrawingPolyline() {
+    if (this.drawingPolyline) {
+      this.drawingPolyline.setMap(null);
+    }
+
+    if (this.drawingVertices.length < 2) return;
+
+    // Crear path incluyendo una línea de regreso al primer punto para previsualizar el cierre
+    const path = [...this.drawingVertices];
+    if (path.length >= 3) {
+      path.push(path[0]); // Cerrar visualmente la previsualización
+    }
+
+    this.drawingPolyline = new google.maps.Polyline({
+      path: path,
+      strokeColor: '#00FF00',
+      strokeWeight: 3,
+      strokeOpacity: 0.8,
+      map: this.map,
+    });
+  }
+
+  /**
+   * Cierra el polígono: crea el Polygon final y ejecuta toda la lógica de
+   * validación, cálculo de paneles y emisión de eventos (equivalente al
+   * antiguo handler overlaycomplete del DrawingManager).
+   */
+  private closePolygon() {
+    if (this.drawingVertices.length < 3) return;
+
+    // Limpiar elementos temporales de dibujo
+    this.clearTemporaryDrawingElements();
+    this.isDrawing = false;
+    this.removeMapListeners();
+    this.map.setOptions({ draggableCursor: '' });
+
+    // Limpiar polígonos y paneles anteriores
+    this.clearPolygons();
+    this.clearPanels();
+
+    // Crear el polígono final con las mismas opciones visuales que antes
+    const newPolygon = new google.maps.Polygon({
+      paths: this.drawingVertices,
+      fillColor: '#808080',
+      fillOpacity: 0.5,
+      strokeWeight: 3,
+      strokeColor: '#00FF00',
+      clickable: true,
+      editable: true,
+      zIndex: 1,
+      geodesic: true,
+      map: this.map,
+    });
+
+    console.log('Nuevo polígono creado:', newPolygon);
+    this.polygons.push(newPolygon);
+
+    // Validar el área inicial
+    if (!this.validateArea(newPolygon)) {
+      console.log('Área no válida, limpiando dibujo');
+      this.clearDrawing();
+      return;
+    }
+
+    const path = newPolygon.getPath();
+    console.log('Path del polígono:', path.getArray());
+    const isLocationValid = this.locationService.validatePolygonLocation(
+      newPolygon,
+      this.map
+    );
+    console.log('¿Ubicación válida?', isLocationValid);
+
+    if (isLocationValid) {
+      const area = google.maps.geometry.spherical.computeArea(path);
+      console.log('Área calculada:', area);
+      this.areaSubject.next(area);
+
+      // Listener para el evento set_at en el polígono (cuando se edita)
+      const updatePolygonAfterEdit = () => {
+        console.log('Polígono editado, actualizando...');
+        const updatedArea =
+          google.maps.geometry.spherical.computeArea(path);
+        console.log('Nueva área después de edición:', updatedArea);
+        if (this.validateArea(newPolygon)) {
+          console.log('Área válida después de edición');
+          newPolygon.setMap(this.map);
+          this.polygons[0] = newPolygon;
+          this.drawPanels(newPolygon);
+          this.overlayCompleteSubject.next(true);
+          this.disableDrawingMode();
+          return;
+        } else {
+          console.log('Área no válida después de edición');
+        }
+      };
+
+      google.maps.event.addListener(
+        path,
+        'set_at',
+        updatePolygonAfterEdit
+      );
+      google.maps.event.addListener(
+        path,
+        'insert_at',
+        updatePolygonAfterEdit
+      );
+
+      // Dibuja los paneles
+      console.log('Dibujando paneles');
+      this.drawPanels(newPolygon);
+      this.overlayCompleteSubject.next(true);
+      this.disableDrawingMode();
+      // Obtener el centro del polígono para recentrar el mapa
+      const bounds = new google.maps.LatLngBounds();
+      path.forEach((latLng) => bounds.extend(latLng));
+      const polygonCenter = bounds.getCenter();
+      console.log('Centro del polígono:', polygonCenter.toString());
+
+      this.map.panTo(polygonCenter);
+      console.log('Mapa centrado en el polígono');
+      return;
+    } else {
+      console.log('Ubicación no válida, mostrando mensaje de error');
+      this.snackBar.open(
+        'La ubicación seleccionada se encuentra fuera de la Provincia de San Juan, no se puede procesar.',
+        '',
+        {
+          duration: 5000,
+          panelClass: ['custom-snackbar'],
+          horizontalPosition: 'center',
+          verticalPosition: 'top',
+        }
+      );
+      this.map.panTo(this.center);
+      this.map.setZoom(13);
+      this.clearDrawing();
+      this.areaSubject.next(0);
+      this.overlayCompleteSubject.next(false);
+    }
+
+    // Limpiar los vértices temporales
+    this.drawingVertices = [];
+  }
+
+  /**
+   * Limpia los marcadores y la polyline temporales del dibujo.
+   */
+  private clearTemporaryDrawingElements() {
+    this.vertexMarkers.forEach(marker => {
+      marker.map = null;
+    });
+    this.vertexMarkers = [];
+
+    if (this.drawingPolyline) {
+      this.drawingPolyline.setMap(null);
+      this.drawingPolyline = null;
+    }
+  }
+
+  /**
+   * Remueve los listeners del mapa para el dibujo.
+   */
+  private removeMapListeners() {
+    if (this.mapClickListener) {
+      google.maps.event.removeListener(this.mapClickListener);
+      this.mapClickListener = null;
+    }
+    if (this.mapDblClickListener) {
+      google.maps.event.removeListener(this.mapDblClickListener);
+      this.mapDblClickListener = null;
+    }
+  }
+
+  /**
+   * Limpia todo el estado de dibujo temporal (vértices, marcadores, polyline).
+   */
+  private clearDrawingState() {
+    this.drawingVertices = [];
+    this.clearTemporaryDrawingElements();
   }
 
   private validateArea(polygon: google.maps.Polygon): boolean {
@@ -326,13 +482,15 @@ export class MapService {
     return true;
   }
 
-  setDrawingMode(mode: google.maps.drawing.OverlayType | null) {
-    if (!this.drawingManager) {
-      this.initializeDrawingManager();
-      return;
+  /**
+   * Establece el modo de dibujo. Compatible con las llamadas existentes
+   * que usan setDrawingMode(null) para desactivar.
+   */
+  setDrawingMode(mode: any | null) {
+    if (mode === null) {
+      this.disableDrawingMode();
     }
-    this.drawingManager.setDrawingMode(mode);
-    this.drawingManager.setOptions({ drawingControl: true });
+    // Si mode no es null, no hacemos nada aquí — usar enableDrawingMode() directamente
   }
 
   overlayComplete$(): Observable<boolean> {
@@ -556,34 +714,31 @@ export class MapService {
     return this.panelWidthMeters * this.panelHeightMeters;
   }
 
+  /**
+   * Métodos de compatibilidad: hideDrawingControl y showDrawingControl
+   * ya no necesitan hacer nada (no hay DrawingManager), pero se mantienen
+   * para que los componentes que los llaman no rompan.
+   */
   hideDrawingControl() {
-    if (this.drawingManager) {
-      this.drawingManager.setOptions({
-        drawingControl: false,
-      });
-    }
+    // No-op: ya no hay DrawingManager con controles visuales
   }
 
   showDrawingControl() {
-    if (this.drawingManager) {
-      this.drawingManager.setOptions({
-        drawingControl: true,
-      });
-    }
-  }
-
-  enableDrawingMode() {
-    this.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+    // No-op: ya no hay DrawingManager con controles visuales
   }
 
   disableDrawingMode() {
-    this.setDrawingMode(null);
-    this.hideDrawingControl();
+    this.isDrawing = false;
+    this.removeMapListeners();
+    if (this.map) {
+      this.map.setOptions({ draggableCursor: '' });
+    }
   }
 
   clearDrawing() {
     this.clearPolygons();
     this.clearPanels();
+    this.clearDrawingState();
     this.disableDrawingMode();
   }
 

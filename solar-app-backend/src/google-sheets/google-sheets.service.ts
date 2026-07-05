@@ -26,10 +26,22 @@ export class GoogleSheetsService implements OnModuleInit {
   }
 
   async getGoogleSheetClient(): Promise<sheets_v4.Sheets> {
-    const auth = new google.auth.GoogleAuth({
-      keyFile: './src/config/credentials.json',
-      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-    });
+    let auth;
+    
+    if (process.env.GOOGLE_CREDENTIALS) {
+      // Si estamos en Vercel/Producción, leer desde la variable de entorno
+      const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+      auth = new google.auth.GoogleAuth({
+        credentials,
+        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+      });
+    } else {
+      // En local, leer desde el archivo
+      auth = new google.auth.GoogleAuth({
+        keyFile: './src/config/credentials.json',
+        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+      });
+    }
     const authClient = await auth.getClient();
     if (!(authClient instanceof google.auth.JWT)) {
       throw new Error('authClient must be an instance of google.auth.JWT');
