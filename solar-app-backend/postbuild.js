@@ -21,12 +21,3 @@ if (fs.existsSync(srcPath)) {
     console.log('No credentials.json file found. Skipping copy.');
 }
 
-// Crear el directorio si no existe
-if (!fs.existsSync(targetDir)) {
-  fs.mkdirSync(targetDir, { recursive: true });
-}
-
-// Copiar el archivo
-fs.copyFileSync(sourceFile, targetFile);
-
-console.log('Credentials file copied successfully.');
