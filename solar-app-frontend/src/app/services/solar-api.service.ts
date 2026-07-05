@@ -12,12 +12,13 @@ import { SharedService } from './shared.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { SolarDataFront } from '../interfaces/solar-data-front';
 import { Router } from '@angular/router';
+import { environment } from '../../environments/environments';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SolarApiService implements OnDestroy {
-  private readonly apiUrl: string = '/api'; // Backend
+  private readonly apiUrl: string = environment.apiUrl;
   private _resultados!: ResultadosFrontDTO;
   annualConsumption: number = 0;
   private mapService!: MapService;
