@@ -1,4 +1,4 @@
-import { GeneracionFotovoltaica } from "src/interfaces/generacion-fotovoltaica/generacion-fotovoltaica.interface";
+import { GeneracionFotovoltaica } from "../../../interfaces/generacion-fotovoltaica/generacion-fotovoltaica.interface";
 
 export class FlujoEnergia {
 

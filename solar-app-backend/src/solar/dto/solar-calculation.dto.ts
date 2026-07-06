@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { CoordenadasDTO } from "./coordenadas.dto";
-import { TarifaCategoria } from "src/tarifa-categoria/tarifa-categoria-enum";
-import { Parametros } from "src/interfaces/sheets/parametros/parametros.interface";
+import { TarifaCategoria } from "../../tarifa-categoria/tarifa-categoria-enum";
+import { Parametros } from "../../interfaces/sheets/parametros/parametros.interface";
 
 // src/solar/dto/solar-calculation.dto.ts
 export class SolarCalculationDto {

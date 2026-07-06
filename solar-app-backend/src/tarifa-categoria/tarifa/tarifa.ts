@@ -1,4 +1,4 @@
-import { CuadroTarifario } from 'src/interfaces/sheets/cuadro-tarifario/cuadro-tarifario.interface';
+import { CuadroTarifario } from '../../interfaces/sheets/cuadro-tarifario/cuadro-tarifario.interface';
 import { TarifaCategoria } from '../tarifa-categoria-enum';
 
 export class Tarifa {

@@ -1,10 +1,10 @@
-import { FlujoIngresosMonetarios } from 'src/interfaces/flujo-ingresos-monetarios/flujo-ingresos-monetarios.interface';
-import { ProyeccionTarifas } from 'src/interfaces/proyeccion-tarifas/proyeccion-tarifas.interface';
-import { IflujoEnergia } from 'src/interfaces/iflujo-energia/iflujo-energia.interface';
-import { SolarCalculationDto } from 'src/solar/dto/solar-calculation.dto';
-import { SolarData } from 'src/interfaces/solar-data/solar-data.interface';
-import { Tarifa } from 'src/tarifa-categoria/tarifa/tarifa';
-import { CostoMantenimiento } from 'src/interfaces/costo-mantenimiento/costo-mantenimiento.interface';
+import { FlujoIngresosMonetarios } from '../../interfaces/flujo-ingresos-monetarios/flujo-ingresos-monetarios.interface';
+import { ProyeccionTarifas } from '../../interfaces/proyeccion-tarifas/proyeccion-tarifas.interface';
+import { IflujoEnergia } from '../../interfaces/iflujo-energia/iflujo-energia.interface';
+import { SolarCalculationDto } from '../../solar/dto/solar-calculation.dto';
+import { SolarData } from '../../interfaces/solar-data/solar-data.interface';
+import { Tarifa } from '../../tarifa-categoria/tarifa/tarifa';
+import { CostoMantenimiento } from '../../interfaces/costo-mantenimiento/costo-mantenimiento.interface';
 
 export class EcoFin {
   private tipoDeCambioArs: number;

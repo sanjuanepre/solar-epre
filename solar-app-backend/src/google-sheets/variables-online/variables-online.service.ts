@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { iam_v1, sheets_v4 } from 'googleapis';
-import { CaracteristicasSistema } from 'src/interfaces/sheets/caracteristicas-sistema/caracteristicas-sistema.interface';
-import { Economicas } from 'src/interfaces/sheets/cotizacion/economicas.interface';
-import { CuadroTarifario } from 'src/interfaces/sheets/cuadro-tarifario/cuadro-tarifario.interface';
-import { InversionCostos } from 'src/interfaces/sheets/inversion-ycostos/inversion-costos.interface';
-import { TasaDescuento } from 'src/interfaces/sheets/tasa-descuento/tasa-descuento.interface';
-import { SolarCalculationDto } from 'src/solar/dto/solar-calculation.dto';
-import { TarifaCategoria } from 'src/tarifa-categoria/tarifa-categoria-enum';
+import { CaracteristicasSistema } from '../../interfaces/sheets/caracteristicas-sistema/caracteristicas-sistema.interface';
+import { Economicas } from '../../interfaces/sheets/cotizacion/economicas.interface';
+import { CuadroTarifario } from '../../interfaces/sheets/cuadro-tarifario/cuadro-tarifario.interface';
+import { InversionCostos } from '../../interfaces/sheets/inversion-ycostos/inversion-costos.interface';
+import { TasaDescuento } from '../../interfaces/sheets/tasa-descuento/tasa-descuento.interface';
+import { SolarCalculationDto } from '../../solar/dto/solar-calculation.dto';
+import { TarifaCategoria } from '../../tarifa-categoria/tarifa-categoria-enum';
 
 @Injectable()
 export class VariablesOnlineService {

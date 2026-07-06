@@ -1,10 +1,10 @@
 import axios from 'axios';
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { SolarCalculationDto } from './dto/solar-calculation.dto';
-import { CalculadoraService } from 'src/calculadora/calculadora.service';
-import { SolarData } from 'src/interfaces/solar-data/solar-data.interface';
-import { PanelConfig } from 'src/interfaces/panel-config/panel-config.interface';
-import { ResultadosDto } from 'src/interfaces/resultados-dto/resultados-dto.interface';
+import { CalculadoraService } from '../calculadora/calculadora.service';
+import { SolarData } from '../interfaces/solar-data/solar-data.interface';
+import { PanelConfig } from '../interfaces/panel-config/panel-config.interface';
+import { ResultadosDto } from '../interfaces/resultados-dto/resultados-dto.interface';
 
 @Injectable()
 export class SolarService {

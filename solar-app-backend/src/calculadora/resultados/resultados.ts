@@ -1,11 +1,11 @@
-import { EmisionesGeiEvitadas } from 'src/interfaces/emisiones-gei-evitadas/emisiones-gei-evitadas.interface';
-import { IndicadoresFinancieros } from 'src/interfaces/indicadores-financieros/indicadores-financieros.interface';
-import { ResultadosCapitalPropio } from 'src/interfaces/resultados-capital-propio/resultados-capital-propio.interface';
+import { EmisionesGeiEvitadas } from '../../interfaces/emisiones-gei-evitadas/emisiones-gei-evitadas.interface';
+import { IndicadoresFinancieros } from '../../interfaces/indicadores-financieros/indicadores-financieros.interface';
+import { ResultadosCapitalPropio } from '../../interfaces/resultados-capital-propio/resultados-capital-propio.interface';
 import { EcoFin } from '../eco-fin/eco-fin';
-import { FlujoIngresosMonetarios } from 'src/interfaces/flujo-ingresos-monetarios/flujo-ingresos-monetarios.interface';
-import { SolarCalculationDto } from 'src/solar/dto/solar-calculation.dto';
-import { CostoMantenimiento } from 'src/interfaces/costo-mantenimiento/costo-mantenimiento.interface';
-import { SolarData } from 'src/interfaces/solar-data/solar-data.interface';
+import { FlujoIngresosMonetarios } from '../../interfaces/flujo-ingresos-monetarios/flujo-ingresos-monetarios.interface';
+import { SolarCalculationDto } from '../../solar/dto/solar-calculation.dto';
+import { CostoMantenimiento } from '../../interfaces/costo-mantenimiento/costo-mantenimiento.interface';
+import { SolarData } from '../../interfaces/solar-data/solar-data.interface';
 
 export class Resultados {
   private readonly tasaDescuento = 10 / 100;

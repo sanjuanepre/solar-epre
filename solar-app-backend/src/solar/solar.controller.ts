@@ -11,9 +11,9 @@ import {
 import { SolarService } from './solar.service';
 import { SolarCalculationDto } from './dto/solar-calculation.dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { ResultadosDto } from 'src/interfaces/resultados-dto/resultados-dto.interface';
-import { SolarData } from 'src/interfaces/solar-data/solar-data.interface';
-import { GoogleSheetsService } from 'src/google-sheets/google-sheets.service';
+import { ResultadosDto } from '../interfaces/resultados-dto/resultados-dto.interface';
+import { SolarData } from '../interfaces/solar-data/solar-data.interface';
+import { GoogleSheetsService } from '../google-sheets/google-sheets.service';
 import { Response } from 'express';
 
 @ApiTags('solar')

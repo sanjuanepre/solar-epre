@@ -1,4 +1,3 @@
-import './register-paths'; // Debe ir primero para registrar los paths antes de cargar AppModule
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';

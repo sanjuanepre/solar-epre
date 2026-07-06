@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { SolarData } from 'src/interfaces/solar-data/solar-data.interface';
-import { Tarifa } from 'src/tarifa-categoria/tarifa/tarifa';
+import { SolarData } from '../interfaces/solar-data/solar-data.interface';
+import { Tarifa } from '../tarifa-categoria/tarifa/tarifa';
 import { DatosTecnicos } from './datos-tecnicos/datos-tecnicos';
 import { EcoFin } from './eco-fin/eco-fin';
 import { Resultados } from './resultados/resultados';
-import { SolarCalculationDto } from 'src/solar/dto/solar-calculation.dto';
-import { Parametros } from 'src/interfaces/sheets/parametros/parametros.interface';
+import { SolarCalculationDto } from '../solar/dto/solar-calculation.dto';
+import { Parametros } from '../interfaces/sheets/parametros/parametros.interface';
 
 @Injectable()
 export class CalculadoraService {

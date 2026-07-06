@@ -1,4 +1,4 @@
-import { FlujoEnergia } from 'src/calculadora/datos-tecnicos/flujo-energia/flujo-energia';
+import { FlujoEnergia } from '../../calculadora/datos-tecnicos/flujo-energia/flujo-energia';
 import { GeneracionFotovoltaica } from '../generacion-fotovoltaica/generacion-fotovoltaica.interface';
 import { SolarData } from '../solar-data/solar-data.interface';
 import { FlujoIngresosMonetarios } from '../flujo-ingresos-monetarios/flujo-ingresos-monetarios.interface';

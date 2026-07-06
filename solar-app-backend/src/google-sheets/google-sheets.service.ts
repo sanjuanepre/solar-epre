@@ -1,15 +1,15 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { google, sheets_v4 } from 'googleapis';
-import { SolarCalculationDto } from 'src/solar/dto/solar-calculation.dto';
+import { SolarCalculationDto } from '../solar/dto/solar-calculation.dto';
 import { CheckInitService } from './check-init/check-init.service';
-import { CaracteristicasSistema } from 'src/interfaces/sheets/caracteristicas-sistema/caracteristicas-sistema.interface';
+import { CaracteristicasSistema } from '../interfaces/sheets/caracteristicas-sistema/caracteristicas-sistema.interface';
 import { VariablesOnlineService } from './variables-online/variables-online.service';
-import { InversionCostos } from 'src/interfaces/sheets/inversion-ycostos/inversion-costos.interface';
-import { Economicas } from 'src/interfaces/sheets/cotizacion/economicas.interface';
-import { CuadroTarifario } from 'src/interfaces/sheets/cuadro-tarifario/cuadro-tarifario.interface';
-import { Parametros } from 'src/interfaces/sheets/parametros/parametros.interface';
-import { CalculadoraService } from 'src/calculadora/calculadora.service';
-import { TarifaCategoria } from 'src/tarifa-categoria/tarifa-categoria-enum';
+import { InversionCostos } from '../interfaces/sheets/inversion-ycostos/inversion-costos.interface';
+import { Economicas } from '../interfaces/sheets/cotizacion/economicas.interface';
+import { CuadroTarifario } from '../interfaces/sheets/cuadro-tarifario/cuadro-tarifario.interface';
+import { Parametros } from '../interfaces/sheets/parametros/parametros.interface';
+import { CalculadoraService } from '../calculadora/calculadora.service';
+import { TarifaCategoria } from '../tarifa-categoria/tarifa-categoria-enum';
 
 @Injectable()
 export class GoogleSheetsService implements OnModuleInit {

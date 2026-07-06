@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GoogleSheetsService } from './google-sheets.service';
-import { MesesConsumo } from 'src/interfaces/meses-consumo/meses-consumo.interface';
+import { MesesConsumo } from '../interfaces/meses-consumo/meses-consumo.interface';
 @ApiTags('GoogleSheets')
 @Controller('google-sheets')
 export class GoogleSheetsController {

@@ -4,7 +4,7 @@ import { GoogleSheetsService } from './google-sheets.service';
 import { GoogleSheetsController } from './google-sheets.controller';
 import { CheckInitService } from './check-init/check-init.service';
 import { VariablesOnlineService } from './variables-online/variables-online.service';
-import { CalculadoraModule } from 'src/calculadora/calculadora.module';
+import { CalculadoraModule } from '../calculadora/calculadora.module';
 
 @Module({
   imports: [CalculadoraModule],

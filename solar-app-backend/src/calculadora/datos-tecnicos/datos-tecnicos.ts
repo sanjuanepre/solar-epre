@@ -1,8 +1,8 @@
-import { GeneracionFotovoltaica } from 'src/interfaces/generacion-fotovoltaica/generacion-fotovoltaica.interface';
-import { EmisionesGeiEvitadas } from 'src/interfaces/emisiones-gei-evitadas/emisiones-gei-evitadas.interface';
-import { IflujoEnergia } from 'src/interfaces/iflujo-energia/iflujo-energia.interface';
-import { SolarCalculationDto } from 'src/solar/dto/solar-calculation.dto';
-import { SolarData } from 'src/interfaces/solar-data/solar-data.interface';
+import { GeneracionFotovoltaica } from '../../interfaces/generacion-fotovoltaica/generacion-fotovoltaica.interface';
+import { EmisionesGeiEvitadas } from '../../interfaces/emisiones-gei-evitadas/emisiones-gei-evitadas.interface';
+import { IflujoEnergia } from '../../interfaces/iflujo-energia/iflujo-energia.interface';
+import { SolarCalculationDto } from '../../solar/dto/solar-calculation.dto';
+import { SolarData } from '../../interfaces/solar-data/solar-data.interface';
 
 export class DatosTecnicos {
   private readonly eficienciaInstalacion: number;
