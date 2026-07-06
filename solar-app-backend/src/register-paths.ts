@@ -1,8 +1,12 @@
 import * as tsConfigPaths from 'tsconfig-paths';
+import * as path from 'path';
 
-// Registrar los paths para resolver imports de "src/" en Vercel antes de que se cargue AppModule
+// Obtener la ruta absoluta del directorio del backend (un nivel arriba de src/)
+const backendDir = path.resolve(__dirname, '..');
+console.log('Registering paths with baseUrl:', backendDir);
+
 tsConfigPaths.register({
-  baseUrl: './',
+  baseUrl: backendDir,
   paths: {
     "src/*": ["src/*", "dist/*"]
   }
