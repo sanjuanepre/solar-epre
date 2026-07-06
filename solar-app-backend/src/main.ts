@@ -1,14 +1,5 @@
+import './register-paths'; // Debe ir primero para registrar los paths antes de cargar AppModule
 import 'reflect-metadata';
-import * as tsConfigPaths from 'tsconfig-paths';
-
-// Registrar los paths para resolver imports de "src/" en Vercel
-tsConfigPaths.register({
-  baseUrl: './',
-  paths: {
-    "src/*": ["src/*", "dist/*"]
-  }
-});
-
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
