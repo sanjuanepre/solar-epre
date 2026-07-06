@@ -1,5 +1,5 @@
 # compiled output
-# /dist  <- Incluido en el repo para despliegue en Vercel
+/dist
 /node_modules
 /build
 
