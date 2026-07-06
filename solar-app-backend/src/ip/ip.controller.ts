@@ -1,6 +1,5 @@
 import { Controller, Get, Res } from '@nestjs/common';
 import { Response } from 'express';
-import fetch from 'node-fetch'; // Asegúrate de instalar node-fetch si no lo tienes
 
 @Controller('api/ip')
 export class IpController {
