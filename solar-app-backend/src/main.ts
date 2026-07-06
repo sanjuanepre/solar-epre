@@ -20,8 +20,16 @@ async function bootstrap() {
 
 // Exportamos el handler para Vercel Serverless
 export default async (req: any, res: any) => {
-  const server = await bootstrap();
-  return server(req, res);
+  try {
+    const server = await bootstrap();
+    return server(req, res);
+  } catch (err) {
+    return res.status(500).json({
+      error: 'BootstrapError',
+      message: err.message,
+      stack: err.stack,
+    });
+  }
 };
 
 // Desarrollo local
