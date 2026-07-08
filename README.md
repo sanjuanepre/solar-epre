@@ -1,5 +1,8 @@
 # Generación Solar San Juan
 
+> [!IMPORTANT]
+> **Contexto del Proyecto e Historial de Cambios:** Para comprender el estado de avance actual, las últimas refactorizaciones (incluyendo el sistema de dibujo de polígonos nativos) y las variables de integración, por favor lee primero el archivo [PROJECT_STATUS.md](file:///f:/Apps/solar-epresj/PROJECT_STATUS.md).
+
 ## Descripción
 
 Este proyecto permite calcular el ahorro en el consumo eléctrico basandose en la generación fotovoltaica de un zona elegida dentro de la Provincia de San Juan, Argentina, usando la **API Solar de Google**. El backend está desarrollado en **NestJS** y el frontend en **Angular**.
