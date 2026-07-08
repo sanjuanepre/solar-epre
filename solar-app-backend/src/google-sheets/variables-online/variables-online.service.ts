@@ -95,7 +95,7 @@ export class VariablesOnlineService {
       const tipoCambioArs = economicas.tipoCambioArs;
 
       const costoUsdWpConIva = this.parseFloatWithFormat(rows[0][1]);
-      const equipoMedicionUsd = this.parseFloatWithFormat(rows[2][1]);
+      const equipoMedicionUsd = this.parseFloatWithFormat(rows[2][1]) / tipoCambioArs;
       const mantenimientoUsd = this.parseFloatWithFormat(rows[5][1]);
 
       const equipoDeMedicionUsdAplicado = categoriaSeleccionada.includes('T1-R')

@@ -166,7 +166,7 @@ export class SharedService {
   }
 
   getPlazoInversionValue(): number {
-    const plazo = Math.abs(this.plazoInversionSubject.getValue());
+    const plazo = this.plazoInversionSubject.getValue();
     console.log('Obteniendo plazo de inversión: ', plazo);
     return plazo;
   }
@@ -386,24 +386,34 @@ export class SharedService {
 
   getCostoEquipoDeMedicion() {
     const resultados = this.getResultadosFront();
+    if (resultados?.parametros?.inversionCostos?.equipoDeMedicionUsdAplicado) {
+      const costo = resultados.parametros.inversionCostos.equipoDeMedicionUsdAplicado;
+      console.log('Obteniendo costo de equipo de medición desde parametros:', costo);
+      return costo;
+    }
     let costo: number;
     if (this.getTarifaContratada().includes("T1-R")) {
       costo = 782.30;
     } else {
       costo = 646.53;
     }
-    console.log('Obteniendo costo de equipo de medición:', costo);
+    console.log('Obteniendo costo de equipo de medición (fallback):', costo);
     return costo;
   }
   getCostoUsdWp() {
     const resultados = this.getResultadosFront();
+    if (resultados?.parametros?.inversionCostos?.costoUsdWpAplicado) {
+      const costo = resultados.parametros.inversionCostos.costoUsdWpAplicado;
+      console.log('Obteniendo costo en USD/Wp desde parametros:', costo);
+      return costo;
+    }
     let costo: number;
     if (this.getTarifaContratada().includes("T1-R")) {
       costo = 1.5;
     } else {
       costo = 1.24;
     }
-    console.log('Obteniendo costo en USD/Wp:', costo);
+    console.log('Obteniendo costo en USD/Wp (fallback):', costo);
     return costo;
   }
 
@@ -425,10 +435,13 @@ export class SharedService {
 
   getDegradacionPanel(): number {
     const resultados = this.getResultadosFront();
-    const parametros: ParametrosFront = resultados.parametros!;
-    const degradacion = parametros.caracteristicasSistema.degradacionAnualPanel;
-    console.log('Obteniendo degradación anual del panel:', degradacion);
-    return degradacion;
+    if (resultados?.parametros?.caracteristicasSistema?.degradacionAnualPanel !== undefined) {
+      const degradacion = resultados.parametros.caracteristicasSistema.degradacionAnualPanel;
+      console.log('Obteniendo degradación anual del panel desde parametros:', degradacion);
+      return degradacion;
+    }
+    console.log('Obteniendo degradación anual del panel (fallback): 0.004');
+    return 0.004;
   }
 
   resetAll() {

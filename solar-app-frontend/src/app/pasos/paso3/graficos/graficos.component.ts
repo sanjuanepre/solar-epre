@@ -256,7 +256,7 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
         },
       },
       annotations: {
-        xaxis: [
+        xaxis: this.recuperoInversionMeses >= 0 ? [
           {
             x: anoRecuperoInversion.toString(),
             strokeDashArray: 5,
@@ -264,7 +264,7 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
             borderWidth: 2,
             showInLegend: true,
           },
-        ],
+        ] : [],
       },
       legend: {
         markers: {
@@ -308,14 +308,14 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Actualizar la anotación del año de recupero
     const updatedAnnotations = {
-      xaxis: [
+      xaxis: this.recuperoInversionMeses >= 0 ? [
         {
           x: anoRecuperoInversion.toString(),
           strokeDashArray: 5, // Estilo de línea de puntos
           borderColor: '#008ae3', // Color celeste oscuro
           borderWidth: 2, // Grosor de la línea
         },
-      ],
+      ] : [],
     };
 
     // Tomamos el primer valor de ahorro e ingreso
