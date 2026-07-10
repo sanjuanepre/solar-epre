@@ -5,6 +5,7 @@ import { CalculadoraService } from '../calculadora/calculadora.service';
 import { SolarData } from '../interfaces/solar-data/solar-data.interface';
 import { PanelConfig } from '../interfaces/panel-config/panel-config.interface';
 import { ResultadosDto } from '../interfaces/resultados-dto/resultados-dto.interface';
+import { SolarDataLayersResponse } from './dto/solar-data-layers.interface';
 
 @Injectable()
 export class SolarService {
@@ -311,4 +312,82 @@ export class SolarService {
       adjustedSolarDataNearby,
     );
   }
+
+  /**
+   * Obtiene las URLs de las capas de datos solares (GeoTIFFs) desde la Google Solar API.
+   * Incluye: flujo anual, flujo mensual, máscara de edificio, DSM, etc.
+   * Las URLs son temporalmente firmadas y deben utilizarse de inmediato o cachearse en backend.
+   */
+  async getSolarDataLayers(
+    latitude: number,
+    longitude: number,
+    radiusMeters: number = 30,
+  ): Promise<SolarDataLayersResponse> {
+    if (isNaN(latitude) || isNaN(longitude)) {
+      throw new HttpException(
+        'Coordenadas inválidas',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const apiKey = process.env.GOOGLE_API_KEY;
+
+    const params = new URLSearchParams({
+      'location.latitude': latitude.toFixed(5),
+      'location.longitude': longitude.toFixed(5),
+      radiusMeters: radiusMeters.toString(),
+      view: 'FULL_LAYERS',
+      key: apiKey,
+    });
+
+    const url = `https://solar.googleapis.com/v1/dataLayers:get?${params}`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-cache',
+        headers: {
+          Pragma: 'no-cache',
+          'Cache-Control': 'no-cache',
+        },
+      });
+
+      if (!response.ok) {
+        let errorMsg = 'Error desconocido';
+        try {
+          const errorContent = await response.json();
+          errorMsg = errorContent.error?.message ?? JSON.stringify(errorContent);
+        } catch {
+          errorMsg = `HTTP ${response.status}`;
+        }
+        console.warn(`[SolarService] dataLayers:get falló (${errorMsg}). Retornando mock.`);
+        return this.getMockDataLayers(latitude, longitude);
+      }
+
+      const data: SolarDataLayersResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.warn(`[SolarService] Error en dataLayers:get (${error.message}). Retornando mock.`);
+      return this.getMockDataLayers(latitude, longitude);
+    }
+  }
+
+  /**
+   * Datos de fallback para desarrollo local o cuando la API de Solar no está disponible.
+   */
+  private getMockDataLayers(latitude: number, longitude: number): SolarDataLayersResponse {
+    return {
+      imageryDate: { year: 2023, month: 6, day: 15 },
+      imageryProcessedDate: { year: 2024, month: 1, day: 10 },
+      dsmUrl: null,
+      rgbUrl: null,
+      maskUrl: null,
+      annualFluxUrl: null,
+      monthlyFluxUrl: null,
+      hourlyShadeUrls: [],
+      imageryQuality: 'LOW',
+      isMock: true,
+    };
+  }
 }
+

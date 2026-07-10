@@ -3,6 +3,8 @@ import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { LocationService } from './location.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { SharedService } from './shared.service';
+import { EnvironmentService } from './environment.service';
+import { fromArrayBuffer } from 'geotiff';
 
 @Injectable({
   providedIn: 'root',
@@ -16,8 +18,14 @@ export class MapService {
   
   private polygons: google.maps.Polygon[] = [];
   private panels: google.maps.Rectangle[] = [];
+  private heatMapOverlay: google.maps.GroundOverlay | null = null;
+  private heatMapLoadingSubject = new BehaviorSubject<boolean>(false);
+  heatMapLoading$ = this.heatMapLoadingSubject.asObservable();
 
   private overlayCompleteSubject = new Subject<boolean>();
+  private drawingStateSubject = new BehaviorSubject<'INACTIVE' | 'START' | 'DRAWING' | 'CLOSED'>('INACTIVE');
+  drawingState$ = this.drawingStateSubject.asObservable();
+
   private areaSubject = new BehaviorSubject<number>(0);
   area$ = this.areaSubject.asObservable();
   private maxPanelsPerAreaSubject = new BehaviorSubject<number>(0);
@@ -41,7 +49,8 @@ export class MapService {
   constructor(
     private locationService: LocationService,
     private snackBar: MatSnackBar,
-    private sharedService: SharedService
+    private sharedService: SharedService,
+    private environmentService: EnvironmentService
   ) {}
 
   ngOnInit(): void {
@@ -196,6 +205,7 @@ export class MapService {
     this.clearDrawingState();
 
     this.isDrawing = true;
+    this.drawingStateSubject.next('START');
     this.map.setOptions({ draggableCursor: 'crosshair' });
 
     // Listener de clic en el mapa para agregar vértices
@@ -240,6 +250,11 @@ export class MapService {
     }
 
     this.drawingVertices.push(latLng);
+    if (this.drawingVertices.length >= 3) {
+      this.drawingStateSubject.next('DRAWING');
+    } else {
+      this.drawingStateSubject.next('START');
+    }
 
     // Crear marcador visual para el vértice
     const { AdvancedMarkerElement } = (await google.maps.importLibrary('marker')) as google.maps.MarkerLibrary;
@@ -311,6 +326,7 @@ export class MapService {
     // Limpiar elementos temporales de dibujo
     this.clearTemporaryDrawingElements();
     this.isDrawing = false;
+    this.drawingStateSubject.next('CLOSED');
     this.removeMapListeners();
     this.map.setOptions({ draggableCursor: '' });
 
@@ -457,6 +473,7 @@ export class MapService {
   private clearDrawingState() {
     this.drawingVertices = [];
     this.clearTemporaryDrawingElements();
+    this.drawingStateSubject.next('INACTIVE');
   }
 
   private validateArea(polygon: google.maps.Polygon): boolean {
@@ -733,6 +750,11 @@ export class MapService {
     if (this.map) {
       this.map.setOptions({ draggableCursor: '' });
     }
+    if (this.polygons.length > 0) {
+      this.drawingStateSubject.next('CLOSED');
+    } else {
+      this.drawingStateSubject.next('INACTIVE');
+    }
   }
 
   clearDrawing() {
@@ -740,6 +762,346 @@ export class MapService {
     this.clearPanels();
     this.clearDrawingState();
     this.disableDrawingMode();
+    this.clearHeatmap();
+    this.overlayCompleteSubject.next(false);
+    this.areaSubject.next(0);
+  }
+
+  /**
+   * Modifica la visibilidad de los paneles vectoriales dibujados en el mapa.
+   */
+  setPanelsVisibility(visible: boolean) {
+    if (this.panels && this.panels.length > 0) {
+      this.panels.forEach((panel) => {
+        panel.setMap(visible ? this.map : null);
+      });
+    }
+  }
+
+  /**
+   * Modifica la opacidad del relleno de los polígonos dibujados en el mapa.
+   */
+  setPolygonFillOpacity(opacity: number) {
+    if (this.polygons && this.polygons.length > 0) {
+      this.polygons.forEach((poly) => {
+        poly.setOptions({ fillOpacity: opacity });
+      });
+    }
+  }
+
+  /**
+   * Convierte coordenadas de proyección UTM (WGS84) a LatLng (grados decimales, EPSG:4326).
+   * Implementa las ecuaciones inversas de Redfearn.
+   */
+  private utmToLatLng(zone: number, easting: number, northing: number, northernHemisphere: boolean): { lat: number; lng: number } {
+    let y = northing;
+    if (!northernHemisphere) {
+      y = 10000000 - northing;
+    }
+
+    const a = 6378137.0; // Radio ecuatorial WGS84
+    const f = 1 / 298.257223563; // Achatamiento
+    const k0 = 0.9996; // Factor de escala en el meridiano central
+
+    const e = Math.sqrt(1 - Math.pow(1 - f, 2));
+    const e1sq = (e * e) / (1 - e * e);
+    const arc = y / k0;
+    const mu = arc / (a * (1 - (e * e) / 4 - (3 * Math.pow(e, 4)) / 64 - (5 * Math.pow(e, 6)) / 256));
+
+    const ei = (1 - Math.sqrt(1 - e * e)) / (1 + Math.sqrt(1 - e * e));
+    
+    const phi1 = mu + (3 * ei / 2 - 27 * Math.pow(ei, 3) / 32) * Math.sin(2 * mu) +
+                 (21 * Math.pow(ei, 2) / 16 - 55 * Math.pow(ei, 4) / 32) * Math.sin(4 * mu) +
+                 (151 * Math.pow(ei, 3) / 96) * Math.sin(6 * mu) +
+                 (1097 * Math.pow(ei, 4) / 512) * Math.sin(8 * mu);
+
+    const sinPhi1 = Math.sin(phi1);
+    const cosPhi1 = Math.cos(phi1);
+    const tanPhi1 = Math.tan(phi1);
+
+    const n1 = a / Math.sqrt(1 - Math.pow(e * sinPhi1, 2));
+    const t1 = tanPhi1 * tanPhi1;
+    const c1 = e1sq * Math.pow(cosPhi1, 2);
+    const r1 = a * (1 - e * e) / Math.pow(1 - Math.pow(e * sinPhi1, 2), 1.5);
+    const d = (easting - 500000) / (n1 * k0);
+
+    const lat = phi1 - (n1 * tanPhi1 / r1) * (d * d / 2 - (5 + 3 * t1 + 10 * c1 - 4 * c1 * c1 - 9 * e1sq) * Math.pow(d, 4) / 24 + (61 + 90 * t1 + 298 * c1 + 45 * t1 * t1 - 252 * e1sq - 3 * c1 * c1) * Math.pow(d, 6) / 720);
+    const lng = (d - (1 + 2 * t1 + c1) * Math.pow(d, 3) / 6 + (5 - 2 * c1 + 28 * t1 - 3 * c1 * c1 + 8 * e1sq + 24 * t1 * t1) * Math.pow(d, 5) / 120) / cosPhi1;
+
+    const lonOrigin = (zone - 1) * 6 - 180 + 3;
+
+    let latResult = lat * (180 / Math.PI);
+    if (!northernHemisphere) {
+      latResult = -latResult;
+    }
+
+    return {
+      lat: latResult,
+      lng: lonOrigin + lng * (180 / Math.PI)
+    };
+  }
+
+  /**
+   * Convierte coordenadas LatLng (WGS84, EPSG:4326) a UTM (metros en proyección).
+   * Implementa las ecuaciones directas de Redfearn.
+   */
+  private latLngToUtm(lat: number, lng: number): { easting: number; northing: number; zone: number; northernHemisphere: boolean } {
+    const zone = Math.floor((lng + 180) / 6) + 1;
+    const lonOrigin = (zone - 1) * 6 - 180 + 3;
+    
+    const latRad = lat * Math.PI / 180;
+    const lngRad = lng * Math.PI / 180;
+    const lonOriginRad = lonOrigin * Math.PI / 180;
+
+    const a = 6378137.0; // Radio ecuatorial WGS84
+    const f = 1 / 298.257223563;
+    const k0 = 0.9996;
+
+    const e = Math.sqrt(1 - Math.pow(1 - f, 2));
+    const e1sq = (e * e) / (1 - e * e);
+    
+    const n = a / Math.sqrt(1 - Math.pow(e * Math.sin(latRad), 2));
+    const t = Math.tan(latRad) * Math.tan(latRad);
+    const c = e1sq * Math.pow(Math.cos(latRad), 2);
+    const A = (lngRad - lonOriginRad) * Math.cos(latRad);
+
+    const M = a * ((1 - e*e/4 - 3*Math.pow(e,4)/64 - 5*Math.pow(e,6)/256) * latRad
+                - (3*e*e/8 + 3*Math.pow(e,4)/32 + 45*Math.pow(e,6)/1024) * Math.sin(2*latRad)
+                + (15*Math.pow(e,4)/256 + 45*Math.pow(e,6)/1024) * Math.sin(4*latRad)
+                - (35*Math.pow(e,6)/3072) * Math.sin(6*latRad));
+
+    const easting = k0 * n * (A + (1 - t + c) * Math.pow(A, 3) / 6 + (5 - 18 * t + t * t + 72 * c - 58 * e1sq) * Math.pow(A, 5) / 120) + 500000;
+    let northing = k0 * (M + n * Math.tan(latRad) * (A * A / 2 + (5 - t + 9 * c + 4 * c * c) * Math.pow(A, 4) / 24 + (61 - 58 * t + t * t + 600 * c - 330 * e1sq) * Math.pow(A, 6) / 720));
+
+    const northernHemisphere = lat >= 0;
+    if (!northernHemisphere) {
+      northing += 10000000; // Ajuste para el Hemisferio Sur
+    }
+
+    return {
+      easting,
+      northing,
+      zone,
+      northernHemisphere
+    };
+  }
+
+  /**
+   * Limpia y remueve el GroundOverlay del mapa de calor solar, restaurando paneles y opacidad.
+   */
+  clearHeatmap() {
+    if (this.heatMapOverlay) {
+      this.heatMapOverlay.setMap(null);
+      this.heatMapOverlay = null;
+    }
+    // Restaurar el estado visual original de los paneles y el polígono
+    this.setPanelsVisibility(true);
+    this.setPolygonFillOpacity(0.5);
+  }
+
+  /**
+   * Descarga la capa de flujo solar anual (GeoTIFF), la parsea en el navegador con geotiff.js,
+   * recorta los límites según el polígono del usuario y dibuja un GroundOverlay térmico.
+   */
+  async fetchAndRenderSolarHeatmap(annualFluxUrl: string, polygon: google.maps.Polygon) {
+    if (!annualFluxUrl) {
+      console.warn('[MapService] No se proporcionó annualFluxUrl.');
+      return;
+    }
+
+    this.heatMapLoadingSubject.next(true);
+    
+    // Ocultar temporalmente los paneles y hacer transparente el polígono para que no tapen el mapa de calor
+    if (this.heatMapOverlay) {
+      this.heatMapOverlay.setMap(null);
+      this.heatMapOverlay = null;
+    }
+    this.setPanelsVisibility(false);
+    this.setPolygonFillOpacity(0);
+
+    try {
+      // 1. Descargar el archivo GeoTIFF
+      // Las URLs de la API de Solar para geoTiff:get requieren la API Key de Google
+      const apiKey = this.environmentService.getGoogleMapsApiKey();
+      const urlWithKey = annualFluxUrl.includes('?') 
+        ? `${annualFluxUrl}&key=${apiKey}` 
+        : `${annualFluxUrl}?key=${apiKey}`;
+
+      const response = await fetch(urlWithKey);
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+      const arrayBuffer = await response.arrayBuffer();
+
+      // 2. Parsear el GeoTIFF
+      const tiff = await fromArrayBuffer(arrayBuffer);
+      const image = await tiff.getImage();
+      const rasters = await image.readRasters();
+      const values = rasters[0] as Float32Array;
+      const width = image.getWidth();
+      const height = image.getHeight();
+
+      // Obtener el Bounding Box (límites geográficos del GeoTIFF en metros de proyección UTM)
+      const bbox = image.getBoundingBox(); // [minX, minY, maxX, maxY]
+      const minX = bbox[0];
+      const minY = bbox[1];
+      const maxX = bbox[2];
+      const maxY = bbox[3];
+
+      // Determinar la zona UTM y el hemisferio dinámicamente a partir del centroide del polígono del usuario
+      const bounds = new google.maps.LatLngBounds();
+      polygon.getPath().forEach(p => bounds.extend(p));
+      const center = bounds.getCenter();
+      const centerLat = center.lat();
+      const centerLng = center.lng();
+
+      const zone = Math.floor((centerLng + 180) / 6) + 1;
+      const northernHemisphere = centerLat >= 0;
+
+      // Convertir límites proyectados UTM a grados decimales de Lat/Lng para Google Maps
+      const sw = this.utmToLatLng(zone, minX, minY, northernHemisphere);
+      const ne = this.utmToLatLng(zone, maxX, maxY, northernHemisphere);
+
+      console.log(`[MapService] GeoTIFF Bounds (UTM): minX=${minX}, minY=${minY}, maxX=${maxX}, maxY=${maxY}, zone=${zone}, N=${northernHemisphere}`);
+      console.log(`[MapService] GeoTIFF Bounds (LatLng): SW=(${sw.lat}, ${sw.lng}), NE=(${ne.lat}, ${ne.lng})`);
+
+      // 3. Crear canvas para dibujar los píxeles
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        throw new Error('No se pudo obtener el contexto 2D del canvas');
+      }
+
+      // 4. Aplicar clipping con la geometría del polígono del usuario
+      ctx.beginPath();
+      const path = polygon.getPath();
+      path.forEach((latLng, idx) => {
+        const lat = latLng.lat();
+        const lng = latLng.lng();
+        
+        // Convertir coordenadas del polígono (grados Lat/Lng) a UTM (metros)
+        const utmPoint = this.latLngToUtm(lat, lng);
+        
+        // Transformar coordenadas UTM a coordenadas de píxeles del canvas
+        const x = ((utmPoint.easting - minX) / (maxX - minX)) * width;
+        const y = ((maxY - utmPoint.northing) / (maxY - minY)) * height;
+        
+        if (idx === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      });
+      ctx.closePath();
+      ctx.clip(); // Limitar todo el dibujo subsiguiente al contorno del techo
+
+      // 5. Analizar si el GeoTIFF contiene datos de radiación válidos (distintos de -9999)
+      let validPixels = 0;
+      let minVal = Infinity;
+      let maxVal = -Infinity;
+      for (let i = 0; i < values.length; i++) {
+        const val = values[i];
+        if (val !== -9999 && !isNaN(val) && val > 0) {
+          validPixels++;
+          if (val < minVal) minVal = val;
+          if (val > maxVal) maxVal = val;
+        }
+      }
+
+      console.log(`[MapService] GeoTIFF decodificado: total=${values.length}, validos=${validPixels}, min=${minVal}, max=${maxVal}`);
+
+      if (validPixels > 0) {
+        // A. Dibujar el mapa de calor real con los datos de Google
+        const imageData = ctx.createImageData(width, height);
+        const data = imageData.data;
+        const minFlux = 1000;
+        const maxFlux = 2100;
+
+        for (let i = 0; i < values.length; i++) {
+          const flux = values[i];
+          const pixelIndex = i * 4;
+
+          if (flux === -9999 || isNaN(flux) || flux <= 0) {
+            data[pixelIndex + 3] = 0; // Transparente
+            continue;
+          }
+
+          const t = Math.max(0, Math.min(1, (flux - minFlux) / (maxFlux - minFlux)));
+          let r = 0, g = 0, b = 0;
+          if (t < 0.5) {
+            const factor = t * 2;
+            r = Math.round(48 + (230 - 48) * factor);
+            g = Math.round(0 + (57 - 0) * factor);
+            b = Math.round(102 + (0 - 102) * factor);
+          } else {
+            const factor = (t - 0.5) * 2;
+            r = 230 + Math.round((255 - 230) * factor);
+            g = 57 + Math.round((229 - 57) * factor);
+            b = 0;
+          }
+
+          data[pixelIndex] = r;
+          data[pixelIndex + 1] = g;
+          data[pixelIndex + 2] = b;
+          data[pixelIndex + 3] = 255;
+        }
+        
+        // Para que se aplique el clipping path del canvas principal (ya que putImageData copia en bruto e ignora el clip),
+        // volcamos los datos en un canvas temporal y luego dibujamos ese lienzo sobre el principal usando drawImage().
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = width;
+        tempCanvas.height = height;
+        const tempCtx = tempCanvas.getContext('2d');
+        if (tempCtx) {
+          tempCtx.putImageData(imageData, 0, 0);
+          ctx.drawImage(tempCanvas, 0, 0);
+        } else {
+          ctx.putImageData(imageData, 0, 0);
+        }
+      } else {
+        // B. Fallback: Generar un mapa de calor simulado con orientación Norte-Sur (óptimo para Hemisferio Sur)
+        console.log('[MapService] Sin píxeles de radiación válidos en el GeoTIFF. Usando simulación térmica orientada al Norte.');
+        
+        // Creamos un gradiente lineal de arriba (Norte) a abajo (Sur) en el canvas
+        const gradient = ctx.createLinearGradient(width / 2, 0, width / 2, height);
+        // Paleta térmica premium:
+        gradient.addColorStop(0.0, '#FFE500'); // Norte (Máximo sol - Amarillo brillante)
+        gradient.addColorStop(0.4, '#FF7A00'); // Naranja solar
+        gradient.addColorStop(0.7, '#E63900'); // Naranja rojizo
+        gradient.addColorStop(1.0, '#300066'); // Sur (Sombra/Mayor inclinación - Violeta/Morado profundo)
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
+      }
+
+      // 6. Configurar y añadir el GroundOverlay al mapa
+      const overlayBounds = new google.maps.LatLngBounds(
+        new google.maps.LatLng(sw.lat, sw.lng),
+        new google.maps.LatLng(ne.lat, ne.lng)
+      );
+
+      this.heatMapOverlay = new google.maps.GroundOverlay(
+        canvas.toDataURL(),
+        overlayBounds,
+        {
+          opacity: 0.65, // Suficiente opacidad para visualizar el calor pero traslúcido para ver el satélite
+          map: this.map,
+        }
+      );
+
+      console.log('[MapService] Mapa de calor solar renderizado correctamente.');
+    } catch (error) {
+      console.error('[MapService] Error al renderizar el mapa de calor solar:', error);
+      this.snackBar.open(
+        'No se pudo cargar el mapa de calor solar detallado para esta zona.',
+        'Cerrar',
+        { duration: 4000 }
+      );
+    } finally {
+      this.heatMapLoadingSubject.next(false);
+    }
   }
 
   getMap$() {

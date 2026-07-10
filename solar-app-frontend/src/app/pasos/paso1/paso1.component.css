@@ -267,3 +267,300 @@
 
 }
 
+/* ==========================================
+   ESTILOS PREMIUM: BANNER DINÁMICO & HEATMAP
+   ========================================== */
+
+/* Banner Instructivo Dinámico */
+.banner-instrucciones {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 10px 5px 15px 5px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-left: 5px solid transparent;
+}
+
+.icono-banner {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.texto-banner {
+  margin: 0;
+  font-family: 'Sodo Sans', sans-serif;
+  font-size: 14.5px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Colores dinámicos según estado */
+.banner-inactive {
+  background-color: #f3f4f6;
+  border-left-color: #9ca3af;
+  color: #4b5563;
+  .icono-banner { color: #6b7280; }
+}
+
+.banner-start, .banner-drawing {
+  background-color: #eff6ff;
+  border-left-color: #3b82f6;
+  color: #1e40af;
+  .icono-banner {
+    color: #2563eb;
+    animation: bounce-gentle 2s infinite;
+  }
+}
+
+.banner-closed {
+  background-color: #ecfdf5;
+  border-left-color: #10b981;
+  color: #065f46;
+  .icono-banner {
+    color: #059669;
+  }
+}
+
+/* Card de Radiación */
+.card-radiacion {
+  border: 2px solid #ffedd5 !important;
+  background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%);
+}
+
+.text-solar-icon {
+  color: #ea580c !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pulse-glow 2.5s infinite alternate;
+}
+
+.analisis-control {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 5px;
+}
+
+.heatmap-toggle-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.toggle-label {
+  font-family: 'Sodo Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Switch Estilo Slider Customizado */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #d1d5db;
+  transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+input:checked + .slider {
+  background-color: #ea580c; /* Naranja/Solar */
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #ea580c;
+}
+
+input:checked + .slider:before {
+  transform: translateX(24px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+/* Spinner de carga premium */
+.heatmap-loading-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 10px;
+  background: #fff7ed;
+  border-radius: 8px;
+  border: 1px dashed #ffedd5;
+  margin-top: 15px;
+  gap: 12px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.loading-pulse-container {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sun-pulse {
+  font-size: 32px;
+  color: #ea580c;
+  animation: spin 8s linear infinite;
+  z-index: 2;
+}
+
+.pulse-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 2px solid #ea580c;
+  border-radius: 50%;
+  animation: pulse 1.5s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+  opacity: 0;
+  z-index: 1;
+}
+
+.loading-text-container {
+  text-align: center;
+}
+
+.loading-title {
+  display: block;
+  font-size: 14px;
+  font-family: 'Sodo Sans', sans-serif;
+  font-weight: 600;
+  color: #ea580c;
+  margin-bottom: 2px;
+}
+
+.loading-subtitle {
+  display: block;
+  font-size: 11.5px;
+  font-family: 'Sodo Sans', sans-serif;
+  color: #c2410c;
+  opacity: 0.8;
+}
+
+/* Leyenda / Escala térmica de referencia */
+.heatmap-legend-container {
+  margin-top: 15px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.legend-title {
+  display: block;
+  font-size: 11px;
+  font-family: 'Sodo Sans', sans-serif;
+  color: #475569;
+  margin-bottom: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.legend-bar {
+  height: 10px;
+  width: 100%;
+  border-radius: 5px;
+  background: linear-gradient(to right, rgb(48, 0, 102) 0%, rgb(230, 57, 0) 50%, rgb(255, 229, 0) 100%);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.legend-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 11px;
+  font-family: 'Sodo Sans', sans-serif;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Animaciones */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes bounce-gentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes pulse-glow {
+  0% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 1px rgba(234, 88, 12, 0.2));
+  }
+  100% {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 5px rgba(234, 88, 12, 0.6));
+  }
+}
+
+

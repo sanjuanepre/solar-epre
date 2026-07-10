@@ -241,4 +241,20 @@ export class SolarApiService implements OnDestroy {
         return false;
       });
   }
+
+  async getDataLayers(latitude: number, longitude: number, radiusMeters: number = 30): Promise<any> {
+    try {
+      const response = await fetch(
+        `${this.apiUrl}/solar/dataLayers?latitude=${latitude}&longitude=${longitude}&radiusMeters=${radiusMeters}`
+      );
+      if (!response.ok) {
+        throw new Error(`Error en la llamada a dataLayers: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error al obtener dataLayers:', error);
+      throw error;
+    }
+  }
 }
+

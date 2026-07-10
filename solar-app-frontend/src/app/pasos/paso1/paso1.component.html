@@ -10,6 +10,14 @@
   <div class="info-container">
     <p id="sub-titulo">Ubicación donde realizaría la instalación.</p>
 
+    <!-- Banner Instructivo Dinámico -->
+    <div class="banner-instrucciones" [ngClass]="'banner-' + drawingState.toLowerCase()">
+      <span class="material-icons icono-banner">
+        {{ drawingState === 'CLOSED' ? 'check_circle' : (drawingState === 'INACTIVE' ? 'info' : 'edit') }}
+      </span>
+      <p class="texto-banner">{{ instructionText }}</p>
+    </div>
+
     <div class="informacion">
       <div class="info-inicio">
         <div class="titulo-container">
@@ -74,7 +82,64 @@
         <div class="advertencia">
           <p id="recomendacion">
             Marcando punto por punto dibuje el área donde instalaría los paneles
-            solares .
+            solares.
+          </p>
+        </div>
+      </div>
+
+      <!-- Análisis de Radiación Solar (Mapa de calor) -->
+      <div class="info-inicio card-radiacion" *ngIf="areaMarked && (heatmapAvailable || isHeatmapLoading)">
+        <div class="titulo-container">
+          <div class="icono-inicio text-solar-icon">
+            <span class="material-icons">wb_sunny</span>
+          </div>
+          <div class="titulo-inicio">
+            <h2>Radiación Solar</h2>
+          </div>
+        </div>
+
+        <div class="analisis-control">
+          <div class="heatmap-toggle-container">
+            <span class="toggle-label">Ver mapa de calor solar</span>
+            <label class="switch">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="showHeatmap" 
+                (change)="toggleHeatmap()"
+                [disabled]="isHeatmapLoading"
+              />
+              <span class="slider round"></span>
+            </label>
+          </div>
+          
+          <!-- Spinner de carga premium -->
+          <div class="heatmap-loading-overlay" *ngIf="isHeatmapLoading">
+            <div class="loading-pulse-container">
+              <span class="material-icons sun-pulse">wb_sunny</span>
+              <div class="pulse-ring"></div>
+            </div>
+            <div class="loading-text-container">
+              <span class="loading-title">Procesando radiación...</span>
+              <span class="loading-subtitle">Analizando datos satelitales de radiación anual</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Leyenda / Escala térmica de referencia -->
+        <div class="heatmap-legend-container" *ngIf="heatmapAvailable && !isHeatmapLoading">
+          <span class="legend-title">Referencia de radiación anual</span>
+          <div class="legend-bar-container">
+            <div class="legend-bar"></div>
+            <div class="legend-labels">
+              <span class="label-min">Menos radiación (Sombra)</span>
+              <span class="label-max">Más radiación (Óptimo)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="advertencia" *ngIf="heatmapAvailable && !isHeatmapLoading">
+          <p id="recomendacion">
+            Visualiza el mapa térmico de radiación anual detallada sobre el techo para ubicar los paneles en las zonas con mayor sol.
           </p>
         </div>
       </div>

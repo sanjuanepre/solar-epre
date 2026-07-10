@@ -82,9 +82,26 @@ export class SolarController {
     return this.solarService.getSolarData(latitude, longitude);
   }
 
+  @Get('dataLayers')
+  @ApiOperation({
+    summary: 'Obtiene las URLs de capas de datos solares (GeoTIFFs) para visualización del mapa de calor.',
+  })
+  async getDataLayers(
+    @Query('latitude') latitude: number,
+    @Query('longitude') longitude: number,
+    @Query('radiusMeters') radiusMeters: number = 30,
+  ) {
+    return this.solarService.getSolarDataLayers(
+      Number(latitude),
+      Number(longitude),
+      Number(radiusMeters),
+    );
+  }
+
   @Options('calcular')
   handleOptions() {
     // Respuesta vacía para la solicitud OPTIONS
     return;
   }
 }
+
