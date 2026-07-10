@@ -3,6 +3,39 @@
     <div class="titulo">
       <h2 id="titulo">RESULTADOS ESTIMADOS</h2>
     </div>
+
+    <!-- Selector rápido de estructura interactivo en Paso 3 -->
+    <div class="selector-estructura-paso3-container">
+      <div class="selector-estructura-paso3">
+        <span class="selector-label">Estructura de montaje activa:</span>
+        <div class="toggle-estructura-container">
+          <button 
+            type="button"
+            class="btn-toggle-estructura" 
+            [class.active]="tipoEstructura === 'coplanar'"
+            (click)="cambiarEstructura('coplanar')"
+            [disabled]="isLoading || isCalculating">
+            <mat-icon class="text-icon">grid_on</mat-icon>
+            Coplanar al tejado
+          </button>
+          <button 
+            type="button"
+            class="btn-toggle-estructura" 
+            [class.active]="tipoEstructura === 'optimo'"
+            (click)="cambiarEstructura('optimo')"
+            [disabled]="isLoading || isCalculating">
+            <mat-icon class="text-icon font-sun">wb_sunny</mat-icon>
+            Ángulo Óptimo (30° Norte)
+          </button>
+        </div>
+      </div>
+      <div class="ganancia-captacion-tooltip" *ngIf="tipoEstructura === 'optimo' && roofFactor < 1.0">
+        <mat-icon class="ganancia-icon">trending_up</mat-icon>
+        <span>
+          ¡Captación solar optimizada en un <strong>+{{ (1 / roofFactor - 1) * 100 | number:'1.0-0' }}%</strong> en comparación con la inclinación natural del tejado!
+        </span>
+      </div>
+    </div>
     <div class="info-container" id="info-container">
       <div class="action-buttons">
         <div class="editar-component" id="botonEdit">

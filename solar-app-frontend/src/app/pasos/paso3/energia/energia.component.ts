@@ -27,6 +27,7 @@ export class EnergiaComponent implements OnInit, AfterViewInit, OnDestroy {
   @Output() recalculoTerminado: EventEmitter<boolean> =
     new EventEmitter<boolean>();
   factorPotencia: number = 1;
+  tipoEstructura: 'coplanar' | 'optimo' = 'coplanar';
 
   constructor(
     private sharedService: SharedService,
@@ -36,6 +37,13 @@ export class EnergiaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     console.log('ngOnInit: Inicializando componente EnergiaComponent');
+    
+    this.sharedService.tipoEstructura$
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((tipo) => {
+        this.tipoEstructura = tipo || 'coplanar';
+        this.cdr.detectChanges();
+      });
     console.log(
       'Valor inicial de yearlyEnergyAckWhInitial:',
       this.yearlyEnergyAckWhInitial

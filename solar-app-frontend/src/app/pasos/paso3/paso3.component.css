@@ -357,3 +357,113 @@
 #botonEdit, #boton-volver-paso3 {
   visibility: hidden;
 }
+
+/* Selector rápido de estructura interactivo en Paso 3 */
+.selector-estructura-paso3-container {
+  margin: 10px 10px 20px 10px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+.selector-estructura-paso3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.selector-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+  letter-spacing: -0.01em;
+}
+
+.toggle-estructura-container {
+  display: flex;
+  background-color: #f1f5f9;
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.btn-toggle-estructura {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-toggle-estructura:hover:not(:disabled) {
+  color: #0f172a;
+}
+
+.btn-toggle-estructura.active {
+  background-color: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.btn-toggle-estructura .text-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.btn-toggle-estructura.active .font-sun {
+  color: #f59e0b; /* Sol amarillo brillante */
+  animation: spinSolar 8s linear infinite;
+}
+
+@keyframes spinSolar {
+  100% { transform: rotate(360deg); }
+}
+
+.btn-toggle-estructura.active .text-icon:not(.font-sun) {
+  color: #3b82f6; /* Azul estructura */
+}
+
+/* Tooltip premium de ganancia de captación solar */
+.ganancia-captacion-tooltip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #166534;
+  font-size: 13px;
+  animation: slideDown 0.3s ease-out;
+}
+
+.ganancia-captacion-tooltip .ganancia-icon {
+  color: #15803d;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

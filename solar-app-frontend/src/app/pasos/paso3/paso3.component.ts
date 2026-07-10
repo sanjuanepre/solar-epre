@@ -37,6 +37,7 @@ export class Paso3Component implements OnInit, OnDestroy {
   fechaActual!: string;
   categoriaTarifa!: string;
   tipoEstructura: 'coplanar' | 'optimo' = 'coplanar';
+  roofFactor: number = 1.0;
   items: any[] = [];
   currentStep: number = 3;
   mostrarModal: boolean = false;
@@ -376,6 +377,9 @@ export class Paso3Component implements OnInit, OnDestroy {
       this.tipoEstructura = this.sharedService.getTipoEstructura();
       console.log('Tipo de estructura cargada:', this.tipoEstructura);
 
+      this.roofFactor = this.resultadosFront.roofFactor || 1.0;
+      console.log('Factor de techo cargado:', this.roofFactor);
+
       this.eficienciaInstalacion =
         parametros.caracteristicasSistema.eficienciaInstalacion || 0.95;
       console.log('Eficiencia de instalación:', this.eficienciaInstalacion);
@@ -413,6 +417,39 @@ export class Paso3Component implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Error en initializeSystemParameters:', error);
       this.handleInitializationSystemParametersError(error);
+    }
+  }
+
+  async cambiarEstructura(tipo: 'coplanar' | 'optimo'): Promise<void> {
+    if (this.tipoEstructura === tipo || this.isCalculating) {
+      return;
+    }
+    console.log(`[Paso3Component] Cambiando estructura a: ${tipo}`);
+    this.isCalculating = true;
+    this.sharedService.setIsLoading(true);
+    this.sharedService.setTipoEstructura(tipo);
+    this.tipoEstructura = tipo;
+
+    try {
+      const resultados = await this.solarService.calculate();
+      console.log('[Paso3Component] Recálculo exitoso tras cambio de estructura:', resultados);
+      this.resultadosFront = resultados;
+      this.sharedService.setResultadosFront(resultados);
+      
+      // Volver a inicializar los datos en base a los nuevos resultados
+      this.initialLoadFields();
+      this.cdr.detectChanges();
+    } catch (error) {
+      console.error('[Paso3Component] Error al recalcular por cambio de estructura:', error);
+      this.snackBar.open(
+        'Error al recalcular los ahorros energéticos. Por favor intente de nuevo.',
+        'Cerrar',
+        { duration: 5000 }
+      );
+    } finally {
+      this.isCalculating = false;
+      this.sharedService.setIsLoading(false);
+      this.cdr.detectChanges();
     }
   }
 

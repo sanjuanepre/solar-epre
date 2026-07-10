@@ -46,6 +46,7 @@ export class ResultadoService {
       periodoVeinteanalProyeccionTarifas:
         response.periodoVeinteanalProyeccionTarifas,
       resultadosFinancieros: response.resultadosFinancieros,
+      roofFactor: response.roofFactor,
     };
 
     console.log('Resultados generados:', resultados);

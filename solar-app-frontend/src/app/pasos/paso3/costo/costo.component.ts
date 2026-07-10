@@ -15,6 +15,7 @@ export class CostoComponent implements OnInit, AfterViewInit, OnDestroy {
   yarlyEnergykWhInitial!: number;
   yearlyEnergykWh!: number;
   factorPotencia!: number;
+  tipoEstructura: 'coplanar' | 'optimo' = 'coplanar';
 
   constructor(
     private sharedService: SharedService,
@@ -23,6 +24,13 @@ export class CostoComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     console.log('ngOnInit: Iniciando componente CostoComponent');
+    
+    this.sharedService.tipoEstructura$
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((tipo) => {
+        this.tipoEstructura = tipo || 'coplanar';
+        this.cdr.detectChanges();
+      });
     this.sharedService.factorPotencia$
     .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
     .subscribe((newFactorPotencia: number) => {

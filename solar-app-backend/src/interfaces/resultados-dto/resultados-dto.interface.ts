@@ -19,4 +19,5 @@ export interface ResultadosDto {
     casoConCapitalPropio: ResultadosCapitalPropio[],
     indicadoresFinancieros: IndicadoresFinancieros
   };
+  roofFactor?: number;
 }

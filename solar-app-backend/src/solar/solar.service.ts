@@ -166,6 +166,9 @@ export class SolarService {
     );
     // console.log('Resultado del cálculo de ahorros:', JSON.stringify(result, null, 2));
 
+    const roofFactor = this.calculateRoofFactor(solarDataApi.solarPotential, dto.panelsSelected);
+    result.roofFactor = roofFactor;
+
     return result;
   }
 
