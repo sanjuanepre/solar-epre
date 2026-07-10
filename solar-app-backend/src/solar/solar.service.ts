@@ -107,7 +107,10 @@ export class SolarService {
     // Si el tipo de estructura es 'optimo' (inclinación de 30° al Norte), aplicamos el factor de transposición
     if (dto.tipoEstructura === 'optimo') {
       const roofFactor = this.calculateRoofFactor(solarDataApi.solarPotential, dto.panelsSelected);
-      solarPanelConfig.yearlyEnergyDcKwh = solarPanelConfig.yearlyEnergyDcKwh / roofFactor;
+      solarPanelConfig.yearlyEnergyDcKwh = (solarPanelConfig.yearlyEnergyDcKwh || 0) / (roofFactor || 1);
+      if (isNaN(solarPanelConfig.yearlyEnergyDcKwh)) {
+        solarPanelConfig.yearlyEnergyDcKwh = 0;
+      }
     }
 
    /*  console.log(
@@ -117,10 +120,13 @@ export class SolarService {
 
     const yearlysAnualConfigurations =
       solarDataApi.solarPotential.solarPanelConfigs.map((item: any) => {
-        let energyDc = item.yearlyEnergyDcKwh;
+        let energyDc = item.yearlyEnergyDcKwh || 0;
         if (dto.tipoEstructura === 'optimo') {
           const factor = this.calculateRoofFactor(solarDataApi.solarPotential, item.panelsCount);
-          energyDc = energyDc / factor;
+          energyDc = energyDc / (factor || 1);
+          if (isNaN(energyDc)) {
+            energyDc = 0;
+          }
         }
         return {
           panelsCount: item.panelsCount,
@@ -413,10 +419,10 @@ export class SolarService {
 
     const configs = solarPotential.solarPanelConfigs;
     let closestConfig = configs[0];
-    let minDiff = Math.abs(configs[0].panelsCount - panelsSelected);
+    let minDiff = Math.abs((configs[0].panelsCount || 0) - (panelsSelected || 0));
 
     for (const config of configs) {
-      const diff = Math.abs(config.panelsCount - panelsSelected);
+      const diff = Math.abs((config.panelsCount || 0) - (panelsSelected || 0));
       if (diff < minDiff) {
         minDiff = diff;
         closestConfig = config;
@@ -447,7 +453,8 @@ export class SolarService {
       totalPanels += (segment.panelsCount || 0);
     });
 
-    return totalPanels > 0 ? (weightedFactorSum / totalPanels) : 1.0;
+    const factor = totalPanels > 0 ? (weightedFactorSum / totalPanels) : 1.0;
+    return isNaN(factor) || factor <= 0 ? 1.0 : factor;
   }
 }
 
