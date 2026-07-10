@@ -108,6 +108,9 @@
             ⦁ Categoría de tarifa seleccionada = {{ categoriaTarifa }}.
           </p>
           <p class="hipotesis">
+            ⦁ Tipo de estructura = {{ tipoEstructura === 'optimo' ? 'Estructura inclinada al Norte (30°)' : 'Coplanar al tejado (inclinación natural)' }}.
+          </p>
+          <p class="hipotesis">
             ⦁ Potencia contratada=
             {{ potenciaContratadaHip / 1000 | number : "1.0-0" }} kW
           </p>

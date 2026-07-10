@@ -83,6 +83,9 @@ export class SharedService {
   private tarifaIntercambioUsdkWhSubject = new BehaviorSubject<number>(0);
   tarifaIntercambioUsdkWh$ = this.tarifaIntercambioUsdkWhSubject.asObservable();
 
+  private tipoEstructuraSubject = new BehaviorSubject<'coplanar' | 'optimo'>('coplanar');
+  tipoEstructura$ = this.tipoEstructuraSubject.asObservable();
+
   private initialState = {
     tarifaContratada: '',
     yearlysAnualConfigurations: [],
@@ -93,7 +96,8 @@ export class SharedService {
     costoInstalacion: 0,
     plazoInversion: 0,
     tarifaIntercambioUsdkWh: 0,
-    potenciaMaxAsignadaW: 0
+    potenciaMaxAsignadaW: 0,
+    tipoEstructura: 'coplanar' as 'coplanar' | 'optimo'
   };
 
 
@@ -477,6 +481,17 @@ export class SharedService {
   
   getMaxPanelsPerMaxPotencia() {
     return this.maxPanelsPerMaxPotenciaSubject.getValue();
+  }
+
+  setTipoEstructura(value: 'coplanar' | 'optimo') {
+    console.log('Estableciendo tipo de estructura:', value);
+    this.tipoEstructuraSubject.next(value);
+  }
+
+  getTipoEstructura(): 'coplanar' | 'optimo' {
+    const value = this.tipoEstructuraSubject.getValue();
+    console.log('Obteniendo tipo de estructura:', value);
+    return value;
   }
 
 }

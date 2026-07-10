@@ -563,4 +563,187 @@ input:checked + .slider:before {
   }
 }
 
+/* Estilos para el panel unificado de Análisis e Instalación */
+.card-analisis-config {
+  animation: fadeIn 0.3s ease-in-out;
+  margin-top: 15px;
+  border: 2px solid #e2e8f0 !important;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  gap: 15px !important;
+}
+
+.text-analisis-icon {
+  color: #10b981; /* Verde premium para indicar análisis/optimización */
+}
+
+.seccion-config {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.seccion-subtitle {
+  font-family: 'Sodo Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.seccion-desc-lite {
+  font-family: 'Sodo Sans', sans-serif;
+  font-size: 11.5px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.select-margin {
+  margin-bottom: 6px !important;
+}
+
+.config-divider {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid #e2e8f0;
+  margin: 5px 0;
+}
+
+/* Spinner de carga premium - Versión Compacta */
+.heatmap-loading-overlay-compact {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  background: #fff7ed;
+  border-radius: 8px;
+  border: 1px dashed #ffedd5;
+  margin-top: 8px;
+  gap: 12px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.loading-pulse-container-compact {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sun-pulse-compact {
+  font-size: 22px;
+  color: #ea580c;
+  animation: spin 8s linear infinite;
+  z-index: 2;
+}
+
+.pulse-ring-compact {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 1.5px solid #ea580c;
+  border-radius: 50%;
+  animation: pulse 1.5s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+  opacity: 0;
+  z-index: 1;
+}
+
+.loading-text-container-compact {
+  text-align: left;
+}
+
+.loading-title-compact {
+  display: block;
+  font-size: 12.5px;
+  font-family: 'Sodo Sans', sans-serif;
+  font-weight: 600;
+  color: #ea580c;
+}
+
+.loading-subtitle-compact {
+  display: block;
+  font-size: 10.5px;
+  font-family: 'Sodo Sans', sans-serif;
+  color: #c2410c;
+  opacity: 0.8;
+}
+
+/* Estructura de Montaje - Layout Compacto (2 Columnas Grid) */
+.estructura-selector-compact {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.estructura-option-compact {
+  padding: 10px 12px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #ffffff;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 85px;
+}
+
+.estructura-option-compact:hover {
+  border-color: #93c5fd;
+  background-color: #f8fafc;
+  transform: translateY(-1px);
+}
+
+.estructura-option-compact.active {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+.option-header-compact {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.option-icon-compact {
+  font-size: 16px;
+  color: #64748b;
+  transition: color 0.15s ease;
+}
+
+.estructura-option-compact.active .option-icon-compact {
+  color: #2563eb;
+}
+
+.option-title-compact {
+  font-family: 'Sodo Sans', sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #1e293b;
+  transition: color 0.15s ease;
+}
+
+.estructura-option-compact.active .option-title-compact {
+  color: #1d4ed8;
+}
+
+.option-desc-compact {
+  font-family: 'Sodo Sans', sans-serif;
+  font-size: 10.5px;
+  line-height: 1.35;
+  color: #64748b;
+  margin: 0;
+  transition: color 0.15s ease;
+}
+
+.estructura-option-compact.active .option-desc-compact {
+  color: #475569;
+}
+
 

@@ -124,6 +124,7 @@ export class SolarApiService implements OnDestroy {
         panelsSelected: this.sharedService.getPanelsSelected(),
         potenciaMaxAsignada: this.potenciaMaxAsignadaW,
         factorPotencia: factorPotencia ?? 1,
+        tipoEstructura: this.sharedService.getTipoEstructura(),
       };
       console.log('Datos que se envían al endpoint:', datosCalculo);
 

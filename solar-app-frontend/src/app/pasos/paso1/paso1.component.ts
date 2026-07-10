@@ -26,6 +26,7 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
   annualFluxUrl: string = '';
   drawingState: 'INACTIVE' | 'START' | 'DRAWING' | 'CLOSED' = 'INACTIVE';
   instructionText: string = 'Presiona "Marcar techo" para comenzar a dibujar el área de instalación.';
+  tipoEstructura: 'coplanar' | 'optimo' = 'coplanar';
 
   @ViewChild('pacInput', { static: false }) pacInput!: ElementRef;
   private marker!: google.maps.marker.AdvancedMarkerElement | null;
@@ -84,6 +85,14 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
         this.zone.run(() => {
           this.isHeatmapLoading = loading;
           this.updateInstructionText(this.drawingState);
+        });
+      });
+
+    this.sharedService.tipoEstructura$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((tipo) => {
+        this.zone.run(() => {
+          this.tipoEstructura = tipo;
         });
       });
 
@@ -359,8 +368,13 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
       this.showHeatmap = false;
       this.isHeatmapLoading = false;
       this.annualFluxUrl = '';
+      this.sharedService.setTipoEstructura('coplanar');
       this.updateInstructionText(this.drawingState);
     });
+  }
+
+  selectTipoEstructura(tipo: 'coplanar' | 'optimo') {
+    this.sharedService.setTipoEstructura(tipo);
   }
 
   private calculateInstalledPower(): number {

@@ -36,6 +36,7 @@ export class Paso3Component implements OnInit, OnDestroy {
   tasaInflacionUsd!: number;
   fechaActual!: string;
   categoriaTarifa!: string;
+  tipoEstructura: 'coplanar' | 'optimo' = 'coplanar';
   items: any[] = [];
   currentStep: number = 3;
   mostrarModal: boolean = false;
@@ -371,6 +372,9 @@ export class Paso3Component implements OnInit, OnDestroy {
 
       const parametros: ParametrosFront = this.resultadosFront.parametros!;
       console.log('Parámetros obtenidos:', parametros);
+
+      this.tipoEstructura = this.sharedService.getTipoEstructura();
+      console.log('Tipo de estructura cargada:', this.tipoEstructura);
 
       this.eficienciaInstalacion =
         parametros.caracteristicasSistema.eficienciaInstalacion || 0.95;

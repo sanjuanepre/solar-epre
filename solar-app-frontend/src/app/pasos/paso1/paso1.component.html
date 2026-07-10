@@ -87,20 +87,24 @@
         </div>
       </div>
 
-      <!-- Análisis de Radiación Solar (Mapa de calor) -->
-      <div class="info-inicio card-radiacion" *ngIf="areaMarked && (heatmapAvailable || isHeatmapLoading)">
+      <!-- Análisis y Configuración de la Instalación -->
+      <div class="info-inicio card-analisis-config" *ngIf="areaMarked && (heatmapAvailable || isHeatmapLoading)">
         <div class="titulo-container">
-          <div class="icono-inicio text-solar-icon">
-            <span class="material-icons">wb_sunny</span>
+          <div class="icono-inicio text-analisis-icon">
+            <span class="material-icons font-icon-large">dashboard_customize</span>
           </div>
           <div class="titulo-inicio">
-            <h2>Radiación Solar</h2>
+            <h2>Análisis e Instalación</h2>
           </div>
         </div>
 
-        <div class="analisis-control">
+        <!-- 1. Control de Radiación Solar (Mapa de Calor) -->
+        <div class="seccion-config solar-control">
           <div class="heatmap-toggle-container">
-            <span class="toggle-label">Ver mapa de calor solar</span>
+            <div class="toggle-text">
+              <span class="seccion-subtitle">Mapa de calor solar</span>
+              <p class="seccion-desc-lite">Visualiza las zonas con mayor radiación solar anual sobre el tejado.</p>
+            </div>
             <label class="switch">
               <input 
                 type="checkbox" 
@@ -113,34 +117,66 @@
           </div>
           
           <!-- Spinner de carga premium -->
-          <div class="heatmap-loading-overlay" *ngIf="isHeatmapLoading">
-            <div class="loading-pulse-container">
-              <span class="material-icons sun-pulse">wb_sunny</span>
-              <div class="pulse-ring"></div>
+          <div class="heatmap-loading-overlay-compact" *ngIf="isHeatmapLoading">
+            <div class="loading-pulse-container-compact">
+              <span class="material-icons sun-pulse-compact">wb_sunny</span>
+              <div class="pulse-ring-compact"></div>
             </div>
-            <div class="loading-text-container">
-              <span class="loading-title">Procesando radiación...</span>
-              <span class="loading-subtitle">Analizando datos satelitales de radiación anual</span>
+            <div class="loading-text-container-compact">
+              <span class="loading-title-compact">Procesando radiación...</span>
+              <span class="loading-subtitle-compact">Analizando datos satelitales</span>
+            </div>
+          </div>
+
+          <!-- Leyenda / Escala térmica de referencia (solo visible si el mapa de calor está encendido) -->
+          <div class="heatmap-legend-container" *ngIf="heatmapAvailable && !isHeatmapLoading && showHeatmap">
+            <span class="legend-title">Referencia de radiación anual</span>
+            <div class="legend-bar-container">
+              <div class="legend-bar"></div>
+              <div class="legend-labels">
+                <span class="label-min">Menos radiación (Sombra)</span>
+                <span class="label-max">Más radiación (Óptimo)</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Leyenda / Escala térmica de referencia -->
-        <div class="heatmap-legend-container" *ngIf="heatmapAvailable && !isHeatmapLoading">
-          <span class="legend-title">Referencia de radiación anual</span>
-          <div class="legend-bar-container">
-            <div class="legend-bar"></div>
-            <div class="legend-labels">
-              <span class="label-min">Menos radiación (Sombra)</span>
-              <span class="label-max">Más radiación (Óptimo)</span>
+        <hr class="config-divider" *ngIf="heatmapAvailable && !isHeatmapLoading" />
+
+        <!-- 2. Selección de Estructura de Montaje -->
+        <div class="seccion-config estructura-control" *ngIf="heatmapAvailable && !isHeatmapLoading">
+          <span class="seccion-subtitle">Estructura de montaje</span>
+          <p class="seccion-desc-lite select-margin">Elija cómo desea montar los paneles sobre el tejado.</p>
+
+          <div class="estructura-selector-compact">
+            <div 
+              class="estructura-option-compact" 
+              [class.active]="tipoEstructura === 'coplanar'"
+              (click)="selectTipoEstructura('coplanar')"
+            >
+              <div class="option-header-compact">
+                <span class="material-icons option-icon-compact">home</span>
+                <span class="option-title-compact">Coplanares al techo</span>
+              </div>
+              <p class="option-desc-compact">
+                Sigue la inclinación natural del techo. Montaje más simple, estético y económico.
+              </p>
+            </div>
+
+            <div 
+              class="estructura-option-compact" 
+              [class.active]="tipoEstructura === 'optimo'"
+              (click)="selectTipoEstructura('optimo')"
+            >
+              <div class="option-header-compact">
+                <span class="material-icons option-icon-compact">explore</span>
+                <span class="option-title-compact">Inclinada al Norte (30°)</span>
+              </div>
+              <p class="option-desc-compact">
+                Paneles a 30° Norte. <strong>Maximiza la generación anual en San Juan (+10% a +25%)</strong>.
+              </p>
             </div>
           </div>
-        </div>
-
-        <div class="advertencia" *ngIf="heatmapAvailable && !isHeatmapLoading">
-          <p id="recomendacion">
-            Visualiza el mapa térmico de radiación anual detallada sobre el techo para ubicar los paneles en las zonas con mayor sol.
-          </p>
         </div>
       </div>
    

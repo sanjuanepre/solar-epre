@@ -103,6 +103,13 @@ export class SolarService {
       solarDataApi.solarPotential,
       dto.panelsSelected,
     );
+
+    // Si el tipo de estructura es 'optimo' (inclinación de 30° al Norte), aplicamos el factor de transposición
+    if (dto.tipoEstructura === 'optimo') {
+      const roofFactor = this.calculateRoofFactor(solarDataApi.solarPotential, dto.panelsSelected);
+      solarPanelConfig.yearlyEnergyDcKwh = solarPanelConfig.yearlyEnergyDcKwh / roofFactor;
+    }
+
    /*  console.log(
       'Configuración de paneles calculada:',
       JSON.stringify(solarPanelConfig, null, 2),
@@ -110,9 +117,14 @@ export class SolarService {
 
     const yearlysAnualConfigurations =
       solarDataApi.solarPotential.solarPanelConfigs.map((item: any) => {
+        let energyDc = item.yearlyEnergyDcKwh;
+        if (dto.tipoEstructura === 'optimo') {
+          const factor = this.calculateRoofFactor(solarDataApi.solarPotential, item.panelsCount);
+          energyDc = energyDc / factor;
+        }
         return {
           panelsCount: item.panelsCount,
-          yearlyEnergyDcKwh: item.yearlyEnergyDcKwh,
+          yearlyEnergyDcKwh: energyDc,
         };
       });
     // console.log('Configuraciones anuales:', JSON.stringify(yearlysAnualConfigurations, null, 2));
@@ -388,6 +400,54 @@ export class SolarService {
       imageryQuality: 'LOW',
       isMock: true,
     };
+  }
+
+  /**
+   * Calcula el factor de captación anual relativo del tejado (F_techo) a partir de los pitch y azimuth
+   * de cada segmento de tejado en la configuración de paneles de referencia, para latitud -31.5° (San Juan).
+   */
+  private calculateRoofFactor(solarPotential: any, panelsSelected: number): number {
+    if (!solarPotential || !solarPotential.solarPanelConfigs || solarPotential.solarPanelConfigs.length === 0) {
+      return 1.0;
+    }
+
+    const configs = solarPotential.solarPanelConfigs;
+    let closestConfig = configs[0];
+    let minDiff = Math.abs(configs[0].panelsCount - panelsSelected);
+
+    for (const config of configs) {
+      const diff = Math.abs(config.panelsCount - panelsSelected);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestConfig = config;
+      }
+    }
+
+    if (!closestConfig || !closestConfig.roofSegmentSummaries || closestConfig.roofSegmentSummaries.length === 0) {
+      return 1.0;
+    }
+
+    let totalPanels = 0;
+    let weightedFactorSum = 0;
+
+    closestConfig.roofSegmentSummaries.forEach((segment: any) => {
+      const pitchRad = (segment.pitchDegrees || 0) * Math.PI / 180;
+      const azimuthRad = (segment.azimuthDegrees || 0) * Math.PI / 180;
+
+      // Inclinación óptima anual es 30° en San Juan
+      const pitchOptRad = 30 * Math.PI / 180;
+
+      // Pérdidas por desviación de inclinación y de orientación (azimuth)
+      const loss = 1.2 * (1 - Math.cos(pitchRad - pitchOptRad)) + 
+                   0.8 * Math.pow(Math.sin(pitchRad), 2) * (1 - Math.cos(azimuthRad));
+
+      const segmentFactor = Math.max(0.5, 1 - loss);
+
+      weightedFactorSum += segmentFactor * (segment.panelsCount || 0);
+      totalPanels += (segment.panelsCount || 0);
+    });
+
+    return totalPanels > 0 ? (weightedFactorSum / totalPanels) : 1.0;
   }
 }
 
