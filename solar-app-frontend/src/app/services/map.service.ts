@@ -659,9 +659,10 @@ export class MapService {
 
     let totalPanels = 0;
     const max = maxPanels;
+    let maxGridPanels = 0;
 
-    for (let i = 0; i < numPanelsX && totalPanels < max; i++) {
-      for (let j = 0; j < numPanelsY && totalPanels < max; j++) {
+    for (let i = 0; i < numPanelsX; i++) {
+      for (let j = 0; j < numPanelsY; j++) {
         const southWestCorner = new google.maps.LatLng(
           southWest.lat() + offsetY + j * panelHeightDegrees,
           southWest.lng() + offsetX + i * panelWidthDegrees
@@ -684,24 +685,30 @@ export class MapService {
         );
 
         if (allCornersInside) {
-          const panelRectangle = new google.maps.Rectangle({
-            bounds: new google.maps.LatLngBounds(
-              southWestCorner,
-              northEastCorner
-            ),
-            fillColor: '#000000',
-            fillOpacity: 0.7,
-            strokeColor: '#FFFFFF',
-            strokeWeight: 0.5,
-            map: this.map,
-          });
+          maxGridPanels++;
 
-          this.panels.push(panelRectangle);
-          totalPanels++;
+          if (totalPanels < max) {
+            const panelRectangle = new google.maps.Rectangle({
+              bounds: new google.maps.LatLngBounds(
+                southWestCorner,
+                northEastCorner
+              ),
+              fillColor: '#000000',
+              fillOpacity: 0.7,
+              strokeColor: '#FFFFFF',
+              strokeWeight: 0.5,
+              map: this.map,
+            });
+
+            this.panels.push(panelRectangle);
+            totalPanels++;
+          }
         }
       }
     }
+    this.sharedService.setMaxPanelsPerSuperface(maxGridPanels);
     this.sharedService.setPanelsCountSelected(totalPanels);
+    this.sharedService.calculateAreaPanelsSelected(totalPanels);
   }
 
   getPolygons() {
