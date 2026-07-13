@@ -86,21 +86,37 @@ export class PanelesComponent implements OnInit, AfterViewInit, OnDestroy {
         }
 
         this.mapService.reDrawPanels(this.panelesSelectCount);
-        // Actualizar el máximo permitido y redibujar paneles
-        // this.updateMaxPanels();
-        // this.mapService.reDrawPanels(this.panelesSelectCount);
       });
 
-    // Subscripción al plazo de recuperación de la inversión
-    this.sharedService.plazoInversion$
+    // Suscripción al máximo de paneles por área de superficie para actualizar los límites del slider
+    this.sharedService.maxPanelsPerSuperface$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
-      .subscribe((plazo) => {
-        console.log(
-          'PanelesComponent: Nuevo plazo de recuperación de inversión:',
-          plazo
-        );
-        this.plazoRecuperoInversion = plazo;
+      .subscribe((maxArea) => {
+        console.log('PanelesComponent: Nuevo máximo de paneles por área:', maxArea);
+        this.maxPanelsArea$ = maxArea;
+        this.updateSliderLimits();
       });
+
+    // Suscripción a la cantidad de paneles seleccionados
+    this.sharedService.panelsCountSelected$
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((count) => {
+        console.log('PanelesComponent: Cantidad de paneles seleccionados:', count);
+        this.panelesSelectCount = count;
+        this.updateSliderLimits();
+      });
+  }
+
+  updateSliderLimits() {
+    const maxAllowed = this.maxPanelsArea$ || this.panelesSelectCount;
+    if (this.slider) {
+      this.slider.max = maxAllowed;
+    }
+    if (this.panelesSelectCount > maxAllowed) {
+      this.panelesSelectCount = maxAllowed;
+      this.sharedService.setPanelsCountSelected(maxAllowed);
+    }
+    this.cdr.detectChanges();
   }
 
   ngAfterViewInit(): void {

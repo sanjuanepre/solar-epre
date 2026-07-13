@@ -32,7 +32,8 @@ export class SharedService {
   private inversionUsdSubject = new BehaviorSubject<number>(0);
   inversionUsd$ = this.inversionUsdSubject.asObservable();
 
-  private dimensionPanel!: { height: number; width: number };
+  private dimensionPanelSubject = new BehaviorSubject<DimensionPanel>({ height: 1.722, width: 1.134 });
+  dimensionPanel$ = this.dimensionPanelSubject.asObservable();
   private areaPanelsSelectedSubject = new BehaviorSubject<number>(0);
   areaPanelsSelected$ = this.areaPanelsSelectedSubject.asObservable();
 
@@ -369,13 +370,13 @@ export class SharedService {
     return value;
   }
   getDimensionPanel(): DimensionPanel {
-    const dimension = this.dimensionPanel || this.getDimensionByCapacity(this.getPanelCapacityW());
+    const dimension = this.dimensionPanelSubject.getValue();
     console.log('Obteniendo dimensiones del panel:', dimension);
     return dimension;
   }
   setDimensionPanels(dimensionPanel: DimensionPanel) {
     console.log('Estableciendo dimensiones del panel:', dimensionPanel);
-    this.dimensionPanel = dimensionPanel;
+    this.dimensionPanelSubject.next(dimensionPanel);
   }
 
   setYearlysAnualConfigurations(

@@ -722,7 +722,22 @@ export class Paso3Component implements OnInit, OnDestroy {
     this.sharedService.panelCapacityW$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe({
-        next: (capacity) => (this.potenciaPanelHip = capacity),
+        next: (capacity) => {
+          this.potenciaPanelHip = capacity;
+          this.panelCapacityW = capacity;
+          console.log('Paso 3: Capacidad de panel W actualizada:', capacity);
+          this.cdr.detectChanges();
+        },
+      });
+
+    this.sharedService.dimensionPanel$
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe({
+        next: (dimension) => {
+          this.dimensionPanel = dimension;
+          console.log('Paso 3: Dimensiones del panel actualizadas:', dimension);
+          this.cdr.detectChanges();
+        },
       });
 
 

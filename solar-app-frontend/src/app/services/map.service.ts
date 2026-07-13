@@ -33,8 +33,12 @@ export class MapService {
   private panelsRedrawn = new Subject<number>();
   panelsRedrawn$ = this.panelsRedrawn.asObservable();
 
-  private panelWidthMeters = 1.045;
-  private panelHeightMeters = 1.879;
+  get panelWidthMeters(): number {
+    return this.sharedService.getDimensionPanel().width;
+  }
+  get panelHeightMeters(): number {
+    return this.sharedService.getDimensionPanel().height;
+  }
   polygonAux!: google.maps.Polygon;
 
   // --- Estado para dibujo manual de polígonos ---

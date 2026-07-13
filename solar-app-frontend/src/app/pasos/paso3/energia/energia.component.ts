@@ -78,7 +78,7 @@ export class EnergiaComponent implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     console.log('ngAfterViewInit: La vista ha sido inicializada');
 
-    // Nos suscribimos al observable de potencia de instalación
+    // Nos suscribimos al observable de potencia de instalación (cantidad de paneles)
     this.sharedService.panelsCountSelected$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((panelsCountSelected) => {
@@ -86,7 +86,18 @@ export class EnergiaComponent implements OnInit, AfterViewInit, OnDestroy {
           'Suscripción panelsCountSelected$: Recibido nueva potencia:',
           panelsCountSelected
         );
-        this.updateYearlyEnergy(); // Llamamos a la función de actualización de energía
+        this.updateYearlyEnergy();
+      });
+
+    // Nos suscribimos al observable de capacidad de panel para actualizar la energía al cambiar la potencia
+    this.sharedService.panelCapacityW$
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((panelCapacity) => {
+        console.log(
+          'Suscripción panelCapacityW$: Recibido nueva capacidad:',
+          panelCapacity
+        );
+        this.updateYearlyEnergy();
       });
   }
 
