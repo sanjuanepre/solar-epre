@@ -8,6 +8,8 @@ import {
   OnDestroy,
   ChangeDetectorRef,
   ChangeDetectionStrategy,
+  OnChanges,
+  SimpleChanges
 } from '@angular/core';
 
 import { distinctUntilChanged, Subject, takeUntil } from 'rxjs';
@@ -24,7 +26,7 @@ import * as ApexCharts from 'apexcharts';
   styleUrls: ['./graficos.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
+export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
   @Input()
   periodoVeinteanalEmisionesGEIEvitadasOriginal!: EmisionesGeiEvitadasFront[];
   periodoVeinteanalEmisionesGEIEvitadasCopia: EmisionesGeiEvitadasFront[] = [];
@@ -124,12 +126,58 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
       });
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    console.log('GraficosComponent: ngOnChanges invocado', changes);
+    
+    if (changes['periodoVeinteanalFlujoIngresosMonetarios']) {
+      const current = changes['periodoVeinteanalFlujoIngresosMonetarios'].currentValue;
+      if (current && current.length > 0) {
+        if (!this.chartAhorroRecupero) {
+          console.log('GraficosComponent: Inicializando gráfico Ahorro/Recupero desde ngOnChanges');
+          setTimeout(() => this.initializeChartAhorroRecupero(), 0);
+        } else {
+          console.log('GraficosComponent: Actualizando gráfico Ahorro/Recupero desde ngOnChanges');
+          this.updateChartAhorroRecupero();
+        }
+      }
+    }
+
+    if (changes['periodoVeinteanalFlujoEnergia'] || changes['periodoVeinteanalGeneracionFotovoltaica']) {
+      if (this.periodoVeinteanalFlujoEnergia && this.periodoVeinteanalFlujoEnergia.length > 0) {
+        if (!this.chartEnergiaConsumo) {
+          console.log('GraficosComponent: Inicializando gráfico Energia/Consumo desde ngOnChanges');
+          setTimeout(() => this.initializeChartEnergiaConsumo(), 0);
+        } else {
+          this.updateChartEnergiaConsumo();
+        }
+      }
+    }
+
+    if (changes['periodoVeinteanalEmisionesGEIEvitadasOriginal']) {
+      const current = changes['periodoVeinteanalEmisionesGEIEvitadasOriginal'].currentValue;
+      if (current && current.length > 0) {
+        if (!this.chartEmisiones) {
+          console.log('GraficosComponent: Inicializando gráfico Emisiones desde ngOnChanges');
+          setTimeout(() => this.initializeChartEmisionesEvitadasAcumuladas(), 0);
+        } else {
+          this.updateChartEmisionesEvitadasAcumuladas();
+        }
+      }
+    }
+  }
+
   ngAfterViewInit(): void {
     this.carbonOffSetInicialTon = this.sharedService.getCarbonOffSetTnAnual();
 
-    this.initializeChartEnergiaConsumo();
-    this.initializeChartAhorroRecupero();
-    this.initializeChartEmisionesEvitadasAcumuladas();
+    if (this.periodoVeinteanalFlujoEnergia && this.periodoVeinteanalFlujoEnergia.length > 0) {
+      this.initializeChartEnergiaConsumo();
+    }
+    if (this.periodoVeinteanalFlujoIngresosMonetarios && this.periodoVeinteanalFlujoIngresosMonetarios.length > 0) {
+      this.initializeChartAhorroRecupero();
+    }
+    if (this.periodoVeinteanalEmisionesGEIEvitadasOriginal && this.periodoVeinteanalEmisionesGEIEvitadasOriginal.length > 0) {
+      this.initializeChartEmisionesEvitadasAcumuladas();
+    }
   }
 
   ngOnDestroy(): void {
@@ -139,6 +187,14 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private initializeChartAhorroRecupero() {
+    if (
+      !this.periodoVeinteanalFlujoIngresosMonetarios ||
+      this.periodoVeinteanalFlujoIngresosMonetarios.length === 0
+    ) {
+      console.warn('initializeChartAhorroRecupero: No hay datos de flujo de ingresos monetarios para inicializar el gráfico.');
+      return;
+    }
+
     this.periodoVeinteanalFlujoIngresosMonetariosCopia = JSON.parse(
       JSON.stringify(this.periodoVeinteanalFlujoIngresosMonetarios)
     );
@@ -300,6 +356,13 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
       console.error('El gráfico no está inicializado.');
       return;
     }
+    if (
+      !this.periodoVeinteanalFlujoIngresosMonetariosCopia ||
+      this.periodoVeinteanalFlujoIngresosMonetariosCopia.length === 0
+    ) {
+      console.warn('updateChartAhorroRecupero: No hay copia de flujo de ingresos monetarios para actualizar el gráfico.');
+      return;
+    }
     // Obtener el valor actualizado de los meses y calcular el año de recupero
     const recuperoInversionAnios = Math.round(this.recuperoInversionMeses / 12);
     const primerAno =
@@ -418,6 +481,11 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private initializeChartEnergiaConsumo() {
+    if (!this.consumoTotalAnual && !this.yearlyEnergy) {
+      console.warn('initializeChartEnergiaConsumo: No hay datos de energía para inicializar el gráfico.');
+      return;
+    }
+
     const options = {
       chart: {
         type: 'bar',
