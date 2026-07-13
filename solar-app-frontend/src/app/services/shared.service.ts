@@ -10,6 +10,16 @@ import { Router } from '@angular/router';
   providedIn: 'root',
 })
 export class SharedService {
+  // Catálogo de dimensiones físicas de paneles por potencia (metros)
+  private static readonly PANEL_DIMENSIONS: Record<number, DimensionPanel> = {
+    400: { height: 1.722, width: 1.134 },
+    450: { height: 1.903, width: 1.134 },
+    500: { height: 2.094, width: 1.134 },
+    550: { height: 2.278, width: 1.134 },
+    600: { height: 2.278, width: 1.134 },
+    700: { height: 2.384, width: 1.303 },
+  };
+
   private maxPanelsPerMaxPotenciaSubject = new BehaviorSubject<number>(0);
   maxPanelsPerMaxPotencia$ = this.maxPanelsPerMaxPotenciaSubject.asObservable();
 
@@ -183,12 +193,19 @@ export class SharedService {
   setPanelCapacityW(value: number) {
     console.log('Seteando capacidad de panel en W: ', value);
     this.panelCapacityWSubject.next(value);
+    // Sincronizar dimensiones del panel con la potencia seleccionada
+    const dimension = this.getDimensionByCapacity(value);
+    this.setDimensionPanels(dimension);
   }
 
   getPanelCapacityW(): number {
     const capacity = this.panelCapacityWSubject.getValue();
     console.log('Obteniendo capacidad de panel en W: ', capacity);
     return capacity;
+  }
+
+  getDimensionByCapacity(watts: number): DimensionPanel {
+    return SharedService.PANEL_DIMENSIONS[watts] || SharedService.PANEL_DIMENSIONS[400];
   }
 
   setYearlyEnergyAckWh(value: number): void {
@@ -352,10 +369,7 @@ export class SharedService {
     return value;
   }
   getDimensionPanel(): DimensionPanel {
-    const dimension = this.dimensionPanel || {
-      height: 1.879,
-      width: 1.045,
-    };
+    const dimension = this.dimensionPanel || this.getDimensionByCapacity(this.getPanelCapacityW());
     console.log('Obteniendo dimensiones del panel:', dimension);
     return dimension;
   }

@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { ResultadosFrontDTO } from '../interfaces/resultados-front-dto';
-import { GmailService } from './gmail.service';
 import { SharedService } from './shared.service';
 import { FlujoIngresosMonetariosFront } from '../interfaces/flujo-ingresos-monetarios-front';
 
@@ -10,7 +9,6 @@ import { FlujoIngresosMonetariosFront } from '../interfaces/flujo-ingresos-monet
 export class ResultadoService {
   private resultados!: ResultadosFrontDTO;
   constructor(
-    private gmailService: GmailService,
     private sharedService: SharedService
   ) {}
 
@@ -18,7 +16,6 @@ export class ResultadoService {
     console.log('Iniciando generarResultados con response:', response);
     
     console.log('Verificando capacidad del panel:', response.solarData.panels.panelCapacityW);
-    this.checkUpdatePanelCapacity(response.solarData.panels.panelCapacityW);
     
     const inversionInitial = response.parametros.inversionCostos.inversion;
     console.log('Inversión inicial:', inversionInitial);
@@ -77,11 +74,5 @@ export class ResultadoService {
 
     console.log('Finalizando método ahorrosUsdCalcular. Valor retornado:', sumaAhorros);
     return sumaAhorros;
-  }
-
-  private checkUpdatePanelCapacity(newPanelCapacityW: number): void {
-    if (newPanelCapacityW !== 400) {
-      this.gmailService.sendEmailChangeCapacityInApi(newPanelCapacityW);
-    }
   }
 }

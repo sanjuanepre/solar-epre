@@ -53,7 +53,7 @@ export class SolarApiService implements OnDestroy {
     this.sharedService.resetAll();
   }
 
-  async calculate(panels400WCount?: number, factorPotencia?: number): Promise<any> {
+  async calculate(panelsCount?: number, factorPotencia?: number): Promise<any> {
     console.log(
       'Iniciando cálculo solar - Método calculate en SolarApiService'
     );
@@ -224,8 +224,8 @@ export class SolarApiService implements OnDestroy {
     }
   }
 
-  async recalculate(panels400WCount: number, factorPotencia: number): Promise<boolean> {
-    return await this.calculate(panels400WCount, factorPotencia)
+  async recalculate(panelsCount: number, factorPotencia: number): Promise<boolean> {
+    return await this.calculate(panelsCount, factorPotencia)
       .then(() => {
         const resultadosProcesados = this.resultadoService.generarResultados(this._resultados);
         this.sharedService.setYearlyEnergyAckWh(resultadosProcesados.periodoVeinteanalGeneracionFotovoltaica[0].generacionFotovoltaicaKWh);
@@ -234,7 +234,7 @@ export class SolarApiService implements OnDestroy {
           resultadosProcesados.resultadosFinancieros.indicadoresFinancieros
             .payBackMonths;
         this.sharedService.setPlazoInversion(plazoInversionInicial);
-        this.sharedService.calculateAreaPanelsSelected(panels400WCount);
+        this.sharedService.calculateAreaPanelsSelected(panelsCount);
         console.log('Plazo de inversión inicial establecido:', plazoInversionInicial);
         return true;
       })

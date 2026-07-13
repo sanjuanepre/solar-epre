@@ -102,11 +102,11 @@ export class EnergiaComponent implements OnInit, AfterViewInit, OnDestroy {
   private async updateYearlyEnergy(): Promise<void> {
     if (!this.sharedService.getIsLoading()) this.recalculoIniciado.emit(true);
     const panelCapacity = this.sharedService.getPanelCapacityW();
-    let panels400WCount = this.sharedService.getPanelsSelected();
-    const factorPotencia = 400 / 400;
+    let panelsCount = this.sharedService.getPanelsSelected();
+    const factorPotencia = panelCapacity / 400;
 
     await this.recalculateService
-      .recalculateyearlyEnergyACkWh(panels400WCount, factorPotencia)
+      .recalculateyearlyEnergyACkWh(panelsCount, factorPotencia)
       .then((recalculoOk) => {
         this.cdr.detectChanges();
         console.log('recalculoOk:', recalculoOk);
