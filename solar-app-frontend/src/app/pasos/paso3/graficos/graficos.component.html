@@ -1,5 +1,5 @@
 <div class="container-graficos">
-  <!-- Energia consumida y generada -->
+  <!-- Energía consumida y generada (barras apiladas) -->
   <div class="item-grafico">
     <div class="grafico-container-borde">
       <div class="head">
@@ -7,7 +7,7 @@
           <img
             src="assets/icon-pot-intal.png"
             class="tamaño-icon"
-            alt="Icono de Emisiones CO2"
+            alt="Icono energía"
           />
         </div>
         <div class="titulo">
@@ -27,7 +27,35 @@
     </div>
   </div>
 
-  <!-- Ahorros anuales y punto de recupero de la inversión -->
+  <!-- Distribución energética (donut) -->
+  <div class="item-grafico">
+    <div class="grafico-container-borde">
+      <div class="head">
+        <div class="icono">
+          <img
+            src="assets/icon-pot-intal.png"
+            class="tamaño-icon"
+            alt="Icono distribución"
+          />
+        </div>
+        <div class="titulo">
+          <p>Distribución de energía anual</p>
+        </div>
+        <div class="resultado-container">
+          <div class="unidad">
+            <p class="unidad-texto"></p>
+          </div>
+        </div>
+      </div>
+      <div class="informacion-general">
+        <div class="grafico-component">
+          <div id="chartDonutEnergiaRef"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ahorros anuales y flujo de caja acumulado -->
   <div class="item-grafico">
     <div class="grafico-container-borde">
       <div class="head">
@@ -35,7 +63,7 @@
           <img src="assets/icon-dinero.png" class="tamaño-icon" alt="ahorros" />
         </div>
         <div class="titulo">
-          <p>Ahorros anuales y punto de recupero de la inversión</p>
+          <p>Ahorros anuales y flujo de caja acumulado</p>
         </div>
         <div class="resultado-container">
           <div class="resultado">
@@ -84,6 +112,5 @@
       </div>
     </div>
   </div>
-   
 
 </div>
