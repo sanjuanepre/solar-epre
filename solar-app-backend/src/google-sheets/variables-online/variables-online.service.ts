@@ -98,8 +98,10 @@ export class VariablesOnlineService {
       const equipoMedicionUsd = this.parseFloatWithFormat(rows[2][1]) / tipoCambioArs;
       const mantenimientoUsd = this.parseFloatWithFormat(rows[5][1]);
 
+      const ivaEquipoMedicion = this.parseFloatWithFormat(rows[3][1]) / 100;
+
       const equipoDeMedicionUsdAplicado = categoriaSeleccionada.includes('T1-R')
-        ? equipoMedicionUsd * (1 + economicas.IVA)
+        ? equipoMedicionUsd * (1 + ivaEquipoMedicion)
         : equipoMedicionUsd;
 
       const inversionYCostos: InversionCostos = {
@@ -188,8 +190,8 @@ export class VariablesOnlineService {
         tasaDescuentoFlujoFondosUsd:
           this.parseFloatWithFormat(rowsEconomicas[2][1]) / 100,
         impuestosYTasasProvinciales:
-          this.parseFloatWithFormat(rowsImpuestos[0][1]) / 100,
-        IVA: this.parseFloatWithFormat(rowsImpuestos[1][1]) / 100,
+          this.parseFloatWithFormat(rowsImpuestos[1][1]) / 100,
+        IVA: this.parseFloatWithFormat(rowsImpuestos[2][1]) / 100,
       };
 
       return economicas;
