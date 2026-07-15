@@ -94,11 +94,18 @@ export class VariablesOnlineService {
       const categoriaSeleccionada = solarCalculationDto.categoriaSeleccionada;
       const tipoCambioArs = economicas.tipoCambioArs;
 
-      const costoUsdWpConIva = this.parseFloatWithFormat(rows[0][1]);
-      const equipoMedicionUsd = this.parseFloatWithFormat(rows[2][1]) / tipoCambioArs;
-      const mantenimientoUsd = this.parseFloatWithFormat(rows[5][1]);
+      // Buscar valores por etiqueta, o usar los índices tradicionales como fallback
+      const costoUsdWpConIvaStr = this.findValueByLabel(rows, 'Costo (USD/Wp) CON IVA') || rows[0]?.[1];
+      const costoUsdWpConIva = this.parseFloatWithFormat(costoUsdWpConIvaStr);
 
-      const ivaEquipoMedicion = this.parseFloatWithFormat(rows[3][1]) / 100;
+      const equipoMedicionArsStr = this.findValueByLabel(rows, 'Equipo de medición ($AR) SIN IVA') || rows[2]?.[1];
+      const equipoMedicionUsd = this.parseFloatWithFormat(equipoMedicionArsStr) / tipoCambioArs;
+
+      const mantenimientoStr = this.findValueByLabel(rows, 'Mantenimiento (% inversión inicial)') || rows[5]?.[1];
+      const mantenimientoUsd = this.parseFloatWithFormat(mantenimientoStr);
+
+      const ivaEquipoMedicionStr = this.findValueByLabel(rows, 'IVA Equipo de medición') || rows[3]?.[1];
+      const ivaEquipoMedicion = this.parseFloatWithFormat(ivaEquipoMedicionStr) / 100;
 
       const equipoDeMedicionUsdAplicado = categoriaSeleccionada.includes('T1-R')
         ? equipoMedicionUsd * (1 + ivaEquipoMedicion)
@@ -139,15 +146,21 @@ export class VariablesOnlineService {
         throw new Error('No se encontraron datos en el rango especificado.');
       }
 
-      const caracteristicasSistema: CaracteristicasSistema = {
-        eficienciaInstalacion: this.parseFloatWithFormat(rows[0][1]) / 100,
-        degradacionAnualPanel: this.parseFloatWithFormat(rows[1][1]) / 100,
-        proporcionAutoconsumo: this.parseFloatWithFormat(rows[2][1]) / 100,
-        proporcionInyeccion:
-          (100 - this.parseFloatWithFormat(rows[2][1])) / 100,
-      };
+      const eficienciaStr = this.findValueByLabel(rows, 'Eficiencia instalacion') || rows[0]?.[1];
+      const degradacionStr = this.findValueByLabel(rows, 'Degradación anual paneles') || rows[1]?.[1];
+      const autoconsumoStr = this.findValueByLabel(rows, 'Proporción de autoconsumo') || rows[2]?.[1];
 
-      return caracteristicasSistema;
+      const eficienciaInstalacion = this.parseFloatWithFormat(eficienciaStr) / 100;
+      const degradacionAnualPanel = this.parseFloatWithFormat(degradacionStr) / 100;
+      const proporcionAutoconsumo = this.parseFloatWithFormat(autoconsumoStr) / 100;
+      const proporcionInyeccion = 1 - proporcionAutoconsumo;
+
+      return {
+        eficienciaInstalacion,
+        degradacionAnualPanel,
+        proporcionAutoconsumo,
+        proporcionInyeccion,
+      };
     } catch (error) {
       console.error('Error in getCaracteristicasSistema:', error);
       throw new Error(
@@ -184,20 +197,43 @@ export class VariablesOnlineService {
         throw new Error('No se encontraron datos en el rango especificado.');
       }
 
+      const TCStr = this.findValueByLabel(rowsEconomicas, 'Tipo de cambio') || rowsEconomicas[0]?.[1];
+      const inflacionStr = this.findValueByLabel(rowsEconomicas, 'Tasa inflación') || rowsEconomicas[1]?.[1];
+      const descuentoStr = this.findValueByLabel(rowsEconomicas, 'Tasa de descuento') || rowsEconomicas[2]?.[1];
+
+      const provStr = this.findValueByLabel(rowsImpuestos, 'Impuestos y tasas provinciales') || rowsImpuestos[1]?.[1];
+      const ivaStr = this.findValueByLabel(rowsImpuestos, 'IVA') || rowsImpuestos[2]?.[1];
+
       const economicas: Economicas = {
-        tipoCambioArs: this.parseFloatWithFormat(rowsEconomicas[0][1]),
-        tasaInflacionUsd: this.parseFloatWithFormat(rowsEconomicas[1][1]) / 100,
-        tasaDescuentoFlujoFondosUsd:
-          this.parseFloatWithFormat(rowsEconomicas[2][1]) / 100,
-        impuestosYTasasProvinciales:
-          this.parseFloatWithFormat(rowsImpuestos[1][1]) / 100,
-        IVA: this.parseFloatWithFormat(rowsImpuestos[2][1]) / 100,
+        tipoCambioArs: this.parseFloatWithFormat(TCStr),
+        tasaInflacionUsd: this.parseFloatWithFormat(inflacionStr) / 100,
+        tasaDescuentoFlujoFondosUsd: this.parseFloatWithFormat(descuentoStr) / 100,
+        impuestosYTasasProvinciales: this.parseFloatWithFormat(provStr) / 100,
+        IVA: this.parseFloatWithFormat(ivaStr) / 100,
       };
 
       return economicas;
     } catch (error) {
       throw new Error('No se pudieron obtener la cotizacion.');
     }
+  }
+
+  private findValueByLabel(rows: any[][], label: string): string {
+    if (!rows) return '';
+    const normLabel = this.normalizeString(label);
+    const row = rows.find(r => r && r[0] && this.normalizeString(r[0]).includes(normLabel));
+    return row && row[1] !== undefined ? row[1].toString() : '';
+  }
+
+  private normalizeString(val: any): string {
+    if (val === null || val === undefined) return '';
+    return val
+      .toString()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   private parseFloatWithFormat(value: string): number {

@@ -8,7 +8,7 @@ import { CostoMantenimiento } from '../../interfaces/costo-mantenimiento/costo-m
 import { SolarData } from '../../interfaces/solar-data/solar-data.interface';
 
 export class Resultados {
-  private readonly tasaDescuento = 10 / 100;
+  private tasaDescuento = 10 / 100;
   private _casoConCapitalPropio: ResultadosCapitalPropio[];
   private _indicadoresFinancieros: IndicadoresFinancieros;
   private _emisionesGEIEvitadas: EmisionesGeiEvitadas[];
@@ -24,6 +24,10 @@ export class Resultados {
   ) {
     this.solarData = solarData;
     this.dto = dto;
+
+    if (dto?.parametros?.economicas?.tasaDescuentoFlujoFondosUsd !== undefined) {
+      this.tasaDescuento = dto.parametros.economicas.tasaDescuentoFlujoFondosUsd;
+    }
 
     this.generarResultadosCapitalPropio(
       periodoVeinteanalFlujoIngresosMonetarios,
