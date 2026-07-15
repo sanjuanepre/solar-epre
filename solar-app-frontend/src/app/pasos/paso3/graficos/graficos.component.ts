@@ -485,11 +485,13 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
         fontSize: '11px',
         fontFamily: 'sodo sans, sans-serif',
         markers: {
-          width: 10,
-          height: 10,
-          radius: 3,
+          width: 12,
+          height: 12,
+          radius: 2,
+          fillColors: ['#5aaa8a', '#e4c58d', '#008ae3'],
         },
       },
+      dataLabels: { enabled: false },
       fill: { opacity: [0.85, 0.85, 1] },
     };
 
@@ -670,17 +672,24 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private updateChartEmisionesEvitadasAcumuladas(): void {
-    // buildCumulativeCO2Data ahora deriva los valores desde la tasa anual de carbonOffset
-    // y aplica la degradación del panel, por lo que solo necesitamos la fuente de años.
+    // buildCumulativeCO2Data deriva los valores desde la tasa anual de carbonOffset
+    // y aplica la degradación del panel.
     const anioInicial = this.periodoVeinteanalEmisionesGEIEvitadasOriginal[0].year - 1;
     const { categories, data } = this.buildCumulativeCO2Data(
       this.periodoVeinteanalEmisionesGEIEvitadasOriginal,
       anioInicial
     );
 
+    // Recalcular árboles equivalentes con el valor actualizado
+    const totalCO2Acumulado = data[data.length - 1];
+    const arbolesEquivalentes = Math.round(totalCO2Acumulado / 0.02);
+
     this.chartEmisiones.updateOptions({
       series: [{ name: 'CO₂ evitado acumulado', data: data, color: '#5aaa8a' }],
       xaxis: { categories: categories },
+      subtitle: {
+        text: `≈ ${arbolesEquivalentes.toLocaleString('de-DE')} árboles plantados en 20 años`,
+      },
     });
     this.cdr.detectChanges();
   }
