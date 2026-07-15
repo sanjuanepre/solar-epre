@@ -220,8 +220,20 @@ export class VariablesOnlineService {
 
   private findValueByLabel(rows: any[][], label: string): string {
     if (!rows) return '';
-    const row = rows.find(r => r && r[0] && r[0].toString().toLowerCase().includes(label.toLowerCase()));
+    const normLabel = this.normalizeString(label);
+    const row = rows.find(r => r && r[0] && this.normalizeString(r[0]).includes(normLabel));
     return row && row[1] !== undefined ? row[1].toString() : '';
+  }
+
+  private normalizeString(val: any): string {
+    if (val === null || val === undefined) return '';
+    return val
+      .toString()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   private parseFloatWithFormat(value: string): number {
