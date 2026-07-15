@@ -387,7 +387,7 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
       chart: {
         height: 350,
         width: 470,
-        type: 'line',
+        type: 'bar',
         stacked: false,
         background: 'transparent',
         toolbar: { show: false },
@@ -396,6 +396,7 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
       stroke: {
         width: [0, 0, 3],
         curve: 'smooth',
+        colors: ['transparent', 'transparent', '#008ae3'],
       },
       plotOptions: {
         bar: {
@@ -572,6 +573,11 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
       anioInicial
     );
 
+    // Calcular total acumulado al final para la anotación de árboles
+    const totalCO2Acumulado = data[data.length - 1];
+    // Factor: 1 árbol absorbe ~0.02 tCO₂/año durante su vida
+    const arbolesequivalentes = Math.round(totalCO2Acumulado / 0.02);
+
     const options = {
       series: [
         {
@@ -612,6 +618,15 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
         strokeColors: '#fff',
         strokeWidth: 2,
         hover: { size: 7 },
+      },
+      subtitle: {
+        text: `≈ ${arbolesequivalentes.toLocaleString('de-DE')} árboles plantados en 20 años`,
+        align: 'center',
+        style: {
+          fontSize: '11px',
+          fontFamily: 'sodo sans, sans-serif',
+          color: '#5aaa8a',
+        },
       },
       xaxis: {
         categories: categories,
@@ -655,21 +670,13 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private updateChartEmisionesEvitadasAcumuladas(): void {
-    this.periodoVeinteanalEmisionesGEIEvitadasCopia = JSON.parse(
-      JSON.stringify(this.periodoVeinteanalEmisionesGEIEvitadasOriginal)
+    // buildCumulativeCO2Data ahora deriva los valores desde la tasa anual de carbonOffset
+    // y aplica la degradación del panel, por lo que solo necesitamos la fuente de años.
+    const anioInicial = this.periodoVeinteanalEmisionesGEIEvitadasOriginal[0].year - 1;
+    const { categories, data } = this.buildCumulativeCO2Data(
+      this.periodoVeinteanalEmisionesGEIEvitadasOriginal,
+      anioInicial
     );
-
-    const factor =
-      this.sharedService.getCarbonOffSetTnAnual() / this.carbonOffSetInicialTon;
-
-    // Aplicar factor a los datos anuales
-    const dataAjustada = this.periodoVeinteanalEmisionesGEIEvitadasCopia.map((item, index) => ({
-      year: item.year,
-      emisionesTonCO2: index === 0 ? this.sharedService.getCarbonOffSetTnAnual() : item.emisionesTonCO2 * factor,
-    }));
-
-    const anioInicial = dataAjustada[0].year - 1;
-    const { categories, data } = this.buildCumulativeCO2Data(dataAjustada, anioInicial);
 
     this.chartEmisiones.updateOptions({
       series: [{ name: 'CO₂ evitado acumulado', data: data, color: '#5aaa8a' }],
@@ -679,21 +686,28 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * Transforma los datos anuales de CO2 en una serie acumulada,
-   * añadiendo el punto inicial en 0 dinámicamente.
+   * Construye la serie acumulada de CO₂ evitado calculando año a año
+   * a partir de la tasa anual (carbonOffSetTnAnual) y la degradación del panel.
+   * NO usa el dato del backend directamente porque viene como acumulado.
    */
   private buildCumulativeCO2Data(
     source: { year: number; emisionesTonCO2: number }[],
     anioInicial: number
   ): { categories: string[]; data: number[] } {
+    const carbonOffSetAnual = this.sharedService.getCarbonOffSetTnAnual();
+    const degradacion = this.sharedService.getDegradacionPanel();
+    const totalYears = source.length;
+
     const categories: string[] = [anioInicial.toString()];
     const data: number[] = [0];
 
     let acumulado = 0;
-    for (const item of source) {
-      acumulado += item.emisionesTonCO2;
-      categories.push(item.year.toString());
-      data.push(acumulado);
+    let anualActual = carbonOffSetAnual;
+    for (let i = 0; i < totalYears; i++) {
+      acumulado += anualActual;
+      categories.push(source[i].year.toString());
+      data.push(parseFloat(acumulado.toFixed(2)));
+      anualActual *= (1 - degradacion); // degradación anual del panel
     }
 
     return { categories, data };
