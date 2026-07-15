@@ -58,6 +58,7 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
   chartEnergiaConsumo!: ApexCharts;
   chartDonutEnergia!: ApexCharts;
   vistaCO2: 'anual' | 'comparativa' | 'acumulada' | 'gauge' = 'anual';
+  textoArboles: string = '';
 
   constructor(
     private sharedService: SharedService,
@@ -353,6 +354,10 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
   // ─────────────────────────────────────────────────
   private initializeChartAhorroRecupero() {
     const flujoData = this.periodoVeinteanalFlujoIngresosMonetarios;
+    if (!flujoData || flujoData.length === 0) {
+      console.warn('initializeChartAhorroRecupero: flujoData vacío o indefinido, postergando inicialización.');
+      return;
+    }
     const recuperoInversionAnios = Math.round(this.recuperoInversionMeses / 12);
     const primerAno = flujoData[0].year;
     const anoRecuperoInversion = primerAno + recuperoInversionAnios;
@@ -591,7 +596,11 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
     );
 
     const totalCO2Acumulado = cumulativeData[cumulativeData.length - 1];
-    const arbolesequivalentes = Math.round(totalCO2Acumulado / 0.02);
+    const anos = cumulativeData.length - 1; // 20 años
+    // 1 árbol absorbe ~20 kg (0.02 tCO₂) de CO2 por año. En 20 años absorbe 0.4 tCO₂.
+    const arbolesequivalentes = Math.round(totalCO2Acumulado / (0.02 * anos));
+
+    this.textoArboles = `Equivale a absorber el CO<sub>2</sub> de ≈ <strong>${arbolesequivalentes.toLocaleString('de-DE')}</strong> árboles en ${anos} años`;
 
     const carbonOffsetAnual = this.sharedService.getCarbonOffSetTnAnual();
     const factor = carbonOffsetAnual / (this.yearlyEnergy || 1);
@@ -637,15 +646,6 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
           strokeColors: '#fff',
           strokeWidth: 2,
           hover: { size: 6 },
-        },
-        subtitle: {
-          text: `Equivale a absorber el CO₂ de ≈ ${arbolesequivalentes.toLocaleString('de-DE')} árboles en 20 años`,
-          align: 'center',
-          style: {
-            fontSize: '11px',
-            fontFamily: 'sodo sans, sans-serif',
-            color: '#5aaa8a',
-          },
         },
         xaxis: {
           categories: categories,
@@ -777,15 +777,6 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
           strokeColors: '#fff',
           strokeWidth: 2,
           hover: { size: 6 },
-        },
-        subtitle: {
-          text: `Equivale a absorber el CO₂ de ≈ ${arbolesequivalentes.toLocaleString('de-DE')} árboles en 20 años`,
-          align: 'center',
-          style: {
-            fontSize: '11px',
-            fontFamily: 'sodo sans, sans-serif',
-            color: '#5aaa8a',
-          },
         },
         xaxis: {
           categories: categories,

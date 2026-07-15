@@ -112,6 +112,8 @@
           <button (click)="cambiarVistaCO2('acumulada')" [class.active]="vistaCO2 === 'acumulada'">Acumulada</button>
           <button (click)="cambiarVistaCO2('gauge')" [class.active]="vistaCO2 === 'gauge'">Velocímetro</button>
         </div>
+        <div class="subtitulo-arboles" *ngIf="vistaCO2 !== 'gauge' && textoArboles" [innerHTML]="textoArboles">
+        </div>
         <div class="grafico-component">
           <div id="emisionesChartRef"></div>
         </div>
