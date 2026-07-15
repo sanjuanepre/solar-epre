@@ -48,7 +48,7 @@ export class Tarifa {
 
     if (tarifarioActual) {
       const cuadro = tarifarioActual.find((tarifa) => {
-        return tarifa.nombre == this.categoria;
+        return this.categoria.startsWith(tarifa.nombre);
       });
 
       if (cuadro) {
