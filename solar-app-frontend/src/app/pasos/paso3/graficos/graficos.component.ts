@@ -480,17 +480,11 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
           },
         ] : [],
       },
+      colors: ['#5aaa8a', '#e4c58d', '#008ae3'],
       legend: {
         position: 'bottom',
         fontSize: '11px',
         fontFamily: 'sodo sans, sans-serif',
-        markers: {
-          customHTML: [
-            () => '<span style="display:inline-block;width:14px;height:14px;background:#5aaa8a;border-radius:2px;vertical-align:middle;margin-right:3px"></span>',
-            () => '<span style="display:inline-block;width:14px;height:14px;background:#e4c58d;border-radius:2px;vertical-align:middle;margin-right:3px"></span>',
-            () => '<span style="display:inline-block;width:14px;height:3px;background:#008ae3;border-radius:0;vertical-align:middle;margin-right:3px"></span>',
-          ],
-        },
       },
       dataLabels: { enabled: false },
       fill: { opacity: [0.85, 0.85, 1] },
@@ -557,7 +551,7 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // ─────────────────────────────────────────────────
-  // GRÁFICA 4: Emisiones CO₂ evitadas ACUMULADAS
+  // GRÁFICA 4: Emisiones CO₂ evitadas (Anual y Acumulado)
   // ─────────────────────────────────────────────────
   private initializeChartEmisionesEvitadasAcumuladas() {
     if (
@@ -570,51 +564,44 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const anioInicial = this.periodoVeinteanalEmisionesGEIEvitadasOriginal[0].year - 1;
 
-    // Construir datos ACUMULADOS (siempre crecientes)
-    const { categories, data } = this.buildCumulativeCO2Data(
+    // Construir datos (anual y acumulado)
+    const { categories, annualData, cumulativeData } = this.buildCO2Data(
       this.periodoVeinteanalEmisionesGEIEvitadasOriginal,
       anioInicial
     );
 
-    // Calcular total acumulado al final para la anotación de árboles
-    const totalCO2Acumulado = data[data.length - 1];
+    const totalCO2Acumulado = cumulativeData[cumulativeData.length - 1];
     // Factor: 1 árbol absorbe ~0.02 tCO₂/año durante su vida
     const arbolesequivalentes = Math.round(totalCO2Acumulado / 0.02);
 
     const options = {
       series: [
         {
+          name: 'CO₂ evitado anual',
+          type: 'bar',
+          data: annualData,
+        },
+        {
           name: 'CO₂ evitado acumulado',
-          data: data,
-          color: '#5aaa8a',
+          type: 'line',
+          data: cumulativeData,
         },
       ],
       chart: {
         height: 350,
         width: 470,
-        type: 'area',
+        type: 'bar',
         background: 'transparent',
         toolbar: { show: false },
         zoom: { enabled: false },
       },
-      dataLabels: { enabled: false },
+      colors: ['#e4c58d', '#5aaa8a'],
       stroke: {
+        width: [0, 3],
         curve: 'smooth',
-        colors: ['#5aaa8a'],
-        width: 3,
+        colors: ['transparent', '#5aaa8a'],
       },
-      fill: {
-        type: 'gradient',
-        gradient: {
-          shade: 'dark',
-          gradientToColors: ['#e4c58d'],
-          shadeIntensity: 0.8,
-          type: 'vertical',
-          opacityFrom: 0.8,
-          opacityTo: 0.3,
-          stops: [0, 100],
-        },
-      },
+      dataLabels: { enabled: false },
       markers: {
         size: 0,
         colors: ['#5aaa8a'],
@@ -623,7 +610,7 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
         hover: { size: 7 },
       },
       subtitle: {
-        text: `≈ ${arbolesequivalentes.toLocaleString('de-DE')} árboles plantados en 20 años`,
+        text: `Equivale a absorber el CO₂ de ≈ ${arbolesequivalentes.toLocaleString('de-DE')} árboles en 20 años`,
         align: 'center',
         style: {
           fontSize: '11px',
@@ -639,30 +626,50 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
           offsetY: -25,
         },
       },
-      yaxis: {
-        min: 0,
-        labels: {
-          formatter: (val: number): string =>
-            val.toLocaleString('de-DE', { maximumFractionDigits: 1 }),
+      yaxis: [
+        {
+          seriesName: 'CO₂ evitado anual',
+          title: {
+            text: 'Ton CO₂/año',
+            style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
+          },
+          labels: {
+            formatter: (val: number): string =>
+              val.toLocaleString('de-DE', { maximumFractionDigits: 1 }),
+          },
         },
-        title: {
-          text: 'Ton CO₂ acumuladas',
-          style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
+        {
+          opposite: true,
+          seriesName: 'CO₂ evitado acumulado',
+          title: {
+            text: 'Ton CO₂ acumuladas',
+            style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
+          },
+          labels: {
+            formatter: (val: number): string =>
+              val.toLocaleString('de-DE', { maximumFractionDigits: 1 }),
+          },
         },
-      },
+      ],
       tooltip: {
         enabled: true,
         theme: 'light',
+        shared: true,
+        intersect: false,
         y: {
-          formatter: (value: number) =>
-            `${value.toLocaleString('de-DE', {
-              minimumFractionDigits: 1,
-              maximumFractionDigits: 1,
-            })} tCO₂ acumuladas`,
+          formatter: (value: number, { seriesIndex }: any) => {
+            return seriesIndex === 0
+              ? `${value.toLocaleString('de-DE', { maximumFractionDigits: 2 })} tCO₂/año`
+              : `${value.toLocaleString('de-DE', { maximumFractionDigits: 2 })} tCO₂ acumuladas`;
+          },
         },
-        marker: { show: false },
-        style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
       },
+      legend: {
+        position: 'bottom',
+        fontSize: '11px',
+        fontFamily: 'sodo sans, sans-serif',
+      },
+      fill: { opacity: [0.85, 1] },
     };
 
     this.chartEmisiones = new ApexCharts(
@@ -673,53 +680,54 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private updateChartEmisionesEvitadasAcumuladas(): void {
-    // buildCumulativeCO2Data deriva los valores desde la tasa anual de carbonOffset
-    // y aplica la degradación del panel.
     const anioInicial = this.periodoVeinteanalEmisionesGEIEvitadasOriginal[0].year - 1;
-    const { categories, data } = this.buildCumulativeCO2Data(
+    const { categories, annualData, cumulativeData } = this.buildCO2Data(
       this.periodoVeinteanalEmisionesGEIEvitadasOriginal,
       anioInicial
     );
 
-    // Recalcular árboles equivalentes con el valor actualizado
-    const totalCO2Acumulado = data[data.length - 1];
+    const totalCO2Acumulado = cumulativeData[cumulativeData.length - 1];
     const arbolesEquivalentes = Math.round(totalCO2Acumulado / 0.02);
 
     this.chartEmisiones.updateOptions({
-      series: [{ name: 'CO₂ evitado acumulado', data: data, color: '#5aaa8a' }],
+      series: [
+        { name: 'CO₂ evitado anual', data: annualData },
+        { name: 'CO₂ evitado acumulado', data: cumulativeData },
+      ],
       xaxis: { categories: categories },
       subtitle: {
-        text: `≈ ${arbolesEquivalentes.toLocaleString('de-DE')} árboles plantados en 20 años`,
+        text: `Equivale a absorber el CO₂ de ≈ ${arbolesEquivalentes.toLocaleString('de-DE')} árboles en 20 años`,
       },
     });
     this.cdr.detectChanges();
   }
 
   /**
-   * Construye la serie acumulada de CO₂ evitado calculando año a año
+   * Construye los datos de CO₂ evitado anual y acumulado año a año
    * a partir de la tasa anual (carbonOffSetTnAnual) y la degradación del panel.
-   * NO usa el dato del backend directamente porque viene como acumulado.
    */
-  private buildCumulativeCO2Data(
+  private buildCO2Data(
     source: { year: number; emisionesTonCO2: number }[],
     anioInicial: number
-  ): { categories: string[]; data: number[] } {
+  ): { categories: string[]; annualData: number[]; cumulativeData: number[] } {
     const carbonOffSetAnual = this.sharedService.getCarbonOffSetTnAnual();
     const degradacion = this.sharedService.getDegradacionPanel();
     const totalYears = source.length;
 
     const categories: string[] = [anioInicial.toString()];
-    const data: number[] = [0];
+    const annualData: number[] = [0];
+    const cumulativeData: number[] = [0];
 
     let acumulado = 0;
     let anualActual = carbonOffSetAnual;
     for (let i = 0; i < totalYears; i++) {
       acumulado += anualActual;
       categories.push(source[i].year.toString());
-      data.push(parseFloat(acumulado.toFixed(2)));
-      anualActual *= (1 - degradacion); // degradación anual del panel
+      annualData.push(parseFloat(anualActual.toFixed(2)));
+      cumulativeData.push(parseFloat(acumulado.toFixed(2)));
+      anualActual *= (1 - degradacion);
     }
 
-    return { categories, data };
+    return { categories, annualData, cumulativeData };
   }
 }
