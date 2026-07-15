@@ -485,10 +485,11 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
         fontSize: '11px',
         fontFamily: 'sodo sans, sans-serif',
         markers: {
-          width: 12,
-          height: 12,
-          radius: 2,
-          fillColors: ['#5aaa8a', '#e4c58d', '#008ae3'],
+          customHTML: [
+            () => '<span style="display:inline-block;width:14px;height:14px;background:#5aaa8a;border-radius:2px;vertical-align:middle;margin-right:3px"></span>',
+            () => '<span style="display:inline-block;width:14px;height:14px;background:#e4c58d;border-radius:2px;vertical-align:middle;margin-right:3px"></span>',
+            () => '<span style="display:inline-block;width:14px;height:3px;background:#008ae3;border-radius:0;vertical-align:middle;margin-right:3px"></span>',
+          ],
         },
       },
       dataLabels: { enabled: false },
