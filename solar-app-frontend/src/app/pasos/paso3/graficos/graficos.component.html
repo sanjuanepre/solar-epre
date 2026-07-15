@@ -94,7 +94,7 @@
           />
         </div>
         <div class="titulo">
-          <p>Emisiones CO<sub class="small-sup">2</sub> evitadas acumuladas</p>
+          <p>Emisiones de CO<sub class="small-sup">2</sub> evitadas</p>
         </div>
         <div class="resultado-container">
           <div class="resultado">
@@ -106,6 +106,12 @@
         </div>
       </div>
       <div class="informacion-general">
+        <div class="selector-vista">
+          <button (click)="cambiarVistaCO2('anual')" [class.active]="vistaCO2 === 'anual'">Anual</button>
+          <button (click)="cambiarVistaCO2('comparativa')" [class.active]="vistaCO2 === 'comparativa'">Comparativa</button>
+          <button (click)="cambiarVistaCO2('acumulada')" [class.active]="vistaCO2 === 'acumulada'">Acumulada</button>
+          <button (click)="cambiarVistaCO2('gauge')" [class.active]="vistaCO2 === 'gauge'">Velocímetro</button>
+        </div>
         <div class="grafico-component">
           <div id="emisionesChartRef"></div>
         </div>

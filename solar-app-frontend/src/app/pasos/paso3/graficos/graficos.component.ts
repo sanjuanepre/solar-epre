@@ -57,11 +57,17 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
   ahorrosAnualesIniciales!: number;
   chartEnergiaConsumo!: ApexCharts;
   chartDonutEnergia!: ApexCharts;
+  vistaCO2: 'anual' | 'comparativa' | 'acumulada' | 'gauge' = 'anual';
 
   constructor(
     private sharedService: SharedService,
     private cdr: ChangeDetectorRef
   ) { }
+
+  cambiarVistaCO2(vista: 'anual' | 'comparativa' | 'acumulada' | 'gauge') {
+    this.vistaCO2 = vista;
+    this.renderChartEmisiones();
+  }
 
   ngOnInit(): void {
     if (!this.yearlyEnergyInitial) {
@@ -551,155 +557,339 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // ─────────────────────────────────────────────────
-  // GRÁFICA 4: Emisiones CO₂ evitadas (Anual y Acumulado)
+  // GRÁFICA 4: Emisiones CO₂ evitadas (Anual, Comparativa, Acumulada y Velocímetro)
   // ─────────────────────────────────────────────────
   private initializeChartEmisionesEvitadasAcumuladas() {
+    this.renderChartEmisiones();
+  }
+
+  private updateChartEmisionesEvitadasAcumuladas(): void {
+    this.renderChartEmisiones();
+  }
+
+  private renderChartEmisiones() {
+    if (this.chartEmisiones) {
+      try {
+        this.chartEmisiones.destroy();
+      } catch (e) {
+        console.error('Error destroying chartEmisiones', e);
+      }
+    }
+
     if (
       !this.periodoVeinteanalEmisionesGEIEvitadasOriginal ||
       this.periodoVeinteanalEmisionesGEIEvitadasOriginal.length === 0
     ) {
-      console.error('periodoVeinteanalEmisionesGEIEvitadasOriginal no está definido o está vacío');
+      console.error('periodoVeinteanalEmisionesGEIEvitadasOriginal no disponible');
       return;
     }
 
     const anioInicial = this.periodoVeinteanalEmisionesGEIEvitadasOriginal[0].year - 1;
-
-    // Construir datos (anual y acumulado)
     const { categories, annualData, cumulativeData } = this.buildCO2Data(
       this.periodoVeinteanalEmisionesGEIEvitadasOriginal,
       anioInicial
     );
 
     const totalCO2Acumulado = cumulativeData[cumulativeData.length - 1];
-    // Factor: 1 árbol absorbe ~0.02 tCO₂/año durante su vida
     const arbolesequivalentes = Math.round(totalCO2Acumulado / 0.02);
 
-    const options = {
-      series: [
-        {
-          name: 'CO₂ evitado anual',
-          type: 'bar',
-          data: annualData,
+    const carbonOffsetAnual = this.sharedService.getCarbonOffSetTnAnual();
+    const factor = carbonOffsetAnual / (this.yearlyEnergy || 1);
+    const baseCO2 = parseFloat((this.consumoTotalAnual * factor).toFixed(2));
+
+    let options: any;
+
+    if (this.vistaCO2 === 'anual') {
+      options = {
+        series: [
+          {
+            name: 'CO₂ evitado anual',
+            data: annualData,
+          },
+        ],
+        chart: {
+          height: 320,
+          width: '100%',
+          type: 'area',
+          background: 'transparent',
+          toolbar: { show: false },
+          zoom: { enabled: false },
         },
-        {
-          name: 'CO₂ evitado acumulado',
-          type: 'line',
-          data: cumulativeData,
-        },
-      ],
-      chart: {
-        height: 350,
-        width: 470,
-        type: 'bar',
-        background: 'transparent',
-        toolbar: { show: false },
-        zoom: { enabled: false },
-      },
-      colors: ['#e4c58d', '#5aaa8a'],
-      stroke: {
-        width: [0, 3],
-        curve: 'smooth',
-        colors: ['transparent', '#5aaa8a'],
-      },
-      dataLabels: { enabled: false },
-      markers: {
-        size: 0,
         colors: ['#5aaa8a'],
-        strokeColors: '#fff',
-        strokeWidth: 2,
-        hover: { size: 7 },
-      },
-      subtitle: {
-        text: `Equivale a absorber el CO₂ de ≈ ${arbolesequivalentes.toLocaleString('de-DE')} árboles en 20 años`,
-        align: 'center',
-        style: {
-          fontSize: '11px',
-          fontFamily: 'sodo sans, sans-serif',
-          color: '#5aaa8a',
+        stroke: {
+          curve: 'smooth',
+          colors: ['#5aaa8a'],
+          width: 3,
         },
-      },
-      xaxis: {
-        categories: categories,
-        title: {
-          text: 'Año',
-          style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
-          offsetY: -25,
+        fill: {
+          type: 'gradient',
+          gradient: {
+            shade: 'light',
+            type: 'vertical',
+            opacityFrom: 0.6,
+            opacityTo: 0.1,
+          },
         },
-      },
-      yaxis: [
-        {
-          seriesName: 'CO₂ evitado anual',
+        dataLabels: { enabled: false },
+        markers: {
+          size: 0,
+          colors: ['#5aaa8a'],
+          strokeColors: '#fff',
+          strokeWidth: 2,
+          hover: { size: 6 },
+        },
+        subtitle: {
+          text: `Equivale a absorber el CO₂ de ≈ ${arbolesequivalentes.toLocaleString('de-DE')} árboles en 20 años`,
+          align: 'center',
+          style: {
+            fontSize: '11px',
+            fontFamily: 'sodo sans, sans-serif',
+            color: '#5aaa8a',
+          },
+        },
+        xaxis: {
+          categories: categories,
+          labels: {
+            rotate: -45,
+            style: { fontSize: '10px' },
+          },
+        },
+        yaxis: {
           title: {
             text: 'Ton CO₂/año',
             style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
           },
           labels: {
-            formatter: (val: number): string =>
-              val.toLocaleString('de-DE', { maximumFractionDigits: 1 }),
+            formatter: (val: number): string => val.toLocaleString('de-DE', { maximumFractionDigits: 1 }),
           },
         },
-        {
-          opposite: true,
-          seriesName: 'CO₂ evitado acumulado',
+        tooltip: {
+          enabled: true,
+          theme: 'light',
+          y: {
+            formatter: (value: number) => `${value.toLocaleString('de-DE')} tCO₂ evitado`,
+          },
+        },
+      };
+    } else if (this.vistaCO2 === 'comparativa') {
+      const baseSeries = Array(categories.length).fill(baseCO2);
+      const realSeries = annualData.map(val => parseFloat(Math.max(0, baseCO2 - val).toFixed(2)));
+
+      options = {
+        series: [
+          {
+            name: 'Emisiones sin solar',
+            data: baseSeries,
+          },
+          {
+            name: 'Emisiones con solar',
+            data: realSeries,
+          },
+        ],
+        chart: {
+          height: 320,
+          width: '100%',
+          type: 'area',
+          background: 'transparent',
+          toolbar: { show: false },
+          zoom: { enabled: false },
+        },
+        colors: ['#c8c8c8', '#5aaa8a'],
+        stroke: {
+          curve: 'smooth',
+          width: [2, 3],
+        },
+        fill: {
+          type: 'gradient',
+          gradient: {
+            shade: 'light',
+            type: 'vertical',
+            opacityFrom: 0.5,
+            opacityTo: 0.1,
+          },
+        },
+        dataLabels: { enabled: false },
+        xaxis: {
+          categories: categories,
+          labels: {
+            rotate: -45,
+            style: { fontSize: '10px' },
+          },
+        },
+        yaxis: {
+          title: {
+            text: 'Ton CO₂/año',
+            style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
+          },
+          labels: {
+            formatter: (val: number): string => val.toLocaleString('de-DE', { maximumFractionDigits: 1 }),
+          },
+        },
+        legend: {
+          position: 'bottom',
+          fontSize: '11px',
+          fontFamily: 'sodo sans, sans-serif',
+        },
+        tooltip: {
+          enabled: true,
+          theme: 'light',
+          shared: true,
+          y: {
+            formatter: (value: number) => `${value.toLocaleString('de-DE')} tCO₂/año`,
+          },
+        },
+      };
+    } else if (this.vistaCO2 === 'acumulada') {
+      options = {
+        series: [
+          {
+            name: 'CO₂ evitado acumulado',
+            data: cumulativeData,
+          },
+        ],
+        chart: {
+          height: 320,
+          width: '100%',
+          type: 'area',
+          background: 'transparent',
+          toolbar: { show: false },
+          zoom: { enabled: false },
+        },
+        colors: ['#5aaa8a'],
+        stroke: {
+          curve: 'smooth',
+          colors: ['#5aaa8a'],
+          width: 3,
+        },
+        fill: {
+          type: 'gradient',
+          gradient: {
+            shade: 'light',
+            type: 'vertical',
+            opacityFrom: 0.6,
+            opacityTo: 0.1,
+          },
+        },
+        dataLabels: { enabled: false },
+        markers: {
+          size: 0,
+          colors: ['#5aaa8a'],
+          strokeColors: '#fff',
+          strokeWidth: 2,
+          hover: { size: 6 },
+        },
+        subtitle: {
+          text: `Equivale a absorber el CO₂ de ≈ ${arbolesequivalentes.toLocaleString('de-DE')} árboles en 20 años`,
+          align: 'center',
+          style: {
+            fontSize: '11px',
+            fontFamily: 'sodo sans, sans-serif',
+            color: '#5aaa8a',
+          },
+        },
+        xaxis: {
+          categories: categories,
+          labels: {
+            rotate: -45,
+            style: { fontSize: '10px' },
+          },
+        },
+        yaxis: {
           title: {
             text: 'Ton CO₂ acumuladas',
             style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
           },
           labels: {
-            formatter: (val: number): string =>
-              val.toLocaleString('de-DE', { maximumFractionDigits: 1 }),
+            formatter: (val: number): string => val.toLocaleString('de-DE', { maximumFractionDigits: 1 }),
           },
         },
-      ],
-      tooltip: {
-        enabled: true,
-        theme: 'light',
-        shared: true,
-        intersect: false,
-        y: {
-          formatter: (value: number, { seriesIndex }: any) => {
-            return seriesIndex === 0
-              ? `${value.toLocaleString('de-DE', { maximumFractionDigits: 2 })} tCO₂/año`
-              : `${value.toLocaleString('de-DE', { maximumFractionDigits: 2 })} tCO₂ acumuladas`;
+        tooltip: {
+          enabled: true,
+          theme: 'light',
+          y: {
+            formatter: (value: number) => `${value.toLocaleString('de-DE')} tCO₂ acumulado`,
           },
         },
-      },
-      legend: {
-        position: 'bottom',
-        fontSize: '11px',
-        fontFamily: 'sodo sans, sans-serif',
-      },
-      fill: { opacity: [0.85, 1] },
-    };
+      };
+    } else if (this.vistaCO2 === 'gauge') {
+      const totalBaseCO2_20Years = baseCO2 * this.periodoVeinteanalEmisionesGEIEvitadasOriginal.length;
+      const percent = Math.min(100, Math.round((totalCO2Acumulado / (totalBaseCO2_20Years || 1)) * 100));
+
+      options = {
+        series: [percent],
+        chart: {
+          type: 'radialBar',
+          height: 320,
+          width: '100%',
+          offsetY: -10,
+        },
+        plotOptions: {
+          radialBar: {
+            startAngle: -135,
+            endAngle: 135,
+            hollow: {
+              size: '70%',
+            },
+            track: {
+              background: '#e7e7e7',
+              strokeWidth: '97%',
+              margin: 5,
+            },
+            dataLabels: {
+              name: {
+                show: true,
+                label: 'Descarbonización',
+                color: '#555',
+                fontSize: '14px',
+                fontFamily: 'sodo sans, sans-serif',
+                offsetY: 20
+              },
+              value: {
+                show: true,
+                fontSize: '32px',
+                fontFamily: 'sodo sans, sans-serif',
+                color: '#5aaa8a',
+                fontWeight: 'bold',
+                offsetY: -20,
+                formatter: (val: number) => `${val}%`
+              }
+            }
+          }
+        },
+        fill: {
+          type: 'gradient',
+          gradient: {
+            shade: 'dark',
+            type: 'horizontal',
+            shadeIntensity: 0.5,
+            gradientToColors: ['#5aaa8a'],
+            inverseColors: true,
+            opacityFrom: 1,
+            opacityTo: 1,
+            stops: [0, 100]
+          }
+        },
+        colors: ['#e4c58d'],
+        stroke: {
+          lineCap: 'round'
+        },
+        subtitle: {
+          text: `Evitas el ${percent}% de tus emisiones eléctricas totales`,
+          align: 'center',
+          style: {
+            fontSize: '11px',
+            fontFamily: 'sodo sans, sans-serif',
+            color: '#555',
+          },
+        },
+      };
+    }
 
     this.chartEmisiones = new ApexCharts(
       document.querySelector('#emisionesChartRef') as HTMLElement,
       options
     );
     this.chartEmisiones.render();
-  }
-
-  private updateChartEmisionesEvitadasAcumuladas(): void {
-    const anioInicial = this.periodoVeinteanalEmisionesGEIEvitadasOriginal[0].year - 1;
-    const { categories, annualData, cumulativeData } = this.buildCO2Data(
-      this.periodoVeinteanalEmisionesGEIEvitadasOriginal,
-      anioInicial
-    );
-
-    const totalCO2Acumulado = cumulativeData[cumulativeData.length - 1];
-    const arbolesEquivalentes = Math.round(totalCO2Acumulado / 0.02);
-
-    this.chartEmisiones.updateOptions({
-      series: [
-        { name: 'CO₂ evitado anual', data: annualData },
-        { name: 'CO₂ evitado acumulado', data: cumulativeData },
-      ],
-      xaxis: { categories: categories },
-      subtitle: {
-        text: `Equivale a absorber el CO₂ de ≈ ${arbolesEquivalentes.toLocaleString('de-DE')} árboles en 20 años`,
-      },
-    });
-    this.cdr.detectChanges();
   }
 
   /**
