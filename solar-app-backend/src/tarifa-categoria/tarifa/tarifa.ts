@@ -22,7 +22,7 @@ export class Tarifa {
     [TarifaCategoria.T3_BT]: { consumo: 74.804549, inyeccion: 74.804549 },
     [TarifaCategoria.T3_MT_13_2_KV]: { consumo: 68.8040826, inyeccion: 68.8040826 },
     [TarifaCategoria.T3_MT_33_KV]: { consumo: 68.8040826, inyeccion: 68.8040826 },
-    [TarifaCategoria.TRA_SD]: { consumo: 71.72011625, inyeccion: 71.72011625 },
+    [TarifaCategoria.TRA_SD]: { consumo: 123.787912655, inyeccion: 123.787912655 },
   };
 
   constructor(
