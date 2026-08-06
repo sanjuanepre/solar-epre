@@ -472,22 +472,69 @@ export class Paso3Component implements OnInit, OnDestroy {
     }
   }
 
+  buildPdfPayload() {
+    const resultados = this.sharedService.getResultadosFront();
+    const ahorroPesos = resultados?.resultadosFinancieros?.casoConCapitalPropio?.[0]?.ahorrosEnPesos || 0;
+    const ahorroPorcentaje = resultados?.resultadosFinancieros?.casoConCapitalPropio?.[0]?.porcentajeAhorro || 0;
+    const paybackMeses = resultados?.resultadosFinancieros?.indicadoresFinancieros?.payBackMonths || (this.sharedService.getPlazoInversion() || 0);
+
+    return {
+      uniqueID: this.pdfService.uniqueID || this.pdfService.generateShortUUID(),
+      categoriaTarifa: this.categoriaTarifa || this.sharedService.getTarifaContratada(),
+      tipoEstructura: this.tipoEstructura,
+      roofFactor: this.roofFactor,
+      potenciaContratada: this.potenciaContratadaHip || 0,
+      panelesCantidad: this.panelesCantidad || 0,
+      panelCapacityW: this.panelCapacityW || 400,
+      costoInstalacion: this.costoInstalacion || 0,
+      ahorroEstimadoPesosAnual: ahorroPesos,
+      ahorroPorcentajeAnual: ahorroPorcentaje,
+      periodoRecuperoAnios: paybackMeses > 0 ? parseFloat((paybackMeses / 12).toFixed(1)) : 0,
+      potenciaPicoKw: (this.panelesCantidad * this.panelCapacityW) / 1000,
+      generacionAnualKwh: this.yearlyEnergyAckWhDefault || 0,
+      superficieTechoM2: this.sharedService.getAreaPanelsSelected() || 0,
+      emisionesGEIEvitadasTnAnual: (this.yearlyEnergyAckWhDefault * this.carbonOffsetFactorTnPerMWh) / 1000,
+      proporcionAutoconsumo: this.proporcionAutoconsumo || 0,
+      proporcionInyectada: (100 - (this.proporcionAutoconsumo || 0)),
+    };
+  }
+
   downloadPDF(): void {
     if (!this.isDownloading) {
       this.isDownloading = true;
+      const payload = this.buildPdfPayload();
       this.pdfService
-        .generatePDF(true)
-        .then(() => { })
-        .catch(() => { })
-        .finally(() => (this.isDownloading = false));
+        .downloadPdfBlob(payload)
+        .subscribe({
+          next: (blob) => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `resultado-id-${payload.uniqueID}.pdf`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            this.isDownloading = false;
+          },
+          error: (err) => {
+            console.error('Error al descargar el PDF:', err);
+            this.snackBar.open(
+              'No se pudo generar la descarga del PDF. Intente nuevamente.',
+              'Cerrar',
+              { duration: 4000 }
+            );
+            this.isDownloading = false;
+          },
+        });
     }
   }
 
   sendEmail(): void {
-    if (!this.isSendingMail) {
-      if (this.email) {
-        this.isSendingMail = true;
-        this.gmailService.sendEmailWithResults(this.email).then(() => {
+    if (!this.isSendingMail && this.email) {
+      this.isSendingMail = true;
+      const payload = this.buildPdfPayload();
+      this.gmailService
+        .sendEmailWithResults(this.email, payload)
+        .then(() => {
           this.isSendingMail = false;
           this.snackBar.open('El correo ha sido enviado exitosamente.', '', {
             duration: 5000,
@@ -496,8 +543,16 @@ export class Paso3Component implements OnInit, OnDestroy {
             verticalPosition: 'top',
           });
           this.closeModal();
+        })
+        .catch((err) => {
+          console.error('Error al enviar el email:', err);
+          this.isSendingMail = false;
+          this.snackBar.open(
+            'Hubo un problema al enviar el correo. Intente más tarde.',
+            'Cerrar',
+            { duration: 4000 }
+          );
         });
-      }
     }
   }
 

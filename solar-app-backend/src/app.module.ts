@@ -6,6 +6,7 @@ import { GoogleSheetsModule } from './google-sheets/google-sheets.module';
 import { GmailModule } from './gmail/gmail.module';
 import { CalculadoraModule } from './calculadora/calculadora.module';
 import { TarifaCategoriaModule } from './tarifa-categoria/tarifa-categoria.module';
+import { PdfModule } from './pdf/pdf.module';
 import { VariablesOnlineService } from './google-sheets/variables-online/variables-online.service';
 import { HealthController } from './health/health.controller';
 import { IpController } from './ip/ip.controller'; // Importa el nuevo controlador
@@ -22,6 +23,7 @@ import { IpController } from './ip/ip.controller'; // Importa el nuevo controlad
     GmailModule,
     CalculadoraModule,
     TarifaCategoriaModule,
+    PdfModule,
   ],
   controllers: [HealthController, IpController], // Registra el controlador aquí
   providers: [VariablesOnlineService],
