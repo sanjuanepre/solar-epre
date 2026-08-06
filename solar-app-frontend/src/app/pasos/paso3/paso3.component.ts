@@ -476,7 +476,7 @@ export class Paso3Component implements OnInit, OnDestroy {
     const resultados = this.sharedService.getResultadosFront();
     const ahorroPesos = resultados?.resultadosFinancieros?.casoConCapitalPropio?.[0]?.ahorrosEnPesos || 0;
     const ahorroPorcentaje = resultados?.resultadosFinancieros?.casoConCapitalPropio?.[0]?.porcentajeAhorro || 0;
-    const paybackMeses = resultados?.resultadosFinancieros?.indicadoresFinancieros?.payBackMonths || (this.sharedService.getPlazoInversion() || 0);
+    const paybackMeses = resultados?.resultadosFinancieros?.indicadoresFinancieros?.payBackMonths || (this.sharedService.getPlazoInversionValue() || 0);
 
     return {
       uniqueID: this.pdfService.uniqueID || this.pdfService.generateShortUUID(),
