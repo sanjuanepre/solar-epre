@@ -358,21 +358,27 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
       console.warn('initializeChartAhorroRecupero: flujoData vacío o indefinido, postergando inicialización.');
       return;
     }
-    const recuperoInversionAnios = Math.round(this.recuperoInversionMeses / 12);
-    const primerAno = flujoData[0].year;
+    const recuperoMeses = (this.recuperoInversionMeses != null && !isNaN(this.recuperoInversionMeses)) ? this.recuperoInversionMeses : 0;
+    const recuperoInversionAnios = Math.round(recuperoMeses / 12);
+    const primerAno = (flujoData[0] && flujoData[0].year != null && !isNaN(flujoData[0].year)) ? flujoData[0].year : new Date().getFullYear();
     const anoRecuperoInversion = primerAno + recuperoInversionAnios;
+    const anoStr = (anoRecuperoInversion != null && !isNaN(anoRecuperoInversion)) ? anoRecuperoInversion.toString() : '';
 
-    const ahorroData = flujoData.map(item => item.ahorroEnElectricidadTotalUsd);
-    const ingresoData = flujoData.map(item => item.ingresoPorInyeccionElectricaUsd);
-    const categories = flujoData.map(item => item.year.toString());
+    const ahorroData = flujoData.map(item => item?.ahorroEnElectricidadTotalUsd ?? 0);
+    const ingresoData = flujoData.map(item => item?.ingresoPorInyeccionElectricaUsd ?? 0);
+    const categories = flujoData.map(item => (item?.year != null ? item.year.toString() : ''));
 
     // Flujo de caja acumulado: empieza en -inversión y suma ahorros+ingresos cada año
     const inversionInicial = this.inversionInicial ?? this.sharedService.getCostoInstalacion?.() ?? 0;
     const flujoCajaAcumulado = flujoData.reduce((acc, item, index) => {
       const prevVal = index === 0 ? -inversionInicial : acc[index - 1];
-      acc.push(prevVal + item.ahorroEnElectricidadTotalUsd + item.ingresoPorInyeccionElectricaUsd);
+      const ahorro = item?.ahorroEnElectricidadTotalUsd ?? 0;
+      const ingreso = item?.ingresoPorInyeccionElectricaUsd ?? 0;
+      acc.push(prevVal + ahorro + ingreso);
       return acc;
     }, [] as number[]);
+
+    const showAnnotation = recuperoMeses > 0 && !!anoStr && categories.includes(anoStr);
 
     const options = {
       series: [
@@ -431,7 +437,7 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
             style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
           },
           labels: {
-            formatter: (val: number): string => val.toLocaleString('de-DE', { maximumFractionDigits: 0 }),
+            formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE', { maximumFractionDigits: 0 }) : '0',
           },
         },
         {
@@ -446,7 +452,7 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
             style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
           },
           labels: {
-            formatter: (val: number): string => val.toLocaleString('de-DE', { maximumFractionDigits: 0 }),
+            formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE', { maximumFractionDigits: 0 }) : '0',
           },
         },
       ],
@@ -457,6 +463,7 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
         intersect: false,
         y: {
           formatter: (val: number, { seriesIndex }: any) => {
+            if (val == null || isNaN(val)) return '0 USD';
             const valorTruncado = Math.round(val);
             return seriesIndex === 2
               ? `${valorTruncado.toLocaleString('de-DE')} USD`
@@ -473,9 +480,9 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
             strokeDashArray: 4,
           },
         ],
-        xaxis: this.recuperoInversionMeses >= 0 ? [
+        xaxis: showAnnotation ? [
           {
-            x: anoRecuperoInversion.toString(),
+            x: anoStr,
             strokeDashArray: 5,
             borderColor: '#008ae3',
             borderWidth: 2,
@@ -517,19 +524,26 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
     const flujoData = this.periodoVeinteanalFlujoIngresosMonetarios;
     if (!flujoData || flujoData.length === 0) return;
 
-    const recuperoInversionAnios = Math.round(this.recuperoInversionMeses / 12);
-    const primerAno = flujoData[0].year;
+    const recuperoMeses = (this.recuperoInversionMeses != null && !isNaN(this.recuperoInversionMeses)) ? this.recuperoInversionMeses : 0;
+    const recuperoInversionAnios = Math.round(recuperoMeses / 12);
+    const primerAno = (flujoData[0] && flujoData[0].year != null && !isNaN(flujoData[0].year)) ? flujoData[0].year : new Date().getFullYear();
     const anoRecuperoInversion = primerAno + recuperoInversionAnios;
+    const anoStr = (anoRecuperoInversion != null && !isNaN(anoRecuperoInversion)) ? anoRecuperoInversion.toString() : '';
 
-    const ahorroData = flujoData.map(item => item.ahorroEnElectricidadTotalUsd);
-    const ingresoData = flujoData.map(item => item.ingresoPorInyeccionElectricaUsd);
+    const ahorroData = flujoData.map(item => item?.ahorroEnElectricidadTotalUsd ?? 0);
+    const ingresoData = flujoData.map(item => item?.ingresoPorInyeccionElectricaUsd ?? 0);
+    const categories = flujoData.map(item => (item?.year != null ? item.year.toString() : ''));
 
     const inversionInicial = this.inversionInicial ?? this.sharedService.getCostoInstalacion?.() ?? 0;
     const flujoCajaAcumulado = flujoData.reduce((acc, item, index) => {
       const prevVal = index === 0 ? -inversionInicial : acc[index - 1];
-      acc.push(prevVal + item.ahorroEnElectricidadTotalUsd + item.ingresoPorInyeccionElectricaUsd);
+      const ahorro = item?.ahorroEnElectricidadTotalUsd ?? 0;
+      const ingreso = item?.ingresoPorInyeccionElectricaUsd ?? 0;
+      acc.push(prevVal + ahorro + ingreso);
       return acc;
     }, [] as number[]);
+
+    const showAnnotation = recuperoMeses > 0 && !!anoStr && categories.includes(anoStr);
 
     this.chartAhorroRecupero.updateOptions({
       series: [
@@ -539,9 +553,9 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
       ],
       annotations: {
         yaxis: [{ y: 0, borderColor: '#999', borderWidth: 1, strokeDashArray: 4 }],
-        xaxis: this.recuperoInversionMeses >= 0 ? [
+        xaxis: showAnnotation ? [
           {
-            x: anoRecuperoInversion.toString(),
+            x: anoStr,
             strokeDashArray: 5,
             borderColor: '#008ae3',
             borderWidth: 2,
@@ -660,14 +674,14 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
             style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
           },
           labels: {
-            formatter: (val: number): string => val.toLocaleString('de-DE', { maximumFractionDigits: 1 }),
+            formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '0',
           },
         },
         tooltip: {
           enabled: true,
           theme: 'light',
           y: {
-            formatter: (value: number) => `${value.toLocaleString('de-DE')} tCO₂ evitado`,
+            formatter: (value: number) => (value != null && !isNaN(value)) ? `${value.toLocaleString('de-DE')} tCO₂ evitado` : '0 tCO₂ evitado',
           },
         },
       };
@@ -722,7 +736,7 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
             style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
           },
           labels: {
-            formatter: (val: number): string => val.toLocaleString('de-DE', { maximumFractionDigits: 1 }),
+            formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '0',
           },
         },
         legend: {
@@ -735,7 +749,7 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
           theme: 'light',
           shared: true,
           y: {
-            formatter: (value: number) => `${value.toLocaleString('de-DE')} tCO₂/año`,
+            formatter: (value: number) => (value != null && !isNaN(value)) ? `${value.toLocaleString('de-DE')} tCO₂/año` : '0 tCO₂/año',
           },
         },
       };
@@ -791,19 +805,19 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
             style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
           },
           labels: {
-            formatter: (val: number): string => val.toLocaleString('de-DE', { maximumFractionDigits: 1 }),
+            formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '0',
           },
         },
         tooltip: {
           enabled: true,
           theme: 'light',
           y: {
-            formatter: (value: number) => `${value.toLocaleString('de-DE')} tCO₂ acumulado`,
+            formatter: (value: number) => (value != null && !isNaN(value)) ? `${value.toLocaleString('de-DE')} tCO₂ acumulado` : '0 tCO₂ acumulado',
           },
         },
       };
     } else if (this.vistaCO2 === 'gauge') {
-      const totalBaseCO2_20Years = baseCO2 * this.periodoVeinteanalEmisionesGEIEvitadasOriginal.length;
+      const totalBaseCO2_20Years = baseCO2 * (this.periodoVeinteanalEmisionesGEIEvitadasOriginal?.length || 1);
       const percent = Math.min(100, Math.round((totalCO2Acumulado / (totalBaseCO2_20Years || 1)) * 100));
 
       options = {
@@ -842,7 +856,7 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
                 color: '#5aaa8a',
                 fontWeight: 'bold',
                 offsetY: -20,
-                formatter: (val: number) => `${val}%`
+                formatter: (val: number) => `${val != null && !isNaN(val) ? val : 0}%`
               }
             }
           }
@@ -891,11 +905,12 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
     source: { year: number; emisionesTonCO2: number }[],
     anioInicial: number
   ): { categories: string[]; annualData: number[]; cumulativeData: number[] } {
-    const carbonOffSetAnual = this.sharedService.getCarbonOffSetTnAnual();
-    const degradacion = this.sharedService.getDegradacionPanel();
-    const totalYears = source.length;
+    const carbonOffSetAnual = this.sharedService.getCarbonOffSetTnAnual() || 0;
+    const degradacion = this.sharedService.getDegradacionPanel() || 0.005;
+    const totalYears = source ? source.length : 0;
 
-    const categories: string[] = [anioInicial.toString()];
+    const startYr = (anioInicial != null && !isNaN(anioInicial)) ? anioInicial : (new Date().getFullYear() - 1);
+    const categories: string[] = [startYr.toString()];
     const annualData: number[] = [0];
     const cumulativeData: number[] = [0];
 
@@ -903,9 +918,12 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
     let anualActual = carbonOffSetAnual;
     for (let i = 0; i < totalYears; i++) {
       acumulado += anualActual;
-      categories.push(source[i].year.toString());
-      annualData.push(parseFloat(anualActual.toFixed(2)));
-      cumulativeData.push(parseFloat(acumulado.toFixed(2)));
+      const yr = (source && source[i] && source[i].year != null && !isNaN(source[i].year))
+        ? source[i].year
+        : (startYr + 1 + i);
+      categories.push(yr.toString());
+      annualData.push(parseFloat((anualActual || 0).toFixed(2)));
+      cumulativeData.push(parseFloat((acumulado || 0).toFixed(2)));
       anualActual *= (1 - degradacion);
     }
 
