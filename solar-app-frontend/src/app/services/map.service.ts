@@ -76,10 +76,10 @@ export class MapService {
       zoom: this.zoomInicial,
       disableDefaultUI: false,
       zoomControl: false,
-      mapTypeId: google.maps.MapTypeId.HYBRID,
+      mapTypeId: 'hybrid',
       mapTypeControl: false,
       zoomControlOptions: {
-        position: google.maps.ControlPosition.LEFT_BOTTOM,
+        position: 6, // google.maps.ControlPosition.LEFT_BOTTOM
       },
       fullscreenControl: false,
       streetViewControl: false,
@@ -101,6 +101,14 @@ export class MapService {
   clearPolygons() {
     this.polygons.forEach((polygon) => polygon.setMap(null));
     this.polygons = [];
+    this.invalidateHeatmapCache();
+  }
+
+  invalidateHeatmapCache() {
+    if (this.heatMapOverlay) {
+      this.heatMapOverlay.setMap(null);
+      this.heatMapOverlay = null;
+    }
   }
 
   clearPanels() {
@@ -386,6 +394,7 @@ export class MapService {
           newPolygon.setMap(this.map);
           this.polygons[0] = newPolygon;
           this.drawPanels(newPolygon);
+          this.invalidateHeatmapCache();
           this.overlayCompleteSubject.next(true);
           this.disableDrawingMode();
           return;
@@ -903,7 +912,6 @@ export class MapService {
   clearHeatmap() {
     if (this.heatMapOverlay) {
       this.heatMapOverlay.setMap(null);
-      this.heatMapOverlay = null;
     }
     // Restaurar el estado visual original de los paneles y el polígono
     this.setPanelsVisibility(true);
@@ -920,15 +928,19 @@ export class MapService {
       return;
     }
 
-    this.heatMapLoadingSubject.next(true);
-    
     // Ocultar temporalmente los paneles y hacer transparente el polígono para que no tapen el mapa de calor
-    if (this.heatMapOverlay) {
-      this.heatMapOverlay.setMap(null);
-      this.heatMapOverlay = null;
-    }
     this.setPanelsVisibility(false);
     this.setPolygonFillOpacity(0);
+
+    // Si ya tenemos el overlay renderizado, simplemente lo volvemos a mostrar en el mapa
+    if (this.heatMapOverlay) {
+      console.log('[MapService] Reutilizando mapa de calor solar cacheado.');
+      this.heatMapOverlay.setMap(this.map);
+      this.heatMapLoadingSubject.next(false);
+      return;
+    }
+
+    this.heatMapLoadingSubject.next(true);
 
     try {
       // 1. Descargar el archivo GeoTIFF

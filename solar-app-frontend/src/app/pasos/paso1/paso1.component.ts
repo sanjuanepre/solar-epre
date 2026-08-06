@@ -405,7 +405,7 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
    * Actualiza el texto de instrucción del banner según el estado de dibujo.
    */
   updateInstructionText(state: 'INACTIVE' | 'START' | 'DRAWING' | 'CLOSED') {
-    if (this.isHeatmapLoading) {
+    if (this.isHeatmapLoading && this.showHeatmap) {
       this.instructionText = 'Analizando radiación solar sobre el techo... Por favor, espere.';
       return;
     }
@@ -462,9 +462,8 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
         if (response && response.annualFluxUrl) {
           this.annualFluxUrl = response.annualFluxUrl;
           this.heatmapAvailable = true;
-          this.showHeatmap = true; // Por defecto lo mostramos al completar el dibujo
-          console.log('[Paso1Component] Capas térmicas obtenidas. Cargando render...');
-          this.toggleHeatmap();
+          this.showHeatmap = false; // Por defecto no lo mostramos hasta que el usuario lo active
+          console.log('[Paso1Component] Capas térmicas obtenidas. Esperando activación del usuario.');
         } else {
           console.warn('[Paso1Component] La API de Solar no retornó capa de flujo solar para esta ubicación.');
           this.snackBar.open(
