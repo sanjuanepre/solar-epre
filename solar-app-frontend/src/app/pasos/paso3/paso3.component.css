@@ -100,38 +100,52 @@
   gap: 3px;
 }
 
-#downloadButton{
-  background-color: white;
+#downloadButton {
+  background-color: #ffffff;
   color: var(--dark-green);
-  border: 2px solid var(--dark-green); 
-  padding: 5px 13px;
-  border-radius: 5px;
+  border: 1.5px solid var(--medium-green);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
   cursor: pointer;
   display: flex;
   align-items: center; 
-  box-sizing: border-box; 
+  box-sizing: border-box;
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-sm);
 }
 
-#emailButton{
-  background-color:white;
+#emailButton {
+  background-color: #ffffff;
   color: var(--dark-green);
-  border: 2px solid var(--dark-green); 
-  padding: 5px 11px;
-  border-radius: 5px;
+  border: 1.5px solid var(--medium-green);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
   cursor: pointer;
   display: flex;
   align-items: center; 
-  box-sizing: border-box; 
+  box-sizing: border-box;
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-sm);
 }
 
 #emailButton:hover {
-  border-color: var(--medium-green); 
-  color: var(--medium-green); 
+  background-color: var(--light-background);
+  border-color: var(--dark-green);
+  color: var(--dark-green); 
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 #downloadButton:hover {
-  border-color: var(--medium-green); 
-  color: var(--medium-green); 
+  background-color: var(--light-background);
+  border-color: var(--dark-green);
+  color: var(--dark-green); 
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 #boton-editar {

@@ -37,17 +37,38 @@ h5 {
   font-family: "Sodo Sans", sans-serif;
 }
 
-/*COLORES*/
+/*COLORES & TOKENS DE DISEÑO MODERNOS*/
 :root {
   --dark-green: #1e3932;
   --medium-green: #006241;
   --light-green: #00754a;
   --light-background: #d4e9e2;
   --golden: #cba258;
+  --golden-light: #f5e6ca;
   --gris: #edebe9;
+  --gris-suave: #f8f9fa;
   --font-dark: #000000de;
   --font-light: #424242;
+  --font-muted: #6c757d;
   --bordes: #a9b8ad;
+  
+  /* Gradientes Premium */
+  --gradient-solar: linear-gradient(135deg, #ff9f43 0%, #ff6b6b 100%);
+  --gradient-eco: linear-gradient(135deg, #006241 0%, #00754a 100%);
+  --gradient-dark: linear-gradient(135deg, #1e3932 0%, #09221b 100%);
+  --gradient-gold: linear-gradient(135deg, #cba258 0%, #e5c378 100%);
+  --gradient-card: linear-gradient(145deg, #ffffff 0%, #f4f8f6 100%);
+  
+  /* Effects & Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.88);
+  --glass-bg-hover: rgba(255, 255, 255, 0.96);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --shadow-sm: 0 2px 8px rgba(30, 57, 50, 0.06);
+  --shadow-md: 0 4px 16px rgba(30, 57, 50, 0.1);
+  --shadow-lg: 0 8px 24px rgba(30, 57, 50, 0.15);
+  --shadow-glow-solar: 0 0 16px rgba(255, 159, 67, 0.35);
+  --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 /**************************************************************/
 :root {
@@ -106,30 +127,29 @@ h5 {
 
 /************************************************/
 #titulo {
-  background-color: var(--dark-green);
+  background: var(--gradient-dark);
   width: 100%;
-  height: 42px;
+  height: 44px;
   text-transform: uppercase;
-  font-size: 20px;
+  font-size: 17px;
+  letter-spacing: 0.5px;
   font-weight: 700;
   color: #fff;
-  text-align: center;
+  display: flex;
+  justify-content: center;
   align-items: center;
-  padding-top: 8px;
   margin-bottom: 0;
-  font-family: "Sodo Sans", sans-serif;
+  box-shadow: var(--shadow-sm);
+  border-bottom: 2px solid var(--golden);
 }
 
 #sub-titulo {
-  color: #424242;
+  color: var(--font-dark);
   font-size: 14px;
-  font-weight:600;
+  font-weight: 600;
   text-align: left;
-  font-family: "Sodo Sans", sans-serif;
-  margin-bottom: 2px;
-  height: 5%;
+  margin-bottom: 6px;
 }
-
 
 /*************************************************/
 /*span*/
@@ -139,7 +159,7 @@ h5 {
   font-weight: 600;
   cursor: pointer;
   text-decoration: underline;
-  font-family: "Sodo Sans", sans-serif;
+  transition: var(--transition-fast);
 }
 
 #span-general:hover {
@@ -160,6 +180,7 @@ h5 {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 8px 0;
 }
 
 .boton {
@@ -167,54 +188,82 @@ h5 {
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  gap: 12px;
 }
 
 #boton-siguiente {
-  background-color: var(--dark-green);
+  background: var(--gradient-eco);
   color: #fff;
-  font-weight: bold;
+  font-weight: 700;
+  font-size: 14px;
   border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
+  padding: 10px 22px;
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
+  box-shadow: 0 3px 10px rgba(0, 98, 65, 0.25);
+  transition: var(--transition-fast);
 }
 
-#boton-siguiente:hover {
-  background-color: var(--medium-green);
+#boton-siguiente:hover:not([disabled]) {
+  background: var(--gradient-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 98, 65, 0.35);
+}
+
+#boton-siguiente:active:not([disabled]) {
+  transform: translateY(0);
 }
 
 #boton-siguiente .material-icons {
-  margin-left: 8px;
+  margin-left: 6px;
   color: white;
-  font-size: 18px;
+  font-size: 20px;
+  transition: var(--transition-fast);
+}
+
+#boton-siguiente:hover:not([disabled]) .material-icons {
+  transform: translateX(3px);
 }
 
 button[disabled] {
   cursor: not-allowed;
+  opacity: 0.55 !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
 #boton-volver {
-  background-color: white;
+  background-color: #ffffff;
   color: var(--medium-green);
-  font-weight: bold;
-  border: 2px solid #a9b8ad;
-  padding: 10px 20px;
-  border-radius: 5px;
+  font-weight: 700;
+  font-size: 14px;
+  border: 1.5px solid var(--medium-green);
+  padding: 9px 18px;
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
+  transition: var(--transition-fast);
 }
 
 #boton-volver:hover {
-  border: 2px solid #8a978e;
+  background-color: var(--light-background);
+  border-color: var(--dark-green);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
 }
 
 #boton-volver .material-icons {
-  margin-right: 8px;
+  margin-right: 6px;
   color: var(--medium-green);
-  font-size: 18px;
+  font-size: 20px;
+  transition: var(--transition-fast);
+}
+
+#boton-volver:hover .material-icons {
+  transform: translateX(-3px);
 }
 
 /*********************************************************************/

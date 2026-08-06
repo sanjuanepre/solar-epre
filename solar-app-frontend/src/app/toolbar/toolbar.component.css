@@ -1,6 +1,8 @@
 .toolbar {
     display: flex;
     align-items: center; 
+    width: 100%;
+    height: 100%;
 }
 
 #toolbar-content {
@@ -9,10 +11,13 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-left: 100px;
-    padding-right: 100px;
-    background-color: white;
-    border-bottom: 2px solid #8ab4ac;
+    padding-left: 40px;
+    padding-right: 40px;
+    background: #ffffff;
+    border-bottom: 2px solid transparent;
+    border-image: linear-gradient(to right, #006241 0%, #cba258 50%, #006241 100%) 1;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+    z-index: 100;
 }
 
 span {
@@ -25,35 +30,37 @@ span {
 .epre, .logo-varios {
     display: flex;
     align-items: center;
+    gap: 24px;
 }
 
 #epre, #solar, #conicet, #sanjuan {
     display: block;
     margin: 0; 
     padding: 0;
-   
+    transition: transform 0.25s ease, opacity 0.25s ease;
 }
 
-#epre{
-    max-width: 140px;
-    margin-right: 70px;
+#epre:hover, #conicet:hover, #sanjuan:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+#epre {
+    max-width: 130px;
     cursor: pointer;
 }
 
-#solar{
-    max-width: 260px;
-    margin-right: 50px;
+#solar {
+    max-width: 220px;
 }
 
-#conicet{
-    max-width: 275px;
-    margin-right: 50px;
-    margin-top: 3px;
+#conicet {
+    max-width: 230px;
     cursor: pointer;
 }
 
-#sanjuan{
-    max-width: 200px;
+#sanjuan {
+    max-width: 170px;
     cursor: pointer; 
 }
 
