@@ -464,12 +464,14 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
         if (response && response.annualFluxUrl) {
           this.annualFluxUrl = response.annualFluxUrl;
           this.heatmapAvailable = true;
-          this.showHeatmap = false; // Por defecto no lo mostramos hasta que el usuario lo active
-          console.log('[Paso1Component] Capas térmicas obtenidas. Esperando activación del usuario.');
+          this.showHeatmap = true;
+          console.log('[Paso1Component] Capas térmicas obtenidas y activadas.');
         } else {
           console.warn('[Paso1Component] La API de Solar no retornó capa de flujo solar para esta ubicación.');
+          this.showHeatmap = false;
+          this.annualFluxUrl = '';
           this.snackBar.open(
-            'No hay datos de radiación detallados disponibles para esta zona específica.',
+            'No hay datos de radiación solar detallados disponibles para esta zona específica.',
             'Cerrar',
             { duration: 4000 }
           );
@@ -477,6 +479,15 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
       });
     } catch (error) {
       console.error('[Paso1Component] Error al obtener capas solares:', error);
+      this.zone.run(() => {
+        this.showHeatmap = false;
+        this.annualFluxUrl = '';
+        this.snackBar.open(
+          'No se pudo conectar con el servicio de radiación solar. Intente nuevamente.',
+          'Cerrar',
+          { duration: 4000 }
+        );
+      });
     } finally {
       this.zone.run(() => {
         this.isHeatmapLoading = false;

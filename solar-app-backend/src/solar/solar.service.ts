@@ -363,15 +363,20 @@ export class SolarService {
 
     const url = `https://solar.googleapis.com/v1/dataLayers:get?${params}`;
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
     try {
       const response = await fetch(url, {
         method: 'GET',
         cache: 'no-cache',
+        signal: controller.signal,
         headers: {
           Pragma: 'no-cache',
           'Cache-Control': 'no-cache',
         },
       });
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         let errorMsg = 'Error desconocido';
@@ -388,6 +393,7 @@ export class SolarService {
       const data: SolarDataLayersResponse = await response.json();
       return data;
     } catch (error) {
+      clearTimeout(timeoutId);
       console.warn(`[SolarService] Error en dataLayers:get (${error.message}). Retornando mock.`);
       return this.getMockDataLayers(latitude, longitude);
     }
