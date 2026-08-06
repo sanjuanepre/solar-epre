@@ -61,10 +61,12 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
           if (value) {
             this.updateInstalledPower();
             this.updateAreaAndPanelCount();
-            this.loadSolarHeatmap();
+            this.annualFluxUrl = '';
+            this.heatmapAvailable = true;
           } else {
             this.heatmapAvailable = false;
             this.showHeatmap = false;
+            this.annualFluxUrl = '';
             this.mapService.clearHeatmap();
           }
         });
@@ -485,11 +487,18 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
   /**
    * Prende o apaga la visualización de la capa del mapa de calor solar.
    */
-  toggleHeatmap() {
-    if (this.showHeatmap && this.annualFluxUrl) {
-      const polygons = this.mapService.getPolygons();
-      if (polygons.length > 0) {
-        this.mapService.fetchAndRenderSolarHeatmap(this.annualFluxUrl, polygons[0]);
+  async toggleHeatmap() {
+    if (this.showHeatmap) {
+      if (!this.annualFluxUrl) {
+        await this.loadSolarHeatmap();
+      }
+      if (this.annualFluxUrl) {
+        const polygons = this.mapService.getPolygons();
+        if (polygons.length > 0) {
+          this.mapService.fetchAndRenderSolarHeatmap(this.annualFluxUrl, polygons[0]);
+        }
+      } else {
+        this.showHeatmap = false;
       }
     } else {
       this.mapService.clearHeatmap();
