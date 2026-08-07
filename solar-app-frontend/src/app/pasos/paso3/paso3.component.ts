@@ -627,48 +627,22 @@ export class Paso3Component implements OnInit, OnDestroy {
     this.router.navigate(['pasos/2']);
   }
 
+  private readonly emptyArray: any[] = [];
+
   getEmisionesGEIEvitadas() {
-    try {
-      if (this.resultadosFront) {
-        return this.resultadosFront.periodoVeinteanalEmisionesGEIEvitadas;
-      }
-    } catch (error) {
-      console.log('this.resultadosFront no disponible');
-    }
-    return [];
+    return this.resultadosFront?.periodoVeinteanalEmisionesGEIEvitadas || this.emptyArray;
   }
 
   getFlujoEnergia() {
-    try {
-      if (this.resultadosFront) {
-        return this.resultadosFront.periodoVeinteanalFlujoEnergia;
-      }
-    } catch (error) {
-      console.log('this.resultadosFront no disponible');
-    }
-    return [];
+    return this.resultadosFront?.periodoVeinteanalFlujoEnergia || this.emptyArray;
   }
 
   getFlujoIngresosMonetarios() {
-    try {
-      if (this.resultadosFront) {
-        return this.resultadosFront.periodoVeinteanalFlujoIngresosMonetarios;
-      }
-    } catch (error) {
-      console.log('this.resultadosFront no disponible');
-    }
-    return [];
+    return this.resultadosFront?.periodoVeinteanalFlujoIngresosMonetarios || this.emptyArray;
   }
 
   getGeneracionFotovoltaica() {
-    try {
-      if (this.resultadosFront) {
-        return this.resultadosFront.periodoVeinteanalGeneracionFotovoltaica;
-      }
-    } catch (error) {
-      console.log('this.resultadosFront no disponible');
-    }
-    return [];
+    return this.resultadosFront?.periodoVeinteanalGeneracionFotovoltaica || this.emptyArray;
   }
 
   getTIR() {

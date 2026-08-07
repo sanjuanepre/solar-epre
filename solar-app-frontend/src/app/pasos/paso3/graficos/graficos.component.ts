@@ -73,7 +73,16 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    this.refreshAllCharts();
+    let hasActualChange = false;
+    for (const propName in changes) {
+      if (changes[propName].currentValue !== changes[propName].previousValue) {
+        hasActualChange = true;
+        break;
+      }
+    }
+    if (hasActualChange) {
+      this.refreshAllCharts();
+    }
   }
 
   ngOnInit(): void {
