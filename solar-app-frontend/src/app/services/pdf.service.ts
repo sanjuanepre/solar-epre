@@ -24,6 +24,11 @@ export interface GeneratePdfPayload {
   flujoEnergia?: number[];
   flujoIngresos?: number[];
   generacionFotovoltaica?: number[];
+  chartImages?: {
+    energiaConsumo?: string;
+    ahorroRecupero?: string;
+    emisiones?: string;
+  };
 }
 
 @Injectable({

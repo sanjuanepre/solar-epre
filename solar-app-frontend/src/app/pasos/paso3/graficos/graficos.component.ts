@@ -161,6 +161,45 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
     this.refreshAllCharts();
   }
 
+  async getChartsImages(): Promise<{ energiaConsumo?: string; ahorroRecupero?: string; emisiones?: string }> {
+    const result: { energiaConsumo?: string; ahorroRecupero?: string; emisiones?: string } = {};
+
+    try {
+      if (this.chartEnergiaConsumo) {
+        const data = await this.chartEnergiaConsumo.dataURI();
+        if (data && 'imgURI' in data && data.imgURI) {
+          result.energiaConsumo = data.imgURI;
+        }
+      }
+    } catch (e) {
+      console.warn('Error al exportar chartEnergiaConsumo:', e);
+    }
+
+    try {
+      if (this.chartAhorroRecupero) {
+        const data = await this.chartAhorroRecupero.dataURI();
+        if (data && 'imgURI' in data && data.imgURI) {
+          result.ahorroRecupero = data.imgURI;
+        }
+      }
+    } catch (e) {
+      console.warn('Error al exportar chartAhorroRecupero:', e);
+    }
+
+    try {
+      if (this.chartEmisiones) {
+        const data = await this.chartEmisiones.dataURI();
+        if (data && 'imgURI' in data && data.imgURI) {
+          result.emisiones = data.imgURI;
+        }
+      }
+    } catch (e) {
+      console.warn('Error al exportar chartEmisiones:', e);
+    }
+
+    return result;
+  }
+
   refreshAllCharts(): void {
     if (this.chartEnergiaConsumo) {
       this.updateChartEnergiaConsumo();

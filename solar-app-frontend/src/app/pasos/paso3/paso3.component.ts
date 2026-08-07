@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { GmailService } from 'src/app/services/gmail.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -15,12 +15,15 @@ import { PdfService } from 'src/app/services/pdf.service';
 import { ParametrosFront } from 'src/app/interfaces/parametros-front';
 import { distinctUntilChanged, Subject, takeUntil, Subscription } from 'rxjs';
 import { EmisionesGeiEvitadasFront } from 'src/app/interfaces/emisiones-gei-evitadas-front';
+import { GraficosComponent } from './graficos/graficos.component';
+
 @Component({
   selector: 'app-paso3',
   templateUrl: './paso3.component.html',
   styleUrls: ['./paso3.component.css'],
 })
 export class Paso3Component implements OnInit, OnDestroy {
+  @ViewChild(GraficosComponent) graficosComponent?: GraficosComponent;
   isModalOpen = false;
   isCalculating = false;
   email: string = '';
@@ -472,11 +475,20 @@ export class Paso3Component implements OnInit, OnDestroy {
     }
   }
 
-  buildPdfPayload() {
+  async buildPdfPayload() {
     const resultados = this.sharedService.getResultadosFront();
     const ahorroPesos = resultados?.resultadosFinancieros?.casoConCapitalPropio?.[0]?.ahorrosEnPesos || 0;
     const ahorroPorcentaje = resultados?.resultadosFinancieros?.casoConCapitalPropio?.[0]?.porcentajeAhorro || 0;
     const paybackMeses = resultados?.resultadosFinancieros?.indicadoresFinancieros?.payBackMonths || (this.sharedService.getPlazoInversionValue() || 0);
+
+    let chartImages = undefined;
+    if (this.graficosComponent) {
+      try {
+        chartImages = await this.graficosComponent.getChartsImages();
+      } catch (e) {
+        console.warn('No se pudieron capturar las imágenes de los gráficos:', e);
+      }
+    }
 
     return {
       uniqueID: this.pdfService.uniqueID || this.pdfService.generateShortUUID(),
@@ -496,45 +508,52 @@ export class Paso3Component implements OnInit, OnDestroy {
       emisionesGEIEvitadasTnAnual: (this.yearlyEnergyAckWhDefault * this.carbonOffsetFactorTnPerMWh) / 1000,
       proporcionAutoconsumo: this.proporcionAutoconsumo || 0,
       proporcionInyectada: (100 - (this.proporcionAutoconsumo || 0)),
+      chartImages,
     };
   }
 
-  downloadPDF(): void {
+  async downloadPDF(): Promise<void> {
     if (!this.isDownloading) {
       this.isDownloading = true;
-      const payload = this.buildPdfPayload();
-      this.pdfService
-        .downloadPdfBlob(payload)
-        .subscribe({
-          next: (blob) => {
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `resultado-id-${payload.uniqueID}.pdf`;
-            a.click();
-            window.URL.revokeObjectURL(url);
-            this.isDownloading = false;
-          },
-          error: (err) => {
-            console.error('Error al descargar el PDF:', err);
-            this.snackBar.open(
-              'No se pudo generar la descarga del PDF. Intente nuevamente.',
-              'Cerrar',
-              { duration: 4000 }
-            );
-            this.isDownloading = false;
-          },
-        });
+      try {
+        const payload = await this.buildPdfPayload();
+        this.pdfService
+          .downloadPdfBlob(payload)
+          .subscribe({
+            next: (blob) => {
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `resultado-id-${payload.uniqueID}.pdf`;
+              a.click();
+              window.URL.revokeObjectURL(url);
+              this.isDownloading = false;
+            },
+            error: (err) => {
+              console.error('Error al descargar el PDF:', err);
+              this.snackBar.open(
+                'No se pudo generar la descarga del PDF. Intente nuevamente.',
+                'Cerrar',
+                { duration: 4000 }
+              );
+              this.isDownloading = false;
+            },
+          });
+      } catch (e) {
+        console.error('Error preparando payload de PDF:', e);
+        this.isDownloading = false;
+      }
     }
   }
 
-  sendEmail(): void {
+  async sendEmail(): Promise<void> {
     if (!this.isSendingMail && this.email) {
       this.isSendingMail = true;
-      const payload = this.buildPdfPayload();
-      this.gmailService
-        .sendEmailWithResults(this.email, payload)
-        .then(() => {
+      try {
+        const payload = await this.buildPdfPayload();
+        this.gmailService
+          .sendEmailWithResults(this.email, payload)
+          .then(() => {
           this.isSendingMail = false;
           this.snackBar.open('El correo ha sido enviado exitosamente.', '', {
             duration: 5000,
@@ -553,6 +572,10 @@ export class Paso3Component implements OnInit, OnDestroy {
             { duration: 4000 }
           );
         });
+      } catch (e) {
+        console.error('Error al preparar payload para email:', e);
+        this.isSendingMail = false;
+      }
     }
   }
 

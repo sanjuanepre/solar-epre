@@ -5,6 +5,8 @@ import { GeneratePdfDto } from './pdf.dto';
 import { buildPdfHtml } from './pdf.template';
 import * as fs from 'fs';
 
+import * as QRCode from 'qrcode';
+
 @Injectable()
 export class PdfService {
   private readonly logger = new Logger(PdfService.name);
@@ -50,8 +52,16 @@ export class PdfService {
         headless: true,
       });
 
+      const qrTarget = data.qrUrl || 'https://solar.epresanjuan.gob.ar';
+      let qrBase64 = '';
+      try {
+        qrBase64 = await QRCode.toDataURL(qrTarget, { margin: 1, width: 120, color: { dark: '#0f172a', light: '#ffffff' } });
+      } catch (err) {
+        this.logger.warn('No se pudo generar QR code base64:', err);
+      }
+
       const page = await browser.newPage();
-      const htmlContent = buildPdfHtml(data);
+      const htmlContent = buildPdfHtml(data, qrBase64);
 
       await page.setContent(htmlContent, {
         waitUntil: ['load', 'networkidle0'],

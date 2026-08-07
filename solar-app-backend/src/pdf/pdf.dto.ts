@@ -19,4 +19,10 @@ export class GeneratePdfDto {
   flujoEnergia?: number[];
   flujoIngresos?: number[];
   generacionFotovoltaica?: number[];
+  chartImages?: {
+    energiaConsumo?: string;
+    ahorroRecupero?: string;
+    emisiones?: string;
+  };
+  qrUrl?: string;
 }
