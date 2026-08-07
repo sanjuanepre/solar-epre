@@ -407,7 +407,6 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
   private initializeChartAhorroRecupero() {
     const flujoData = this.periodoVeinteanalFlujoIngresosMonetarios;
     if (!flujoData || flujoData.length === 0) {
-      console.warn('initializeChartAhorroRecupero: flujoData vacío o indefinido, postergando inicialización.');
       return;
     }
     const recuperoMeses = (this.recuperoInversionMeses != null && !isNaN(this.recuperoInversionMeses)) ? this.recuperoInversionMeses : 0;
@@ -651,7 +650,6 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       !this.periodoVeinteanalEmisionesGEIEvitadasOriginal ||
       this.periodoVeinteanalEmisionesGEIEvitadasOriginal.length === 0
     ) {
-      console.error('periodoVeinteanalEmisionesGEIEvitadasOriginal no disponible');
       return;
     }
 
