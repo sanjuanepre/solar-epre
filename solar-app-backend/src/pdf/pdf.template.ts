@@ -61,13 +61,14 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
 
     /* HEADER INSTITUCIONAL */
     .top-logo-bar {
-      text-align: center;
-      margin-bottom: 10px;
+      width: 100%;
+      margin-bottom: 12px;
     }
     .top-logo-bar img {
+      width: 100%;
       max-width: 100%;
-      height: 38px;
-      object-fit: contain;
+      height: auto;
+      display: block;
     }
 
     /* NAVY BANNER - EXECUTIVE MODERN STYLE */
@@ -351,8 +352,8 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
           <span class="card-label">Ahorro Anual Estimado</span>
           <svg class="card-icon" fill="none" stroke="#059669" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
         </div>
-        <div class="card-value">${formatMoneda(data.ahorroEstimadoPesosAnual)}</div>
-        <div class="card-subtext">Equivalente al ${formatNumero(data.ahorroPorcentajeAnual, 0)}% de reducción anual en la factura eléctrica</div>
+        <div class="card-value">${formatNumero(data.ahorroEstimadoPesosAnual, 0)} USD/año</div>
+        <div class="card-subtext">${data.ahorroPorcentajeAnual > 0 ? 'Equivalente al ' + formatNumero(data.ahorroPorcentajeAnual, 0) + '% de reducción anual en la factura eléctrica' : 'Ahorro económico anual estimado derivado de la instalación solar'}</div>
       </div>
 
       <!-- Card 3: Costo Estimado de Instalación -->

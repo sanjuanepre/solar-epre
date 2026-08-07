@@ -477,8 +477,15 @@ export class Paso3Component implements OnInit, OnDestroy {
 
   async buildPdfPayload() {
     const resultados = this.sharedService.getResultadosFront();
-    const ahorroPesos = resultados?.resultadosFinancieros?.casoConCapitalPropio?.[0]?.ahorrosEnPesos || 0;
-    const ahorroPorcentaje = resultados?.resultadosFinancieros?.casoConCapitalPropio?.[0]?.porcentajeAhorro || 0;
+    const ahorroUsd = this.sharedService.getAhorroAnualUsd() ||
+      resultados?.periodoVeinteanalFlujoIngresosMonetarios?.[0]?.ahorroEnElectricidadTotalUsd ||
+      resultados?.resultadosFinancieros?.casoConCapitalPropio?.[0]?.ahorrosEnPesos || 0;
+    
+    let ahorroPorcentaje = resultados?.resultadosFinancieros?.casoConCapitalPropio?.[0]?.porcentajeAhorro || 0;
+    if (!ahorroPorcentaje && this.consumoTotalAnual && this.yearlyEnergyAckWhDefault) {
+      ahorroPorcentaje = Math.min(100, Math.round(((this.yearlyEnergyAckWhDefault * ((this.proporcionAutoconsumo || 100) / 100)) / this.consumoTotalAnual) * 100));
+    }
+
     const paybackMeses = resultados?.resultadosFinancieros?.indicadoresFinancieros?.payBackMonths || (this.sharedService.getPlazoInversionValue() || 0);
 
     let chartImages = undefined;
@@ -499,7 +506,7 @@ export class Paso3Component implements OnInit, OnDestroy {
       panelesCantidad: this.panelesCantidad || 0,
       panelCapacityW: this.panelCapacityW || 400,
       costoInstalacion: this.costoInstalacion || 0,
-      ahorroEstimadoPesosAnual: ahorroPesos,
+      ahorroEstimadoPesosAnual: ahorroUsd,
       ahorroPorcentajeAnual: ahorroPorcentaje,
       periodoRecuperoAnios: paybackMeses > 0 ? parseFloat((paybackMeses / 12).toFixed(1)) : 0,
       potenciaPicoKw: (this.panelesCantidad * this.panelCapacityW) / 1000,
