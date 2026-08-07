@@ -2,6 +2,8 @@ import {
   Component,
   Input,
   OnInit,
+  OnChanges,
+  SimpleChanges,
   ViewChild,
   ElementRef,
   AfterViewInit,
@@ -24,7 +26,7 @@ import * as ApexCharts from 'apexcharts';
   styleUrls: ['./graficos.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
+export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   @Input()
   periodoVeinteanalEmisionesGEIEvitadasOriginal!: EmisionesGeiEvitadasFront[];
   periodoVeinteanalEmisionesGEIEvitadasCopia: EmisionesGeiEvitadasFront[] = [];
@@ -70,6 +72,10 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.renderChartEmisiones();
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    this.refreshAllCharts();
+  }
+
   ngOnInit(): void {
     if (!this.yearlyEnergyInitial) {
       this.yearlyEnergyInitial = this.sharedService.getYearlyEnergyAckWh();
@@ -82,29 +88,52 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.ahorrosAnualesIniciales) {
       this.ahorrosAnualesIniciales = this.sharedService.getAhorroAnualUsd();
     }
-    if (this.periodoVeinteanalFlujoIngresosMonetarios.length === 0) {
+    if (!this.periodoVeinteanalFlujoIngresosMonetarios || this.periodoVeinteanalFlujoIngresosMonetarios.length === 0) {
       const resultadosFront = this.sharedService.getResultadosFront();
-      if (resultadosFront.periodoVeinteanalFlujoIngresosMonetarios) {
+      if (resultadosFront && resultadosFront.periodoVeinteanalFlujoIngresosMonetarios) {
         this.periodoVeinteanalFlujoIngresosMonetarios =
           resultadosFront.periodoVeinteanalFlujoIngresosMonetarios;
-      } else {
-        console.warn('No se encontraron datos de FlujoIngresosMonetarios.');
+      }
+    }
+    if (!this.periodoVeinteanalEmisionesGEIEvitadasOriginal || this.periodoVeinteanalEmisionesGEIEvitadasOriginal.length === 0) {
+      const resultadosFront = this.sharedService.getResultadosFront();
+      if (resultadosFront && resultadosFront.periodoVeinteanalEmisionesGEIEvitadas) {
+        this.periodoVeinteanalEmisionesGEIEvitadasOriginal =
+          resultadosFront.periodoVeinteanalEmisionesGEIEvitadas;
       }
     }
     if (!this.carbonOffSetInicialTon) {
       this.carbonOffSetInicialTon = this.sharedService.getCarbonOffSetTnAnual();
     }
 
+    this.sharedService.resultadosFront$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (resultadosFront) => {
+          if (resultadosFront) {
+            if (resultadosFront.periodoVeinteanalFlujoIngresosMonetarios) {
+              this.periodoVeinteanalFlujoIngresosMonetarios = resultadosFront.periodoVeinteanalFlujoIngresosMonetarios;
+            }
+            if (resultadosFront.periodoVeinteanalEmisionesGEIEvitadas) {
+              this.periodoVeinteanalEmisionesGEIEvitadasOriginal = resultadosFront.periodoVeinteanalEmisionesGEIEvitadas;
+            }
+            if (resultadosFront.periodoVeinteanalFlujoEnergia) {
+              this.periodoVeinteanalFlujoEnergia = resultadosFront.periodoVeinteanalFlujoEnergia;
+            }
+            if (resultadosFront.periodoVeinteanalGeneracionFotovoltaica) {
+              this.periodoVeinteanalGeneracionFotovoltaica = resultadosFront.periodoVeinteanalGeneracionFotovoltaica;
+            }
+            this.refreshAllCharts();
+          }
+        },
+      });
+
     this.sharedService.yearlyEnergyAckWh$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe({
         next: (yearlyEnergy) => {
           this.yearlyEnergy = yearlyEnergy;
-          if (this.chartEnergiaConsumo) this.updateChartEnergiaConsumo();
-          if (this.chartDonutEnergia) this.updateChartDonutEnergia();
-          if (this.chartAhorroRecupero) this.updateChartAhorroRecupero();
-          if (this.chartEmisiones)
-            this.updateChartEmisionesEvitadasAcumuladas();
+          this.refreshAllCharts();
         },
       });
 
@@ -113,7 +142,7 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
       .subscribe({
         next: (newPlazoRecupero) => {
           this.recuperoInversionMeses = newPlazoRecupero;
-          if (this.chartAhorroRecupero) this.updateChartAhorroRecupero();
+          this.refreshAllCharts();
         },
       });
 
@@ -122,19 +151,42 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
       .subscribe({
         next: (newEmisionesGeiEvitadas) => {
           this.carbonOffSet = newEmisionesGeiEvitadas;
-          if (this.chartEmisiones)
-            this.updateChartEmisionesEvitadasAcumuladas();
+          this.refreshAllCharts();
         },
       });
   }
 
   ngAfterViewInit(): void {
     this.carbonOffSetInicialTon = this.sharedService.getCarbonOffSetTnAnual();
+    this.refreshAllCharts();
+  }
 
-    this.initializeChartEnergiaConsumo();
-    this.initializeChartDonutEnergia();
-    this.initializeChartAhorroRecupero();
-    this.initializeChartEmisionesEvitadasAcumuladas();
+  refreshAllCharts(): void {
+    if (this.chartEnergiaConsumo) {
+      this.updateChartEnergiaConsumo();
+    } else {
+      this.initializeChartEnergiaConsumo();
+    }
+
+    if (this.chartDonutEnergia) {
+      this.updateChartDonutEnergia();
+    } else {
+      this.initializeChartDonutEnergia();
+    }
+
+    if (this.chartAhorroRecupero) {
+      this.updateChartAhorroRecupero();
+    } else {
+      this.initializeChartAhorroRecupero();
+    }
+
+    if (this.chartEmisiones) {
+      this.updateChartEmisionesEvitadasAcumuladas();
+    } else {
+      this.initializeChartEmisionesEvitadasAcumuladas();
+    }
+    this.cdr.markForCheck();
+    this.cdr.detectChanges();
   }
 
   ngOnDestroy(): void {
@@ -518,7 +570,7 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private updateChartAhorroRecupero() {
     if (!this.chartAhorroRecupero) {
-      console.error('El gráfico no está inicializado.');
+      this.initializeChartAhorroRecupero();
       return;
     }
     const flujoData = this.periodoVeinteanalFlujoIngresosMonetarios;
