@@ -47,6 +47,11 @@ export class SharedService {
   YearlyAnualConfigurations$ =
     this.yearlysAnualConfigurationSubject.asObservable();
 
+  private termsAcceptedSubject = new BehaviorSubject<boolean>(
+    localStorage.getItem('termsAccepted') === 'true'
+  );
+  termsAccepted$ = this.termsAcceptedSubject.asObservable();
+
   private tutorialShownSubject = new BehaviorSubject<boolean>(false);
   tutorialShown$ = this.tutorialShownSubject.asObservable();
   private predefinedCoordinatesSubject = new BehaviorSubject<boolean>(false);
@@ -127,6 +132,15 @@ export class SharedService {
     const tarifa = this.tarifaContratadaSubject.getValue();
     console.log('Obteniendo tarifa contratada: ', tarifa);
     return tarifa;
+  }
+
+  setTermsAccepted(value: boolean): void {
+    localStorage.setItem('termsAccepted', value ? 'true' : 'false');
+    this.termsAcceptedSubject.next(value);
+  }
+
+  getTermsAccepted(): boolean {
+    return this.termsAcceptedSubject.getValue() || localStorage.getItem('termsAccepted') === 'true';
   }
 
   setTutorialShown(value: boolean): void {
@@ -474,8 +488,8 @@ export class SharedService {
     // Redirigir al inicio de la aplicación
     // Recargar la página para asegurar un estado limpio
     // redirigir a pasos/1 y recargar mapa
-    this.router.navigate(['/'], { replaceUrl: true }).then(() => {
-      console.log('Redirigiendo al inicio de la aplicación');
+    this.router.navigate(['/pasos/1'], { replaceUrl: true }).then(() => {
+      console.log('Redirigiendo al inicio del cálculo (/pasos/1)');
     });
   }
 

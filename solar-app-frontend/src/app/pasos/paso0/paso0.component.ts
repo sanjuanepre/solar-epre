@@ -104,6 +104,7 @@ export class Paso0Component implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.isTermsAccepted = this.sharedService.getTermsAccepted();
     this.sharedService.tutorialShown$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((shown) => {
@@ -143,6 +144,9 @@ export class Paso0Component implements OnInit, AfterViewInit, OnDestroy {
   handleAccepted(event: boolean) {
     this.showModal = false;
     this.isTermsAccepted = event;
+    if (event) {
+      this.sharedService.setTermsAccepted(true);
+    }
   }
 
   showInstructions() {
