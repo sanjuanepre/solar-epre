@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { google, sheets_v4 } from 'googleapis';
+import * as fs from 'fs';
 import { SolarCalculationDto } from '../solar/dto/solar-calculation.dto';
 import { CheckInitService } from './check-init/check-init.service';
 import { CaracteristicasSistema } from '../interfaces/sheets/caracteristicas-sistema/caracteristicas-sistema.interface';
@@ -22,25 +23,45 @@ export class GoogleSheetsService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    this.googleSheetClient = await this.getGoogleSheetClient();
+    try {
+      this.googleSheetClient = await this.getGoogleSheetClient();
+    } catch (error) {
+      console.warn('[GoogleSheetsService] No se pudieron cargar las credenciales de Google Sheets:', error?.message || error);
+    }
   }
 
   async getGoogleSheetClient(): Promise<sheets_v4.Sheets> {
-    let auth;
+    let auth: any;
     
     if (process.env.GOOGLE_CREDENTIALS) {
-      // Si estamos en Vercel/Producción, leer desde la variable de entorno
       const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
       auth = new google.auth.GoogleAuth({
         credentials,
         scopes: ['https://www.googleapis.com/auth/spreadsheets'],
       });
-    } else {
-      // En local, leer desde el archivo
+    } else if (process.env.GOOGLE_CLIENT_EMAIL && (process.env.GOOGLE_SERVICE_KEY || process.env.GOOGLE_PRIVATE_KEY)) {
+      const client_email = process.env.GOOGLE_CLIENT_EMAIL;
+      const private_key = (process.env.GOOGLE_SERVICE_KEY || process.env.GOOGLE_PRIVATE_KEY || '').replace(/\\n/g, '\n');
       auth = new google.auth.GoogleAuth({
-        keyFile: './src/config/credentials.json',
+        credentials: {
+          client_email,
+          private_key,
+          project_id: process.env.GOOGLE_PROJECTID,
+        },
         scopes: ['https://www.googleapis.com/auth/spreadsheets'],
       });
+    } else {
+      const localPaths = ['./src/config/credentials.json', './credentials.json', '../src/config/credentials.json'];
+      const foundPath = localPaths.find(p => fs.existsSync(p));
+      if (foundPath) {
+        auth = new google.auth.GoogleAuth({
+          keyFile: foundPath,
+          scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+        });
+      } else {
+        console.warn('[GoogleSheetsService] No se encontraron credenciales en env ni archivo local. GoogleAuth no configurado.');
+        return null as any;
+      }
     }
     const authClient = await auth.getClient();
     if (!(authClient instanceof google.auth.JWT)) {
