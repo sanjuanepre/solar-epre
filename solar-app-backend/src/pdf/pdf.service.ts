@@ -41,15 +41,18 @@ export class PdfService {
     let browser = null;
     try {
       const isVercel = Boolean(process.env.VERCEL || process.env.AWS_EXECUTION_ENV);
+      if (isVercel && (chromium as any).setGraphicsMode !== undefined) {
+        (chromium as any).setGraphicsMode = false;
+      }
       const executablePath = await this.getExecutablePath();
 
       this.logger.log(`Lanzando Puppeteer (Vercel: ${isVercel}, Executable: ${executablePath})`);
 
       browser = await puppeteer.launch({
-        args: isVercel ? chromium.args : ['--no-sandbox', '--disable-setuid-sandbox'],
+        args: isVercel ? chromium.args : ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
         defaultViewport: (chromium as any).defaultViewport || { width: 1280, height: 960 },
         executablePath: executablePath,
-        headless: true,
+        headless: isVercel ? (chromium.headless as any) : true,
       });
 
       const qrTarget = data.qrUrl || 'https://solar.epresanjuan.gob.ar';
