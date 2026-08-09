@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 import { GeneratePdfDto } from './pdf.dto';
 import { buildPdfHtml } from './pdf.template';
@@ -40,6 +39,9 @@ export class PdfService {
   async generatePdf(data: GeneratePdfDto): Promise<Buffer> {
     let browser = null;
     try {
+      // Dynamic import para compatibilidad con CommonJS (puppeteer-core v25+ es ESM puro)
+      const puppeteer = (await import('puppeteer-core')).default;
+
       const isVercel = Boolean(process.env.VERCEL || process.env.AWS_EXECUTION_ENV);
       const executablePath = await this.getExecutablePath();
 
