@@ -34,9 +34,13 @@ export class PdfService {
     }
 
     // En Vercel / Serverless o si no hay navegador instalado localmente
-    process.env.AWS_LAMBDA_JS_RUNTIME = process.env.AWS_LAMBDA_JS_RUNTIME || 'nodejs22.x';
-    const CHROMIUM_PACK_URL = 'https://github.com/Sparticuz/chromium/releases/download/v131.0.0/chromium-v131.0.0-pack.tar';
-    return await chromium.executablePath(CHROMIUM_PACK_URL);
+    process.env.AWS_LAMBDA_JS_RUNTIME = 'nodejs20.x';
+    try {
+      return await chromium.executablePath();
+    } catch {
+      const CHROMIUM_PACK_URL = 'https://github.com/Sparticuz/chromium/releases/download/v131.0.0/chromium-v131.0.0-pack.tar';
+      return await chromium.executablePath(CHROMIUM_PACK_URL);
+    }
   }
 
   async generatePdf(data: GeneratePdfDto): Promise<Buffer> {

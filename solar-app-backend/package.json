@@ -5,6 +5,9 @@
   "author": "E.P.R.E. San Juan",
   "private": true,
   "license": "",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "build": "nest build",
     "postbuild": "node postbuild.js",
