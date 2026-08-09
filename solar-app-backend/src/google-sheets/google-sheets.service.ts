@@ -83,6 +83,14 @@ export class GoogleSheetsService implements OnModuleInit {
     solarCalculationDto: SolarCalculationDto,
   ): Promise<any> {
     try {
+      if (!this.googleSheetClient) {
+        console.warn('[GoogleSheetsService] googleSheetClient es null. Usando parámetros por defecto.');
+        return {
+          ...solarCalculationDto,
+          parametros: this.getFallbackParametros(solarCalculationDto),
+        };
+      }
+
       const caracteristicasSistema =
         await this.getCaracteristicasSistema().then(
           (caracteristicas) => caracteristicas,
@@ -104,9 +112,41 @@ export class GoogleSheetsService implements OnModuleInit {
 
       return solarCalculationWithParameters;
     } catch (error) {
-      console.error('Error calculating online:', error);
-      throw error;
+      console.error('Error calculating online, usando fallback local:', error);
+      return {
+        ...solarCalculationDto,
+        parametros: this.getFallbackParametros(solarCalculationDto),
+      };
     }
+  }
+
+  private getFallbackParametros(solarCalculationDto: SolarCalculationDto): Parametros {
+    return {
+      caracteristicasSistema: {
+        eficienciaInstalacion: 0.82,
+        degradacionAnualPanel: 0.005,
+        proporcionAutoconsumo: 0.70,
+        proporcionInyeccion: 0.30,
+      },
+      inversionCostos: {
+        costoInstalacionUsd: (solarCalculationDto.panelsSelected || 1) * 350,
+        costoMantenimientoUsd: 50,
+      },
+      economicas: {
+        tasaDescuento: { valor: 0.10, label: 'Tasa 10%' },
+        usdToArs: 1200,
+        tarifaIntercambioUsdKwh: 0.045,
+      },
+      cuadroTarifarioActual: [
+        {
+          categoriaTarifaria: solarCalculationDto.categoriaSeleccionada || 'T1-R',
+          cargoFijoArs: 2500,
+          cargoVariableArsKwh: 65.5,
+          cargoPotenciaArsKw: 4500,
+          costoGeneracionArsKwh: 45.0,
+        },
+      ],
+    };
   }
 
   private async getCuadroTarifario(economicas: Economicas): Promise<CuadroTarifario[]> {
