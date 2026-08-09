@@ -78,7 +78,7 @@ export class PdfService {
       const htmlContent = buildPdfHtml(data, qrBase64);
 
       await page.setContent(htmlContent, {
-        waitUntil: ['load', 'networkidle0'],
+        waitUntil: 'domcontentloaded',
       });
 
       const pdfUint8Array = await page.pdf({
