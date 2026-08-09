@@ -21,14 +21,23 @@ async function bootstrap() {
 
 // Exportamos el handler para Vercel Serverless
 export default async (req: any, res: any) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   try {
     const server = await bootstrap();
     return server(req, res);
-  } catch (err) {
+  } catch (err: any) {
+    console.error('[Bootstrap Error]', err);
     return res.status(500).json({
       error: 'BootstrapError',
-      message: err.message,
-      stack: err.stack,
+      message: err?.message || String(err),
+      stack: err?.stack,
     });
   }
 };
