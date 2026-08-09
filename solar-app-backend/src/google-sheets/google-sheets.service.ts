@@ -83,14 +83,6 @@ export class GoogleSheetsService implements OnModuleInit {
     solarCalculationDto: SolarCalculationDto,
   ): Promise<any> {
     try {
-      if (!this.googleSheetClient) {
-        console.warn('[GoogleSheetsService] googleSheetClient es null. Usando parámetros por defecto.');
-        return {
-          ...solarCalculationDto,
-          parametros: this.getFallbackParametros(solarCalculationDto),
-        };
-      }
-
       const caracteristicasSistema =
         await this.getCaracteristicasSistema().then(
           (caracteristicas) => caracteristicas,
@@ -112,50 +104,9 @@ export class GoogleSheetsService implements OnModuleInit {
 
       return solarCalculationWithParameters;
     } catch (error) {
-      console.error('Error calculating online, usando fallback local:', error);
-      return {
-        ...solarCalculationDto,
-        parametros: this.getFallbackParametros(solarCalculationDto),
-      };
+      console.error('Error al obtener parámetros online desde Google Sheets:', error);
+      throw error;
     }
-  }
-
-  private getFallbackParametros(solarCalculationDto: SolarCalculationDto): Parametros {
-    const panels = solarCalculationDto.panelsSelected || 1;
-    const inversionCalculada = panels * 350;
-    return {
-      caracteristicasSistema: {
-        eficienciaInstalacion: 0.82,
-        degradacionAnualPanel: 0.005,
-        proporcionAutoconsumo: 0.70,
-        proporcionInyeccion: 0.30,
-      },
-      inversionCostos: {
-        costoUsdWpConIva: 1.2,
-        costoUsdWpAplicado: 1.0,
-        equipoDeMedicionArsSinIva: 150000,
-        equipoDeMedicionUsdAplicado: 125,
-        mantenimiento: 0.01,
-        costoDeMantenimientoInicialUsd: 50,
-        inversion: inversionCalculada,
-      },
-      economicas: {
-        tipoCambioArs: 1200,
-        tasaInflacionUsd: 0.02,
-        tasaDescuentoFlujoFondosUsd: 0.10,
-        impuestosYTasasProvinciales: 0.15,
-        IVA: 0.21,
-      },
-      cuadroTarifarioActual: [
-        {
-          nombre: (solarCalculationDto.categoriaSeleccionada as any) || 'T1-R',
-          cargoVariableConsumoArsKWh: 65.5,
-          cargoVariableInyeccionArsKWh: 45.0,
-          tension: 'baja',
-          impuestos: 0.21,
-        },
-      ],
-    };
   }
 
   private async getCuadroTarifario(economicas: Economicas): Promise<CuadroTarifario[]> {
