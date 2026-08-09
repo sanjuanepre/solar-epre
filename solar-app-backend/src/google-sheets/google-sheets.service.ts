@@ -46,8 +46,8 @@ export class GoogleSheetsService implements OnModuleInit {
         credentials: {
           client_email,
           private_key,
-          project_id: process.env.GOOGLE_PROJECTID,
         },
+        projectId: process.env.GOOGLE_PROJECTID,
         scopes: ['https://www.googleapis.com/auth/spreadsheets'],
       });
     } else {
