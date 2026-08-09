@@ -38,6 +38,7 @@ export class Paso3Component implements OnInit, OnDestroy {
   costoMantenimiento!: number;
   tasaInflacionUsd!: number;
   fechaActual!: string;
+  fechaMesAnio!: string;
   categoriaTarifa!: string;
   tipoEstructura: 'coplanar' | 'optimo' = 'coplanar';
   roofFactor: number = 1.0;
@@ -731,6 +732,8 @@ export class Paso3Component implements OnInit, OnDestroy {
     const anio = now.getFullYear();
 
     this.fechaActual = `${mes} de ${anio}`;
+    const mesCap = mes.charAt(0).toUpperCase() + mes.slice(1);
+    this.fechaMesAnio = `${mesCap} ${anio}`;
   }
 
   openModal(): void {
