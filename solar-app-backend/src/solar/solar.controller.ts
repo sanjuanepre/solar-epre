@@ -52,10 +52,12 @@ export class SolarController {
       } else {
         this.handleOfflineCase(res);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al calcular el ahorro solar:', error);
       res.status(500).json({
         mensaje: 'No se pudo calcular el ahorro solar.',
+        error: error?.message || String(error),
+        stack: error?.stack,
       }); // Enviar error con código 500
     }
   }
