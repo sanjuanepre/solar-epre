@@ -1061,7 +1061,20 @@ export class MapService {
   }
 
   /**
-   * Limpia y remueve el GroundOverlay del mapa de calor solar, restaurando paneles y opacidad.
+   * Oculta el GroundOverlay del mapa de calor solar (manteniendo el cache), restaurando paneles y opacidad.
+   */
+  hideHeatmap() {
+    this.isHeatmapActiveState = false;
+    if (this.heatMapOverlay) {
+      this.heatMapOverlay.setMap(null);
+    }
+    // Restaurar el estado visual original de los paneles y el polígono
+    this.setPanelsVisibility(true);
+    this.setPolygonFillOpacity(0.5);
+  }
+
+  /**
+   * Limpia y remueve el GroundOverlay del mapa de calor solar por completo (al cambiar la geometría).
    */
   clearHeatmap() {
     this.isHeatmapActiveState = false;

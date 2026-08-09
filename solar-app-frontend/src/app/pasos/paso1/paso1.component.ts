@@ -72,6 +72,7 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
             this.updateAreaAndPanelCount();
             this.annualFluxUrl = '';
             this.heatmapAvailable = true;
+            this.mapService.clearHeatmap();
           } else {
             this.heatmapAvailable = false;
             this.showHeatmap = false;
@@ -566,7 +567,7 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
         this.showHeatmap = false;
       }
     } else {
-      this.mapService.clearHeatmap();
+      this.mapService.hideHeatmap();
     }
   }
 
