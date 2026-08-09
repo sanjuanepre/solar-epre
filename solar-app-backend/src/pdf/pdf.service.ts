@@ -34,7 +34,7 @@ export class PdfService {
     }
 
     // En Vercel / Serverless o si no hay navegador instalado localmente
-    process.env.AWS_LAMBDA_JS_RUNTIME = process.env.AWS_LAMBDA_JS_RUNTIME || 'nodejs20.x';
+    process.env.AWS_LAMBDA_JS_RUNTIME = process.env.AWS_LAMBDA_JS_RUNTIME || 'nodejs22.x';
     const CHROMIUM_PACK_URL = 'https://github.com/Sparticuz/chromium/releases/download/v131.0.0/chromium-v131.0.0-pack.tar';
     return await chromium.executablePath(CHROMIUM_PACK_URL);
   }
@@ -47,6 +47,11 @@ export class PdfService {
         (chromium as any).setGraphicsMode = false;
       }
       const executablePath = await this.getExecutablePath();
+      if (isVercel && executablePath) {
+        const path = await import('path');
+        const dir = path.dirname(executablePath);
+        process.env.LD_LIBRARY_PATH = process.env.LD_LIBRARY_PATH ? `${dir}:${process.env.LD_LIBRARY_PATH}` : dir;
+      }
 
       this.logger.log(`Lanzando Puppeteer (Vercel: ${isVercel}, Executable: ${executablePath})`);
 
