@@ -67,6 +67,19 @@ export class Paso3Component implements OnInit, OnDestroy {
   potenciaInstalacionW!: number;
   isCategoriaTarifaT1: boolean = false;
   periodoVeinteanalEmisionesGEIEvitadasOriginal: EmisionesGeiEvitadasFront[] = [];
+  isScrolledDown: boolean = false;
+  showPanels: boolean = true;
+
+  onScrollInformacion(event: Event) {
+    const target = event.target as HTMLElement;
+    if (target) {
+      const scrolled = target.scrollTop > 70;
+      if (this.isScrolledDown !== scrolled) {
+        this.isScrolledDown = scrolled;
+        this.cdr.detectChanges();
+      }
+    }
+  }
   constructor(
     private router: Router,
     private readonly gmailService: GmailService,
@@ -88,6 +101,7 @@ export class Paso3Component implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     console.log('Iniciando ngOnInit de Paso3Component');
+    this.showPanels = !this.mapService.isHeatmapActive();
     this.sharedService.isLoading$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe({
@@ -664,18 +678,9 @@ export class Paso3Component implements OnInit, OnDestroy {
     }
   }
 
-  enabledDrawing() {
-    this.polygons = this.mapService.getPolygons();
-    this.polygons[0].setEditable(true);
-    this.mapService.disableDrawingMode();
-
-    // Mostrar el snackbar
-    this.snackBar.open('Superficie editable', '', {
-      duration: 5000,
-      panelClass: ['custom-snackbar'],
-      horizontalPosition: 'center',
-      verticalPosition: 'top',
-    });
+  togglePanelsVisibility() {
+    this.showPanels = !this.showPanels;
+    this.mapService.setPanelsVisibility(this.showPanels);
   }
 
   // Método para establecer el timestamp

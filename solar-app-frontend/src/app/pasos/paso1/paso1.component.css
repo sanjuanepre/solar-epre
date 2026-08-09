@@ -752,4 +752,212 @@ input:checked + .slider:before {
   color: #475569;
 }
 
+/* ===================================================
+   FLOATING HUD TOOLBAR SOBRE EL MAPA (TERRA DRAW)
+   =================================================== */
+.hud-map-toolbar {
+  position: fixed;
+  top: 75px;
+  left: 20px;
+  max-width: calc(100vw - 620px);
+  z-index: 99;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 12px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06);
+  opacity: 1;
+  visibility: visible !important;
+  transform: translateY(0);
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s ease;
+  font-family: 'Sodo Sans', sans-serif;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.hud-map-toolbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Estado cuando el menú lateral está colapsado: desvanecimiento suave */
+.hud-map-toolbar.sidebar-collapsed {
+  max-width: calc(100vw - 60px);
+  opacity: 0.2;
+  visibility: visible !important;
+  transform: translateY(-4px);
+}
+
+/* Al pasar el mouse sobre la zona del menú desvanecido, se enciende suavemente al 100% */
+.hud-map-toolbar.sidebar-collapsed:hover {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateY(0);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.hud-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hud-divider {
+  width: 1px;
+  height: 24px;
+  background-color: #cbd5e1;
+  margin: 0 4px;
+}
+
+.hud-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1.5px solid transparent;
+  background: transparent;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hud-btn:hover:not(:disabled) {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.hud-btn.active {
+  background-color: #eff6ff;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15);
+}
+
+.hud-btn.hud-icon-only {
+  padding: 6px 8px;
+}
+
+.hud-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.hud-btn.danger:hover:not(:disabled) {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+.theme-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 2px;
+}
+
+.theme-btn {
+  padding: 5px 10px;
+  font-size: 11.5px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+}
+
+.theme-btn.solar.active {
+  background: #fff7ed;
+  border-color: #ea580c;
+  color: #c2410c;
+}
+
+.theme-btn.epre.active {
+  background: #ecfdf5;
+  border-color: #006241;
+  color: #004d33;
+}
+
+.theme-btn.neon.active {
+  background: #f0fdf4;
+  border-color: #00ff88;
+  color: #047857;
+}
+
+/* Badge Métricas Real-Time */
+.hud-metrics-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
+}
+
+.metric-icon {
+  font-size: 16px;
+  color: #f59e0b;
+}
+
+.metric-separator {
+  color: #64748b;
+}
+
+.metric-panels {
+  color: #38bdf8;
+}
+
+/* Modo Pills en Panel Lateral */
+.modo-pills-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 6px 0;
+}
+
+.pill-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pill-btn:hover {
+  border-color: #93c5fd;
+  background-color: #f8fafc;
+}
+
+.pill-btn.active {
+  border-color: var(--dark-green);
+  background-color: #f0fdf4;
+  color: var(--dark-green);
+}
+
+.hud-label-small {
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: 2px;
+}
+
 

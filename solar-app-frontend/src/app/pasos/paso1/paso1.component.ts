@@ -3,7 +3,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { driver } from 'driver.js';
 import { LocationService } from 'src/app/services/location.service';
-import { MapService } from 'src/app/services/map.service';
+import { MapService, TerraDrawTheme, TerraDrawActiveMode } from 'src/app/services/map.service';
 import { SharedService } from 'src/app/services/shared.service';
 import { SolarApiService } from 'src/app/services/solar-api.service';
 import { distinctUntilChanged, Subject, takeUntil } from 'rxjs';
@@ -19,14 +19,23 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
   tutorialShown: boolean = false;
   areaMarked: boolean = false;
   
+  // TerraDraw & UI Híbrida HUD State
+  activeMode: TerraDrawActiveMode = 'polygon';
+  activeTheme: TerraDrawTheme = 'solar';
+  realtimeAreaM2: number = 0;
+  estimatedPanelsCount: number = 0;
+  canUndo: boolean = false;
+  canRedo: boolean = false;
+
   // Variables del mapa de calor y banner dinámico
   heatmapAvailable: boolean = false;
   showHeatmap: boolean = false;
   isHeatmapLoading: boolean = false;
   annualFluxUrl: string = '';
   drawingState: 'INACTIVE' | 'START' | 'DRAWING' | 'CLOSED' = 'INACTIVE';
-  instructionText: string = 'Presiona "Marcar techo" para comenzar a dibujar el área de instalación.';
+  instructionText: string = 'Busque la ubicación de su propiedad y seleccione una herramienta (Polígono o Rectángulo) para delimitar su techo.';
   tipoEstructura: 'coplanar' | 'optimo' = 'coplanar';
+  isSidebarCollapsed: boolean = false;
 
   @ViewChild('pacInput', { static: false }) pacInput!: ElementRef;
   private marker!: google.maps.marker.AdvancedMarkerElement | null;
@@ -97,6 +106,39 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
           this.tipoEstructura = tipo;
         });
       });
+
+    this.sharedService.sidebarCollapsed$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((collapsed) => {
+        this.zone.run(() => {
+          this.isSidebarCollapsed = collapsed;
+        });
+      });
+
+    // Suscripciones a TerraDraw
+    this.mapService.activeMode$.pipe(takeUntil(this.destroy$)).subscribe((mode) => {
+      this.zone.run(() => (this.activeMode = mode));
+    });
+
+    this.mapService.activeTheme$.pipe(takeUntil(this.destroy$)).subscribe((theme) => {
+      this.zone.run(() => (this.activeTheme = theme));
+    });
+
+    this.mapService.realtimeAreaM2$.pipe(takeUntil(this.destroy$)).subscribe((area) => {
+      this.zone.run(() => (this.realtimeAreaM2 = area));
+    });
+
+    this.mapService.estimatedPanelsCount$.pipe(takeUntil(this.destroy$)).subscribe((count) => {
+      this.zone.run(() => (this.estimatedPanelsCount = count));
+    });
+
+    this.mapService.canUndo$.pipe(takeUntil(this.destroy$)).subscribe((undo) => {
+      this.zone.run(() => (this.canUndo = undo));
+    });
+
+    this.mapService.canRedo$.pipe(takeUntil(this.destroy$)).subscribe((redo) => {
+      this.zone.run(() => (this.canRedo = redo));
+    });
 
     this.mapService.clearDrawing();
     this.areaMarked = false;
@@ -404,7 +446,7 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
-   * Actualiza el texto de instrucción del banner según el estado de dibujo.
+   * Actualiza el texto de instrucción del banner según el estado de dibujo y herramienta activa.
    */
   updateInstructionText(state: 'INACTIVE' | 'START' | 'DRAWING' | 'CLOSED') {
     if (this.isHeatmapLoading && this.showHeatmap) {
@@ -412,19 +454,31 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    switch (state) {
-      case 'START':
-        this.instructionText = 'Haga clic en las esquinas del techo para ir trazando el contorno del área de instalación.';
+    if (state === 'CLOSED') {
+      this.instructionText = '¡Techo delimitado con éxito! Puede mover/rotar el área, activar el mapa de calor solar o presionar Siguiente.';
+      return;
+    }
+
+    switch (this.activeMode) {
+      case 'polygon':
+        if (state === 'START') {
+          this.instructionText = 'Haga clic en las esquinas del techo en el mapa para ir trazando el contorno del área.';
+        } else {
+          this.instructionText = 'Continúe marcando los vértices del techo. Haga doble clic o clic en el punto inicial para cerrar.';
+        }
         break;
-      case 'DRAWING':
-        this.instructionText = 'Haga clic en el primer punto verde o haga doble clic para cerrar y completar el techo.';
+
+      case 'rectangle':
+        this.instructionText = 'Haga clic y arrastre sobre el mapa para trazar una superficie rectangular sobre el techo.';
         break;
-      case 'CLOSED':
-        this.instructionText = '¡Techo delimitado con éxito! Puede activar el mapa de calor solar o continuar.';
+
+      case 'select':
+        this.instructionText = 'Arrastre la figura para moverla o use los botones de rotación (-15°, +15°, 90°) para orientarla.';
         break;
-      case 'INACTIVE':
+
+      case 'static':
       default:
-        this.instructionText = 'Presione "Marcar" para comenzar a dibujar el área de instalación sobre el techo.';
+        this.instructionText = 'Busque la ubicación de su propiedad y luego elija una herramienta (Polígono o Rectángulo) para delimitar su techo.';
         break;
     }
   }
@@ -514,5 +568,30 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
     } else {
       this.mapService.clearHeatmap();
     }
+  }
+
+  // --- Métodos de Control TerraDraw ---
+
+  setTerraDrawMode(mode: TerraDrawActiveMode) {
+    this.mapService.setTerraDrawMode(mode);
+  }
+
+  setTerraDrawTheme(theme: TerraDrawTheme) {
+    this.mapService.setTerraDrawTheme(theme);
+  }
+
+  undoTerraDraw() {
+    this.mapService.undoTerraDraw();
+  }
+
+  redoTerraDraw() {
+    this.mapService.redoTerraDraw();
+  }
+
+  rotatePolygon(angleDegrees: number) {
+    if (this.isHeatmapLoading) {
+      return;
+    }
+    this.mapService.rotatePolygon(angleDegrees);
   }
 }

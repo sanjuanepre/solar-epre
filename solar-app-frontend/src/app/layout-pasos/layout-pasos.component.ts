@@ -68,6 +68,7 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit {
         if (this.isPaso3) {
           this.isCollapsed = true;
         }
+        this.sharedService.setSidebarCollapsed(this.isCollapsed);
         this.cdr.detectChanges();
       });
   }
@@ -75,7 +76,7 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit {
   toggleCollapse() {
     // Permitir colapsar y expandir cualquier paso
     this.isCollapsed = !this.isCollapsed;
-    // this.cdr.detectChanges();
+    this.sharedService.setSidebarCollapsed(this.isCollapsed);
     if (this.mapService.getPolygons().length > 0) {
       setTimeout(() => {
         this.mapService.recenterMapToVisibleArea();
@@ -85,6 +86,7 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit {
 
   expandComponent() {
     this.isCollapsed = false;
+    this.sharedService.setSidebarCollapsed(this.isCollapsed);
     this.cdr.detectChanges();
   }
 

@@ -5,6 +5,17 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { SharedService } from './shared.service';
 import { EnvironmentService } from './environment.service';
 import { fromArrayBuffer } from 'geotiff';
+import {
+  TerraDraw,
+  TerraDrawPolygonMode,
+  TerraDrawRectangleMode,
+  TerraDrawSelectMode,
+  HexColor,
+} from 'terra-draw';
+import { TerraDrawGoogleMapsAdapter } from 'terra-draw-google-maps-adapter';
+
+export type TerraDrawTheme = 'solar' | 'epre' | 'neon';
+export type TerraDrawActiveMode = 'polygon' | 'rectangle' | 'select' | 'static';
 
 @Injectable({
   providedIn: 'root',
@@ -21,6 +32,28 @@ export class MapService {
   private heatMapOverlay: google.maps.GroundOverlay | null = null;
   private heatMapLoadingSubject = new BehaviorSubject<boolean>(false);
   heatMapLoading$ = this.heatMapLoadingSubject.asObservable();
+  private lastAnnualFluxUrl: string | null = null;
+  private isHeatmapActiveState: boolean = false;
+
+  // --- TerraDraw State ---
+  private terraDraw: TerraDraw | null = null;
+  private activeModeSubject = new BehaviorSubject<TerraDrawActiveMode>('static');
+  activeMode$ = this.activeModeSubject.asObservable();
+
+  private activeThemeSubject = new BehaviorSubject<TerraDrawTheme>('solar');
+  activeTheme$ = this.activeThemeSubject.asObservable();
+
+  private realtimeAreaM2Subject = new BehaviorSubject<number>(0);
+  realtimeAreaM2$ = this.realtimeAreaM2Subject.asObservable();
+
+  private estimatedPanelsCountSubject = new BehaviorSubject<number>(0);
+  estimatedPanelsCount$ = this.estimatedPanelsCountSubject.asObservable();
+
+  private canUndoSubject = new BehaviorSubject<boolean>(false);
+  private canRedoSubject = new BehaviorSubject<boolean>(false);
+  
+  canUndo$ = this.canUndoSubject.asObservable();
+  canRedo$ = this.canRedoSubject.asObservable();
 
   private overlayCompleteSubject = new Subject<boolean>();
   private drawingStateSubject = new BehaviorSubject<'INACTIVE' | 'START' | 'DRAWING' | 'CLOSED'>('INACTIVE');
@@ -95,6 +128,12 @@ export class MapService {
 
     console.log('Emitiendo instancia del mapa');
     this.mapSubject.next(this.map);
+
+    // Esperar a que el mapa esté en estado idle para garantizar que sus elementos DOM internos estén montados
+    google.maps.event.addListenerOnce(this.map, 'idle', () => {
+      console.log('Mapa listo en estado idle, inicializando TerraDraw');
+      this.initTerraDraw();
+    });
     console.log('Inicialización del mapa completada');
   }
 
@@ -199,256 +238,335 @@ export class MapService {
     }
   }
 
-  // --- Dibujo manual de polígonos (reemplaza DrawingManager) ---
+  // --- Integración TerraDraw ---
 
-  initializeDrawingManager() {
-    console.log('Iniciando initializeDrawingManager (modo manual)');
-    this.drawingInitialized = true;
-    console.log('Dibujo manual inicializado correctamente');
+  private initTerraDraw() {
+    if (!this.map || this.terraDraw) return;
+
+    // Verificar que el div del mapa existe y está montado en el DOM
+    const mapDiv = this.map.getDiv();
+    if (!mapDiv) {
+      console.warn('Contenedor del mapa no disponible aún para TerraDraw, reintentando...');
+      setTimeout(() => this.initTerraDraw(), 100);
+      return;
+    }
+
+    try {
+      const currentTheme = this.activeThemeSubject.value;
+      const styles = this.getPolygonStyles(currentTheme);
+
+      this.terraDraw = new TerraDraw({
+        adapter: new TerraDrawGoogleMapsAdapter({
+          lib: google.maps,
+          map: this.map,
+          coordinatePrecision: 6,
+        }),
+        modes: [
+          new TerraDrawPolygonMode({
+            styles: styles,
+          }),
+          new TerraDrawRectangleMode({
+            styles: styles,
+          }),
+          new TerraDrawSelectMode({
+            flags: {
+              polygon: {
+                feature: {
+                  draggable: true,
+                  rotateable: true,
+                  scaleable: true,
+                  coordinates: {
+                    midpoints: true,
+                    draggable: true,
+                    deletable: true,
+                  },
+                },
+              },
+              rectangle: {
+                feature: {
+                  draggable: true,
+                  rotateable: true,
+                  scaleable: true,
+                  coordinates: {
+                    midpoints: true,
+                    draggable: true,
+                    deletable: true,
+                  },
+                },
+              },
+            },
+          }),
+        ],
+      });
+
+      this.terraDraw.start();
+      this.setTerraDrawMode('static');
+
+      // Escuchar eventos de dibujo finalizado o modificado
+      this.terraDraw.on('finish', (id: any, context: any) => {
+        this.updateUndoRedoStates();
+        this.handleTerraDrawChange(true);
+        this.setTerraDrawMode('select');
+      });
+
+      this.terraDraw.on('change', (ids: any[], type: any) => {
+        this.updateUndoRedoStates();
+        this.handleTerraDrawChange(false);
+      });
+
+      console.log('TerraDraw iniciado con éxito');
+    } catch (error) {
+      console.error('Error iniciando TerraDraw:', error);
+    }
   }
 
-  /**
-   * Activa el modo de dibujo: escucha clics en el mapa para agregar vértices.
-   */
-  enableDrawingMode() {
-    if (!this.map) return;
+  private getPolygonStyles(theme: TerraDrawTheme) {
+    let mainColor: HexColor = '#ea580c';
+    let fillColor: HexColor = '#f59e0b';
+    let fillOpacity = 0.35;
 
-    // Limpiar dibujo anterior
-    this.clearDrawingState();
+    if (theme === 'epre') {
+      mainColor = '#006241';
+      fillColor = '#00875a';
+      fillOpacity = 0.35;
+    } else if (theme === 'neon') {
+      mainColor = '#00ff88';
+      fillColor = '#00ffaa';
+      fillOpacity = 0.45;
+    }
 
-    this.isDrawing = true;
-    this.drawingStateSubject.next('START');
-    this.map.setOptions({ draggableCursor: 'crosshair' });
+    return {
+      fillColor: fillColor,
+      fillOpacity: fillOpacity,
+      outlineColor: mainColor,
+      outlineWidth: 3.5,
+    };
+  }
 
-    // Listener de clic en el mapa para agregar vértices
-    this.mapClickListener = this.map.addListener('click', (event: google.maps.MapMouseEvent) => {
-      if (!this.isDrawing || !event.latLng) return;
-      this.addVertex(event.latLng);
-    });
-
-    // Listener de doble-clic para cerrar el polígono
-    this.mapDblClickListener = this.map.addListener('dblclick', (event: google.maps.MapMouseEvent) => {
-      if (!this.isDrawing || this.drawingVertices.length < 3) return;
-      // Prevenir que el doble clic agregue un vértice extra y haga zoom
-      event.stop();
-      this.closePolygon();
-    });
-
-    this.snackBar.open(
-      'Haga clic en el mapa para marcar los vértices del área. Cierre el polígono haciendo clic en el primer punto o doble-clic.',
-      '',
-      {
-        duration: 5000,
-        panelClass: ['custom-snackbar'],
-        horizontalPosition: 'center',
-        verticalPosition: 'top',
+  setTerraDrawMode(mode: TerraDrawActiveMode) {
+    if (!this.terraDraw) return;
+    try {
+      if (mode === 'polygon' || mode === 'rectangle') {
+        // Al seleccionar un nuevo modo de dibujo, limpiar dibujos anteriores para mantener una sola área
+        this.clearDrawing();
       }
-    );
+      this.terraDraw.setMode(mode);
+      this.activeModeSubject.next(mode);
+      if (mode === 'polygon' || mode === 'rectangle') {
+        this.drawingStateSubject.next(mode === 'polygon' ? 'START' : 'DRAWING');
+      } else if (mode === 'select') {
+        this.drawingStateSubject.next('CLOSED');
+      } else {
+        this.drawingStateSubject.next('INACTIVE');
+      }
+    } catch (e) {
+      console.warn('Error al cambiar modo TerraDraw:', e);
+    }
+  }
+
+  setTerraDrawTheme(theme: TerraDrawTheme) {
+    this.activeThemeSubject.next(theme);
+    if (this.terraDraw) {
+      this.terraDraw.stop();
+      this.terraDraw = null;
+      this.initTerraDraw();
+      this.handleTerraDrawChange(true);
+    }
   }
 
   /**
-   * Agrega un vértice al polígono en construcción.
+   * Rota la figura actual por el ángulo indicado en grados (positivo = sentido horario, negativo = antihorario)
    */
-  private async addVertex(latLng: google.maps.LatLng) {
-    // Si hacemos clic cerca del primer vértice y ya hay al menos 3 puntos, cerrar el polígono
-    if (this.drawingVertices.length >= 3) {
-      const firstVertex = this.drawingVertices[0];
-      const distance = google.maps.geometry.spherical.computeDistanceBetween(latLng, firstVertex);
-      // Si está a menos de 5 metros del primer punto, cerrar
-      if (distance < 5) {
-        this.closePolygon();
+  rotatePolygon(angleDegrees: number) {
+    if (!this.terraDraw) return;
+    const snapshot = this.terraDraw.getSnapshot();
+    if (!snapshot || snapshot.length === 0) return;
+
+    const feature = JSON.parse(JSON.stringify(snapshot[snapshot.length - 1]));
+    if (!feature.geometry || !feature.geometry.coordinates || !feature.geometry.coordinates[0]) return;
+
+    const rawCoords: number[][] = feature.geometry.coordinates[0];
+    if (rawCoords.length < 3) return;
+
+    // Calcular centroide
+    let latSum = 0;
+    let lngSum = 0;
+    const count = rawCoords.length;
+    rawCoords.forEach((c) => {
+      lngSum += c[0];
+      latSum += c[1];
+    });
+    const centerLat = latSum / count;
+    const centerLng = lngSum / count;
+
+    const rad = (angleDegrees * Math.PI) / 180;
+    const cosAngle = Math.cos(rad);
+    const sinAngle = Math.sin(rad);
+    const cosLat = Math.cos((centerLat * Math.PI) / 180);
+
+    const rotatedCoords = rawCoords.map((c) => {
+      const dLat = c[1] - centerLat;
+      const dLng = (c[0] - centerLng) * cosLat;
+
+      const newLat = centerLat + (dLat * cosAngle - dLng * sinAngle);
+      const newLng = centerLng + (dLat * sinAngle + dLng * cosAngle) / cosLat;
+
+      return [
+        Math.round(newLng * 1000000) / 1000000,
+        Math.round(newLat * 1000000) / 1000000,
+      ];
+    });
+
+    feature.geometry.coordinates[0] = rotatedCoords;
+
+    this.terraDraw.updateFeatureGeometry(feature.id as string, feature.geometry as any);
+    if (this.isHeatmapActive()) {
+      this.invalidateHeatmapCache();
+    }
+    this.handleTerraDrawChange(true);
+  }
+
+  private terraDrawChangeTimeout: any;
+
+  private handleTerraDrawChange(isFinished: boolean = false) {
+    if (this.terraDrawChangeTimeout) {
+      clearTimeout(this.terraDrawChangeTimeout);
+    }
+    
+    if (isFinished) {
+      this._processTerraDrawChange(true);
+    } else {
+      this.terraDrawChangeTimeout = setTimeout(() => {
+        this._processTerraDrawChange(false);
+      }, 150);
+    }
+  }
+
+  private _processTerraDrawChange(isFinished: boolean = false) {
+    if (!this.terraDraw) return;
+    const snapshot = this.terraDraw.getSnapshot();
+
+    if (!snapshot || snapshot.length === 0) {
+      this.clearPolygons();
+      this.clearPanels();
+      this.areaSubject.next(0);
+      this.realtimeAreaM2Subject.next(0);
+      this.estimatedPanelsCountSubject.next(0);
+      this.overlayCompleteSubject.next(false);
+      this.drawingStateSubject.next('INACTIVE');
+      return;
+    }
+
+    const polygonFeatures = snapshot.filter(
+      (f) => f.geometry && (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon')
+    );
+
+    if (polygonFeatures.length === 0) {
+      return;
+    }
+
+    // Únicamente al finalizar un dibujo eliminamos polígonos anteriores si existieran múltiples
+    if (isFinished && polygonFeatures.length > 1) {
+      const idsToRemove = polygonFeatures.slice(0, polygonFeatures.length - 1).map(f => f.id as string);
+      this.terraDraw.removeFeatures(idsToRemove);
+    }
+
+    const feature = polygonFeatures[polygonFeatures.length - 1];
+    if (feature.geometry) {
+      const rawCoords: any[] = feature.geometry.coordinates[0];
+      if (!rawCoords || rawCoords.length < 3) {
         return;
       }
-    }
 
-    this.drawingVertices.push(latLng);
-    if (this.drawingVertices.length >= 3) {
-      this.drawingStateSubject.next('DRAWING');
-    } else {
-      this.drawingStateSubject.next('START');
-    }
+      const path: google.maps.LatLngLiteral[] = rawCoords.map((coord: number[]) => ({
+        lat: coord[1],
+        lng: coord[0],
+      }));
 
-    // Crear marcador visual para el vértice
-    const { AdvancedMarkerElement } = (await google.maps.importLibrary('marker')) as google.maps.MarkerLibrary;
-
-    const pinElement = document.createElement('div');
-    pinElement.style.width = '14px';
-    pinElement.style.height = '14px';
-    pinElement.style.borderRadius = '50%';
-    pinElement.style.backgroundColor = this.drawingVertices.length === 1 ? '#00FF00' : '#FFFFFF';
-    pinElement.style.border = '2px solid #00FF00';
-    pinElement.style.cursor = 'pointer';
-    pinElement.style.boxShadow = '0 0 4px rgba(0,0,0,0.5)';
-
-    const marker = new AdvancedMarkerElement({
-      position: latLng,
-      map: this.map,
-      content: pinElement,
-      gmpClickable: true,
-    });
-
-    // Si es el primer vértice, agregar listener para cerrar al hacer clic
-    if (this.drawingVertices.length === 1) {
-      marker.addListener('gmp-click', () => {
-        if (this.isDrawing && this.drawingVertices.length >= 3) {
-          this.closePolygon();
-        }
+      // Crear polígono interno de referencia en Google Maps
+      this.clearPolygons();
+      const polygon = new google.maps.Polygon({
+        paths: path,
+        visible: false,
+        map: this.map,
       });
-    }
+      this.polygons.push(polygon);
 
-    this.vertexMarkers.push(marker);
+      const areaM2 = google.maps.geometry.spherical.computeArea(path);
+      const areaReducida = areaM2 * 0.9;
+      const panelArea = this.panelArea > 0 ? this.panelArea : 2.0;
+      const estimatedPanels = Math.max(0, Math.floor(areaReducida / panelArea));
 
-    // Actualizar la polyline de previsualización
-    this.updateDrawingPolyline();
-  }
+      this.realtimeAreaM2Subject.next(Math.round(areaM2));
+      this.estimatedPanelsCountSubject.next(estimatedPanels);
 
-  /**
-   * Actualiza la línea de previsualización que conecta los vértices.
-   */
-  private updateDrawingPolyline() {
-    if (this.drawingPolyline) {
-      this.drawingPolyline.setMap(null);
-    }
+      const isSelectMode = this.activeModeSubject.value === 'select';
 
-    if (this.drawingVertices.length < 2) return;
-
-    // Crear path incluyendo una línea de regreso al primer punto para previsualizar el cierre
-    const path = [...this.drawingVertices];
-    if (path.length >= 3) {
-      path.push(path[0]); // Cerrar visualmente la previsualización
-    }
-
-    this.drawingPolyline = new google.maps.Polyline({
-      path: path,
-      strokeColor: '#00FF00',
-      strokeWeight: 3,
-      strokeOpacity: 0.8,
-      map: this.map,
-    });
-  }
-
-  /**
-   * Cierra el polígono: crea el Polygon final y ejecuta toda la lógica de
-   * validación, cálculo de paneles y emisión de eventos (equivalente al
-   * antiguo handler overlaycomplete del DrawingManager).
-   */
-  private closePolygon() {
-    if (this.drawingVertices.length < 3) return;
-
-    // Limpiar elementos temporales de dibujo
-    this.clearTemporaryDrawingElements();
-    this.isDrawing = false;
-    this.drawingStateSubject.next('CLOSED');
-    this.removeMapListeners();
-    this.map.setOptions({ draggableCursor: '' });
-
-    // Limpiar polígonos y paneles anteriores
-    this.clearPolygons();
-    this.clearPanels();
-
-    // Crear el polígono final con las mismas opciones visuales que antes
-    const newPolygon = new google.maps.Polygon({
-      paths: this.drawingVertices,
-      fillColor: '#808080',
-      fillOpacity: 0.5,
-      strokeWeight: 3,
-      strokeColor: '#00FF00',
-      clickable: true,
-      editable: true,
-      zIndex: 1,
-      geodesic: true,
-      map: this.map,
-    });
-
-    console.log('Nuevo polígono creado:', newPolygon);
-    this.polygons.push(newPolygon);
-
-    // Validar el área inicial
-    if (!this.validateArea(newPolygon)) {
-      console.log('Área no válida, limpiando dibujo');
-      this.clearDrawing();
-      return;
-    }
-
-    const path = newPolygon.getPath();
-    console.log('Path del polígono:', path.getArray());
-    const isLocationValid = this.locationService.validatePolygonLocation(
-      newPolygon,
-      this.map
-    );
-    console.log('¿Ubicación válida?', isLocationValid);
-
-    if (isLocationValid) {
-      const area = google.maps.geometry.spherical.computeArea(path);
-      console.log('Área calculada:', area);
-      this.areaSubject.next(area);
-
-      // Listener para el evento set_at en el polígono (cuando se edita)
-      const updatePolygonAfterEdit = () => {
-        console.log('Polígono editado, actualizando...');
-        const updatedArea =
-          google.maps.geometry.spherical.computeArea(path);
-        console.log('Nueva área después de edición:', updatedArea);
-        if (this.validateArea(newPolygon)) {
-          console.log('Área válida después de edición');
-          newPolygon.setMap(this.map);
-          this.polygons[0] = newPolygon;
-          this.drawPanels(newPolygon);
-          this.invalidateHeatmapCache();
-          this.overlayCompleteSubject.next(true);
-          this.disableDrawingMode();
+      // Si está finalizada O se está moviendo/arrastrando en modo 'select', actualizar los paneles vectoriales
+      if (isFinished || isSelectMode) {
+        const isLocationValid = this.locationService.validatePolygonLocation(polygon, this.map, false);
+        if (!isLocationValid) {
+          this.snackBar.open(
+            'La ubicación seleccionada se encuentra fuera de la Provincia de San Juan.',
+            'Cerrar',
+            {
+              duration: 4000,
+              panelClass: ['custom-snackbar'],
+              horizontalPosition: 'center',
+              verticalPosition: 'top',
+            }
+          );
+          this.clearDrawing();
           return;
+        }
+
+        const minArea = this.sharedService.calculateAreaPanels(1) * 4;
+        if (areaM2 >= minArea) {
+          this.areaSubject.next(areaM2);
+          this.drawPanels(polygon);
+          this.overlayCompleteSubject.next(true);
+          this.drawingStateSubject.next('CLOSED');
         } else {
-          console.log('Área no válida después de edición');
+          this.clearPanels();
+          this.overlayCompleteSubject.next(false);
         }
-      };
-
-      google.maps.event.addListener(
-        path,
-        'set_at',
-        updatePolygonAfterEdit
-      );
-      google.maps.event.addListener(
-        path,
-        'insert_at',
-        updatePolygonAfterEdit
-      );
-
-      // Dibuja los paneles
-      console.log('Dibujando paneles');
-      this.drawPanels(newPolygon);
-      this.overlayCompleteSubject.next(true);
-      this.disableDrawingMode();
-      // Obtener el centro del polígono para recentrar el mapa
-      const bounds = new google.maps.LatLngBounds();
-      path.forEach((latLng) => bounds.extend(latLng));
-      const polygonCenter = bounds.getCenter();
-      console.log('Centro del polígono:', polygonCenter.toString());
-
-      this.map.panTo(polygonCenter);
-      console.log('Mapa centrado en el polígono');
-      return;
-    } else {
-      console.log('Ubicación no válida, mostrando mensaje de error');
-      this.snackBar.open(
-        'La ubicación seleccionada se encuentra fuera de la Provincia de San Juan, no se puede procesar.',
-        '',
-        {
-          duration: 5000,
-          panelClass: ['custom-snackbar'],
-          horizontalPosition: 'center',
-          verticalPosition: 'top',
-        }
-      );
-      this.map.panTo(this.center);
-      this.map.setZoom(13);
-      this.clearDrawing();
-      this.areaSubject.next(0);
-      this.overlayCompleteSubject.next(false);
+      }
     }
+  }
 
-    // Limpiar los vértices temporales
-    this.drawingVertices = [];
+  // --- Manejo de Historial (Undo / Redo) ---
+
+  undoTerraDraw() {
+    if (this.terraDraw && this.terraDraw.canUndo()) {
+      this.terraDraw.undo();
+      this.handleTerraDrawChange(true);
+      this.updateUndoRedoStates();
+    }
+  }
+
+  redoTerraDraw() {
+    if (this.terraDraw && this.terraDraw.canRedo()) {
+      this.terraDraw.redo();
+      this.handleTerraDrawChange(true);
+      this.updateUndoRedoStates();
+    }
+  }
+
+  private updateUndoRedoStates() {
+    if (this.terraDraw) {
+      this.canUndoSubject.next(this.terraDraw.canUndo());
+      this.canRedoSubject.next(this.terraDraw.canRedo());
+    }
+  }
+
+  initializeDrawingManager() {
+    if (!this.terraDraw) {
+      this.initTerraDraw();
+    }
+  }
+
+  enableDrawingMode() {
+    this.setTerraDrawMode('polygon');
   }
 
   /**
@@ -616,6 +734,14 @@ export class MapService {
     this.sharedService.setMaxPanelsPerSuperface(maxPanelsEfectivos);
     this.sharedService.setPanelsCountSelected(totalPanels);
     this.sharedService.calculateAreaPanelsSelected(totalPanels);
+
+    if (this.isHeatmapActive()) {
+      this.setPanelsVisibility(false);
+      this.setPolygonFillOpacity(0);
+      if (this.lastAnnualFluxUrl && this.polygons.length > 0 && !this.heatMapOverlay) {
+        this.fetchAndRenderSolarHeatmap(this.lastAnnualFluxUrl, this.polygons[0]);
+      }
+    }
   }
 
   reDrawPanels(panelesCantidad: number) {
@@ -718,6 +844,14 @@ export class MapService {
     this.sharedService.setMaxPanelsPerSuperface(maxGridPanels);
     this.sharedService.setPanelsCountSelected(totalPanels);
     this.sharedService.calculateAreaPanelsSelected(totalPanels);
+
+    if (this.isHeatmapActive()) {
+      this.setPanelsVisibility(false);
+      this.setPolygonFillOpacity(0);
+      if (this.lastAnnualFluxUrl && this.polygons.length > 0 && !this.heatMapOverlay) {
+        this.fetchAndRenderSolarHeatmap(this.lastAnnualFluxUrl, this.polygons[0]);
+      }
+    }
   }
 
   getPolygons() {
@@ -780,7 +914,15 @@ export class MapService {
   clearDrawing() {
     this.clearPolygons();
     this.clearPanels();
-    this.clearDrawingState();
+    if (this.terraDraw) {
+      try {
+        this.terraDraw.clear();
+      } catch (e) {}
+    }
+    this.canUndoSubject.next(false);
+    this.canRedoSubject.next(false);
+    this.realtimeAreaM2Subject.next(0);
+    this.estimatedPanelsCountSubject.next(0);
     this.disableDrawingMode();
     this.clearHeatmap();
     this.overlayCompleteSubject.next(false);
@@ -792,7 +934,15 @@ export class MapService {
    */
   setPanelsVisibility(visible: boolean) {
     if (this.panels && this.panels.length > 0) {
+      const isHeatmap = this.isHeatmapActive();
       this.panels.forEach((panel) => {
+        if (visible) {
+          panel.setOptions({
+            fillOpacity: isHeatmap ? 0.3 : 0.7,
+            strokeColor: '#FFFFFF',
+            strokeWeight: 0.6,
+          });
+        }
         panel.setMap(visible ? this.map : null);
       });
     }
@@ -906,12 +1056,19 @@ export class MapService {
     };
   }
 
+  isHeatmapActive(): boolean {
+    return this.isHeatmapActiveState || !!(this.heatMapOverlay && this.heatMapOverlay.getMap());
+  }
+
   /**
    * Limpia y remueve el GroundOverlay del mapa de calor solar, restaurando paneles y opacidad.
    */
   clearHeatmap() {
+    this.isHeatmapActiveState = false;
+    this.lastAnnualFluxUrl = null;
     if (this.heatMapOverlay) {
       this.heatMapOverlay.setMap(null);
+      this.heatMapOverlay = null;
     }
     // Restaurar el estado visual original de los paneles y el polígono
     this.setPanelsVisibility(true);
@@ -927,6 +1084,9 @@ export class MapService {
       console.warn('[MapService] No se proporcionó annualFluxUrl.');
       return;
     }
+
+    this.lastAnnualFluxUrl = annualFluxUrl;
+    this.isHeatmapActiveState = true;
 
     // Ocultar temporalmente los paneles y hacer transparente el polígono para que no tapen el mapa de calor
     this.setPanelsVisibility(false);

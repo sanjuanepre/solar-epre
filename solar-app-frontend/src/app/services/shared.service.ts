@@ -59,6 +59,13 @@ export class SharedService {
   nearbyLocation: any;
   private isLoadingSubject = new BehaviorSubject<boolean>(false);
   isLoading$ = this.isLoadingSubject.asObservable();
+
+  private sidebarCollapsedSubject = new BehaviorSubject<boolean>(false);
+  sidebarCollapsed$ = this.sidebarCollapsedSubject.asObservable();
+
+  setSidebarCollapsed(collapsed: boolean) {
+    this.sidebarCollapsedSubject.next(collapsed);
+  }
   private panelsCountSelectedSubject = new BehaviorSubject<number>(0);
   panelsCountSelected$ = this.panelsCountSelectedSubject.asObservable();
   private plazoInversionSubject = new BehaviorSubject<number>(0);

@@ -374,12 +374,20 @@
 
 /* Selector rápido de estructura interactivo en Paso 3 */
 .selector-estructura-paso3-container {
-  margin: 10px 10px 20px 10px;
+  margin: 8px 10px 8px 10px;
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  padding: 15px;
+  padding: 10px 14px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.selector-estructura-paso3-container.compact {
+  margin: 4px 10px 4px 10px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
 .selector-estructura-paso3 {
@@ -387,7 +395,117 @@
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 15px;
+  gap: 10px;
+}
+
+.selector-group-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.selector-group-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--dark-green);
+  background-color: var(--dark-green);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.header-action-btn:hover {
+  background-color: var(--medium-green);
+  border-color: var(--medium-green);
+  transform: translateY(-1px);
+}
+
+.header-action-btn.icon-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background-color: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  color: #475569;
+  position: relative;
+}
+
+.header-action-btn.icon-btn:hover {
+  background-color: #f0fdf4;
+  color: var(--dark-green);
+  border-color: var(--dark-green);
+}
+
+.header-action-btn.toggle-panels-btn {
+  background-color: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  color: #475569;
+}
+
+.header-action-btn.toggle-panels-btn:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+.header-action-btn.toggle-panels-btn.active {
+  background-color: #eff6ff;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15);
+}
+
+.header-action-btn .material-icons {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
+
+/* Compact layout when scrolled down */
+.selector-estructura-paso3-container.compact .selector-estructura-paso3 {
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.selector-estructura-paso3-container.compact .btn-toggle-estructura {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.selector-estructura-paso3-container.compact .header-action-btn {
+  height: 30px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.selector-estructura-paso3-container.compact .header-action-btn.icon-btn {
+  width: 30px;
+  height: 30px;
+}
+
+.selector-estructura-paso3-container.compact .header-action-btn .icono-secundario {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
 }
 
 .selector-label {

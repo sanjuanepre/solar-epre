@@ -1,3 +1,162 @@
+<!-- Floating HUD Bar sobre el Mapa Satelital -->
+<div class="hud-map-toolbar" [class.sidebar-collapsed]="isSidebarCollapsed">
+  <div class="hud-group mode-selector">
+    <button 
+      class="hud-btn" 
+      [class.active]="activeMode === 'polygon'" 
+      (click)="setTerraDrawMode('polygon')"
+      title="Trazar polígono punto por punto"
+    >
+      <span class="material-icons">polyline</span>
+      <span class="hud-label">Polígono</span>
+    </button>
+    
+    <button 
+      class="hud-btn" 
+      [class.active]="activeMode === 'rectangle'" 
+      (click)="setTerraDrawMode('rectangle')"
+      title="Trazar rectángulo rápido"
+    >
+      <span class="material-icons">crop_square</span>
+      <span class="hud-label">Rectángulo</span>
+    </button>
+
+    <button 
+      class="hud-btn" 
+      [class.active]="activeMode === 'select'" 
+      (click)="setTerraDrawMode('select')"
+      title="Mover, rotar o editar vértices"
+    >
+      <span class="material-icons">pan_tool</span>
+      <span class="hud-label">Editar / Mover</span>
+    </button>
+  </div>
+
+  <div class="hud-divider"></div>
+
+  <!-- Botones de Rotación de Techo -->
+  <div class="hud-group rotate-actions" *ngIf="realtimeAreaM2 > 0">
+    <button 
+      class="hud-btn hud-icon-only" 
+      [disabled]="isHeatmapLoading"
+      (click)="rotatePolygon(-1)" 
+      [title]="isHeatmapLoading ? 'Generando mapa de calor solar...' : 'Girar 1° a la izquierda'"
+    >
+      <span class="material-icons">rotate_left</span>
+      <span class="hud-label-small">-1°</span>
+    </button>
+
+    <button 
+      class="hud-btn hud-icon-only" 
+      [disabled]="isHeatmapLoading"
+      (click)="rotatePolygon(1)" 
+      [title]="isHeatmapLoading ? 'Generando mapa de calor solar...' : 'Girar 1° a la derecha'"
+    >
+      <span class="material-icons">rotate_right</span>
+      <span class="hud-label-small">+1°</span>
+    </button>
+
+    <button 
+      class="hud-btn hud-icon-only" 
+      [disabled]="isHeatmapLoading"
+      (click)="rotatePolygon(-15)" 
+      [title]="isHeatmapLoading ? 'Generando mapa de calor solar...' : 'Girar 15° a la izquierda'"
+    >
+      <span class="material-icons">rotate_left</span>
+      <span class="hud-label-small">-15°</span>
+    </button>
+
+    <button 
+      class="hud-btn hud-icon-only" 
+      [disabled]="isHeatmapLoading"
+      (click)="rotatePolygon(15)" 
+      [title]="isHeatmapLoading ? 'Generando mapa de calor solar...' : 'Girar 15° a la derecha'"
+    >
+      <span class="material-icons">rotate_right</span>
+      <span class="hud-label-small">+15°</span>
+    </button>
+
+    <button 
+      class="hud-btn hud-icon-only" 
+      [disabled]="isHeatmapLoading"
+      (click)="rotatePolygon(90)" 
+      [title]="isHeatmapLoading ? 'Generando mapa de calor solar...' : 'Girar 90°'"
+    >
+      <span class="material-icons">screen_rotation</span>
+      <span class="hud-label-small">90°</span>
+    </button>
+  </div>
+
+  <div class="hud-divider" *ngIf="realtimeAreaM2 > 0"></div>
+
+  <div class="hud-group history-actions">
+    <button 
+      class="hud-btn hud-icon-only" 
+      [disabled]="!canUndo" 
+      (click)="undoTerraDraw()"
+      title="Deshacer"
+    >
+      <span class="material-icons">undo</span>
+    </button>
+
+    <button 
+      class="hud-btn hud-icon-only" 
+      [disabled]="!canRedo" 
+      (click)="redoTerraDraw()"
+      title="Rehacer"
+    >
+      <span class="material-icons">redo</span>
+    </button>
+
+    <button 
+      class="hud-btn hud-icon-only danger" 
+      (click)="clearDrawing()"
+      title="Borrar dibujo"
+    >
+      <span class="material-icons">delete_sweep</span>
+    </button>
+  </div>
+
+  <div class="hud-divider"></div>
+
+  <!-- Selector de Tema Visual -->
+  <div class="hud-group theme-selector">
+    <span class="theme-title">Tema:</span>
+    <button 
+      class="hud-btn theme-btn solar" 
+      [class.active]="activeTheme === 'solar'" 
+      (click)="setTerraDrawTheme('solar')"
+      title="Estilo Solar Energético"
+    >
+      ☀️ Solar
+    </button>
+    <button 
+      class="hud-btn theme-btn epre" 
+      [class.active]="activeTheme === 'epre'" 
+      (click)="setTerraDrawTheme('epre')"
+      title="Estilo Institucional EPRE"
+    >
+      🏛️ EPRE
+    </button>
+    <button 
+      class="hud-btn theme-btn neon" 
+      [class.active]="activeTheme === 'neon'" 
+      (click)="setTerraDrawTheme('neon')"
+      title="Estilo Neón Alta Visibilidad"
+    >
+      ⚡ Neón
+    </button>
+  </div>
+
+  <!-- Badge Métricas Real-Time -->
+  <div class="hud-metrics-badge" *ngIf="realtimeAreaM2 > 0">
+    <span class="material-icons metric-icon">square_foot</span>
+    <span class="metric-value">{{ realtimeAreaM2 }} m²</span>
+    <span class="metric-separator">•</span>
+    <span class="metric-panels">~{{ estimatedPanelsCount }} paneles</span>
+  </div>
+</div>
+
 <div class="content content-paso-uno">
   <div class="titulo">
     <h2 id="titulo">Ubicación</h2>
@@ -66,23 +225,47 @@
             />
           </div>
           <div class="titulo-inicio">
-            <h2>Marca punto por punto</h2>
+            <h2>Delimitar Área de Techo</h2>
           </div>
         </div>
 
-        <div class="botones">
-          <button id="marcar" (click)="enableDrawingMode()">Marcar
-            <span class="material-icons">edit</span>
+        <!-- Botones de Modo en Panel -->
+        <div class="modo-pills-container">
+          <button 
+            class="pill-btn" 
+            [class.active]="activeMode === 'polygon'" 
+            (click)="setTerraDrawMode('polygon')"
+          >
+            <span class="material-icons">polyline</span> Polígono Libre
           </button>
 
-          <button id="borrar" (click)="clearDrawing()">Borrar dibujo
+          <button 
+            class="pill-btn" 
+            [class.active]="activeMode === 'rectangle'" 
+            (click)="setTerraDrawMode('rectangle')"
+          >
+            <span class="material-icons">crop_square</span> Rectángulo Rápido
+          </button>
+
+          <button 
+            class="pill-btn" 
+            [class.active]="activeMode === 'select'" 
+            (click)="setTerraDrawMode('select')"
+          >
+            <span class="material-icons">pan_tool</span> Mover / Rotar
+          </button>
+        </div>
+
+        <div class="botones">
+          <button id="borrar" (click)="clearDrawing()">
+            Borrar dibujo
             <span class="material-icons">delete</span>
           </button>
         </div>
+
         <div class="advertencia">
           <p id="recomendacion">
-            Marcando punto por punto dibuje el área donde instalaría los paneles
-            solares.
+            Sugerencia: Use la herramienta <b>Rectángulo</b> para techos rectangulares simples, o <b>Polígono</b> para formas personalizadas. Puede rotar o mover el área usando la herramienta <b>Editar / Rotar</b>.
           </p>
         </div>
       </div>

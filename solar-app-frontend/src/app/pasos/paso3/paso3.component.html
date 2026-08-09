@@ -1,66 +1,73 @@
 <span class="resultados" *ngIf="!isLoading">
-  <div class="content" id="contentToConvert">
-    <div class="titulo">
+  <div class="content" id="contentToConvert" [class.compact-header]="isScrolledDown">
+    <div class="titulo" [class.compact]="isScrolledDown">
       <h2 id="titulo">RESULTADOS ESTIMADOS</h2>
     </div>
 
     <!-- Selector rápido de estructura interactivo en Paso 3 -->
-    <div class="selector-estructura-paso3-container">
+    <div class="selector-estructura-paso3-container" [class.compact]="isScrolledDown">
       <div class="selector-estructura-paso3">
-        <span class="selector-label">Estructura de montaje activa:</span>
-        <div class="toggle-estructura-container">
+        <div class="selector-group-left">
+          <span class="selector-label" *ngIf="!isScrolledDown">Estructura:</span>
+          <div class="toggle-estructura-container">
+            <button 
+              type="button"
+              class="btn-toggle-estructura" 
+              [class.active]="tipoEstructura === 'coplanar'"
+              (click)="cambiarEstructura('coplanar')"
+              [disabled]="isLoading || isCalculating"
+              [title]="isScrolledDown ? 'Estructura Coplanar al tejado' : ''">
+              <mat-icon class="text-icon">grid_on</mat-icon>
+              <span>Coplanar al tejado</span>
+            </button>
+            <button 
+              type="button"
+              class="btn-toggle-estructura" 
+              [class.active]="tipoEstructura === 'optimo'"
+              (click)="cambiarEstructura('optimo')"
+              [disabled]="isLoading || isCalculating"
+              [title]="isScrolledDown ? 'Ángulo Óptimo (30° Norte)' : ''">
+              <mat-icon class="text-icon font-sun">wb_sunny</mat-icon>
+              <span>Ángulo Óptimo (30° Norte)</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="selector-group-right">
           <button 
             type="button"
-            class="btn-toggle-estructura" 
-            [class.active]="tipoEstructura === 'coplanar'"
-            (click)="cambiarEstructura('coplanar')"
-            [disabled]="isLoading || isCalculating">
-            <mat-icon class="text-icon">grid_on</mat-icon>
-            Coplanar al tejado
+            class="header-action-btn toggle-panels-btn" 
+            [class.active]="showPanels"
+            (click)="togglePanelsVisibility()" 
+            [title]="showPanels ? 'Ocultar paneles fotovoltaicos' : 'Mostrar paneles fotovoltaicos'">
+            <span class="material-icons">grid_on</span>
+            <span class="btn-text" *ngIf="!isScrolledDown">{{ showPanels ? 'Ocultar paneles' : 'Ver paneles' }}</span>
           </button>
-          <button 
-            type="button"
-            class="btn-toggle-estructura" 
-            [class.active]="tipoEstructura === 'optimo'"
-            (click)="cambiarEstructura('optimo')"
-            [disabled]="isLoading || isCalculating">
-            <mat-icon class="text-icon font-sun">wb_sunny</mat-icon>
-            Ángulo Óptimo (30° Norte)
+
+          <button id="downloadButton" class="header-action-btn icon-btn" (click)="downloadPDF()" title="Descargar informe PDF">
+            <span class="material-icons">download</span>
+            <div
+              class="custom-loader"
+              *ngIf="isDownloading || isSendingMail || isCalculating"
+            ></div>
+          </button>
+
+          <button id="emailButton" class="header-action-btn icon-btn" (click)="openModal()" title="Enviar por correo electrónico">
+            <span class="material-icons">email</span>
           </button>
         </div>
       </div>
-      <div class="ganancia-captacion-tooltip" *ngIf="tipoEstructura === 'optimo' && roofFactor < 1.0">
+
+      <div class="ganancia-captacion-tooltip" *ngIf="!isScrolledDown && tipoEstructura === 'optimo' && roofFactor < 1.0">
         <mat-icon class="ganancia-icon">trending_up</mat-icon>
         <span>
           ¡Captación solar optimizada en un <strong>+{{ (1 / roofFactor - 1) * 100 | number:'1.0-0' }}%</strong> en comparación con la inclinación natural del tejado!
         </span>
       </div>
     </div>
+
     <div class="info-container" id="info-container">
-      <div class="action-buttons">
-        <div class="editar-component" id="botonEdit">
-          <button id="boton-editar" (click)="enabledDrawing()">
-            Editar área
-            <span class="material-icons">edit</span>
-          </button>
-        </div>
-
-        <div class="descargar-enviar-component">
-          <button id="downloadButton" (click)="downloadPDF()">
-            <mat-icon class="icono-secundario">download</mat-icon>
-            <div
-              class="custom-loader"
-              *ngIf="isDownloading || isSendingMail || isCalculating"
-            ></div>
-          </button>
-          <br />
-          <button id="emailButton" (click)="openModal()">
-            <mat-icon class="icono-secundario">email</mat-icon>
-          </button>
-        </div>
-      </div>
-
-      <div class="informacion" id="cuadroInformativo">
+      <div class="informacion" id="cuadroInformativo" (scroll)="onScrollInformacion($event)">
         <div class="container-ingreso-datos" id="appPanelesId">
           <app-paneles
             [dimensionPanel]="dimensionPanel"
