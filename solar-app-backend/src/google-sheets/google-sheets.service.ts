@@ -121,6 +121,8 @@ export class GoogleSheetsService implements OnModuleInit {
   }
 
   private getFallbackParametros(solarCalculationDto: SolarCalculationDto): Parametros {
+    const panels = solarCalculationDto.panelsSelected || 1;
+    const inversionCalculada = panels * 350;
     return {
       caracteristicasSistema: {
         eficienciaInstalacion: 0.82,
@@ -129,21 +131,28 @@ export class GoogleSheetsService implements OnModuleInit {
         proporcionInyeccion: 0.30,
       },
       inversionCostos: {
-        costoInstalacionUsd: (solarCalculationDto.panelsSelected || 1) * 350,
-        costoMantenimientoUsd: 50,
+        costoUsdWpConIva: 1.2,
+        costoUsdWpAplicado: 1.0,
+        equipoDeMedicionArsSinIva: 150000,
+        equipoDeMedicionUsdAplicado: 125,
+        mantenimiento: 0.01,
+        costoDeMantenimientoInicialUsd: 50,
+        inversion: inversionCalculada,
       },
       economicas: {
-        tasaDescuento: { valor: 0.10, label: 'Tasa 10%' },
-        usdToArs: 1200,
-        tarifaIntercambioUsdKwh: 0.045,
+        tipoCambioArs: 1200,
+        tasaInflacionUsd: 0.02,
+        tasaDescuentoFlujoFondosUsd: 0.10,
+        impuestosYTasasProvinciales: 0.15,
+        IVA: 0.21,
       },
       cuadroTarifarioActual: [
         {
-          categoriaTarifaria: solarCalculationDto.categoriaSeleccionada || 'T1-R',
-          cargoFijoArs: 2500,
-          cargoVariableArsKwh: 65.5,
-          cargoPotenciaArsKw: 4500,
-          costoGeneracionArsKwh: 45.0,
+          nombre: (solarCalculationDto.categoriaSeleccionada as any) || 'T1-R',
+          cargoVariableConsumoArsKWh: 65.5,
+          cargoVariableInyeccionArsKWh: 45.0,
+          tension: 'baja',
+          impuestos: 0.21,
         },
       ],
     };
