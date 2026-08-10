@@ -8,6 +8,8 @@ let cachedServer: any;
 async function bootstrap() {
   if (!cachedServer) {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
+    app.use(json({ limit: '50mb' }));
+    app.use(urlencoded({ limit: '50mb', extended: true }));
     app.enableCors({
       origin: '*',
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
@@ -47,6 +49,8 @@ export default async (req: any, res: any) => {
 if (!process.env.VERCEL) {
   async function startLocal() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
+    app.use(json({ limit: '50mb' }));
+    app.use(urlencoded({ limit: '50mb', extended: true }));
     app.enableCors({
       origin: '*',
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
