@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { retry } from 'rxjs/operators';
 import { environment } from 'src/environments/environments';
 
 export interface GeneratePdfPayload {
@@ -47,11 +48,20 @@ export class PdfService {
 
   /**
    * Solicita al backend NestJS (Puppeteer/Chromium) la generación del reporte PDF vectorial.
+   * Cuenta con reintento automático transparente ante eventuales cold-starts del entorno serverless.
    */
   downloadPdfBlob(payload: GeneratePdfPayload): Observable<Blob> {
     const url = `${environment.apiUrl}/pdf/generate`;
-    return this.http.post(url, payload, {
-      responseType: 'blob',
-    });
+    return this.http
+      .post(url, payload, {
+        responseType: 'blob',
+      })
+      .pipe(
+        retry({
+          count: 2,
+          delay: 1500,
+        })
+      );
   }
 }
+
