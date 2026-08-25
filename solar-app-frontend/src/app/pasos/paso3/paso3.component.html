@@ -230,21 +230,40 @@
   </div>
 </div>
 
-<div class="modal-backdrop" *ngIf="isModalOpen">
-  <div class="modal-container">
-    <h2>Enviar Email</h2>
-    <p>Por favor ingrese su correo electrónico.</p>
-    <div class="input-container">
+<div class="modal-backdrop-email" *ngIf="isModalOpen" (click)="closeModal()">
+  <div class="modal-email-card" (click)="$event.stopPropagation()">
+    <div class="modal-email-header">
+      <div class="modal-email-title-group">
+        <span class="material-icons modal-email-header-icon">email</span>
+        <h3>Enviar resultados por correo</h3>
+      </div>
+      <button class="modal-email-close-btn" (click)="closeModal()" aria-label="Cerrar">×</button>
+    </div>
+    <p class="modal-email-desc">
+      Recibirás el informe técnico completo de tu simulación con todos los gráficos y cálculos en formato PDF adjunto.
+    </p>
+    <div class="modal-email-input-wrap">
+      <span class="material-icons input-icon">alternate_email</span>
       <input
         id="email"
         [(ngModel)]="email"
         type="email"
-        placeholder="Ingrese su correo electrónico"
+        placeholder="ejemplo@correo.com"
+        [disabled]="isSendingMail"
+        (keyup.enter)="sendEmail()"
+        autocomplete="email"
       />
     </div>
-    <div class="modal-actions">
-      <button id="boton-volver" (click)="closeModal()">Cancelar</button>
-      <button id="boton-siguiente" (click)="sendEmail()">Enviar</button>
+    <div class="modal-email-actions">
+      <button class="btn-email-cancelar" (click)="closeModal()" [disabled]="isSendingMail">
+        Cancelar
+      </button>
+      <button class="btn-email-enviar" (click)="sendEmail()" [disabled]="!email || isSendingMail">
+        <span class="material-icons btn-icon" *ngIf="!isSendingMail">send</span>
+        <span *ngIf="!isSendingMail">Enviar reporte</span>
+        <span *ngIf="isSendingMail">Enviando correo...</span>
+      </button>
     </div>
   </div>
 </div>
+
