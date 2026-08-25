@@ -8,10 +8,25 @@
   ],
   "functions": {
     "src/main.ts": {
-      "maxDuration": 15
+      "maxDuration": 60
     }
   },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "*" }
+      ]
+    }
+  ],
   "routes": [
+    {
+      "src": "/(.*)",
+      "methods": ["OPTIONS"],
+      "dest": "src/main.ts"
+    },
     {
       "src": "/(.*)",
       "dest": "src/main.ts"
