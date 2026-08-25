@@ -117,7 +117,7 @@ export class MapService {
       fullscreenControl: false,
       streetViewControl: false,
       rotateControl: false,
-      gestureHandling: 'cooperative',
+      gestureHandling: 'greedy',
       mapId: 'b822b45cb79aba09',
     };
     console.log('Opciones del mapa:', mapOptions);
@@ -175,9 +175,11 @@ export class MapService {
 
     const mapCenter = bounds.getCenter();
 
-    // Calcular el nuevo centro considerando el desplazamiento hacia la izquierda de 1/4 del ancho de la pantalla
-    const screenWidth = window.innerWidth; // Ancho de la pantalla en píxeles
-    const offsetX = screenWidth / 4; // Desplazamiento de 1/4 del ancho de la pantalla
+    // Calcular el nuevo centro considerando el ancho de pantalla y si está en móvil
+    const screenWidth = window.innerWidth;
+    const isMobile = screenWidth < 768;
+    const isTablet = screenWidth >= 768 && screenWidth <= 1024;
+    const offsetX = isMobile ? 0 : (isTablet ? screenWidth / 6 : screenWidth / 4);
 
     const zoom = this.map.getZoom() ?? 1;
     const scale = Math.pow(2, zoom);
@@ -205,7 +207,10 @@ export class MapService {
   }
 
   recenterMapAfterLocationSet(location: google.maps.LatLng) {
-    const offsetX = window.innerWidth / 4; // Desplazamiento de 1/4 del ancho de la pantalla
+    const screenWidth = window.innerWidth;
+    const isMobile = screenWidth < 768;
+    const isTablet = screenWidth >= 768 && screenWidth <= 1024;
+    const offsetX = isMobile ? 0 : (isTablet ? screenWidth / 6 : screenWidth / 4);
     const zoom = this.map.getZoom() ?? 1;
     const scale = Math.pow(2, zoom);
     const projection = this.map.getProjection();
@@ -222,13 +227,13 @@ export class MapService {
           )
         );
 
-        if (newCenter) {
-          this.map.panTo(newCenter);
-        } else {
-          console.error('No se pudo calcular el nuevo centro del mapa.');
-        }
+      if (newCenter) {
+        this.map.panTo(newCenter);
+      } else {
+        console.error('No se pudo calcular el nuevo centro del mapa.');
       }
     }
+  }
   }
 
   setZoom(zoom: number) {

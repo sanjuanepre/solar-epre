@@ -1,13 +1,22 @@
 
 .content-paso-cero {
+  height: 100%;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+
   .info-container {
     background-color: white;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     padding: 10px;
     flex: 1; 
+    min-height: 0;
     overflow: hidden; 
+    box-sizing: border-box;
   }
   
   .toolbar-pasos {
@@ -17,15 +26,17 @@
   
   .informacion {
     width: 100%;
-    height: 100%;
-    max-height: 100%;
+    flex: 1;
+    min-height: 0;
     margin-top: 0%;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    overflow-y: auto;
-    overflow-x:hidden; 
+    overflow-y: auto !important;
+    overflow-x: hidden; 
     padding: 5px;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
   }
 
   .texto-container {
@@ -118,23 +129,15 @@
 }
 
 /******************************************************************/
- /* Estilos para personalizar la barra de desplazamiento vertical */
+ .informacion {
+   scrollbar-width: none;
+   -ms-overflow-style: none;
+ }
  .informacion::-webkit-scrollbar {
-  width: 8px; 
-}
-
-.informacion::-webkit-scrollbar-track {
-  background: #f1f1f1; 
-}
-
-.informacion::-webkit-scrollbar-thumb {
-  background: #b8b6b6; 
-  border-radius: 4px; 
-}
-
-.informacion::-webkit-scrollbar-thumb:hover {
-  background: var(--dark-green); 
-}
+   display: none;
+   width: 0;
+   height: 0;
+ }
 
 .texto-container {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -146,18 +149,34 @@
 }
 
 /**************************************************/
-@media only screen and (min-width: 1400px) {
-  .info-inicio p {
-    font-size: 17px!important;
+@media (max-width: 768px) {
+  .content-paso-cero .info-container {
+    padding: 12px 14px;
+  }
+  
+  .texto-container {
+    padding: 10px 12px;
+    gap: 12px;
   }
 
-  .info-inicio h2 {
-    font-size: 19px;
+  .icono {
+    width: 36px;
+    min-width: 36px;
+    flex: 0 0 36px;
   }
-  #span-general {
-    font-size: 17px; 
+
+  .custom-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  #ver-terminos {
+    height: 44px;
+    font-size: 15px;
+    font-weight: 600;
   }
 }
+
 
 
 

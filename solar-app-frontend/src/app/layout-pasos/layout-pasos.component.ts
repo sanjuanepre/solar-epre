@@ -22,8 +22,8 @@ import { SharedService } from '../services/shared.service';
   styleUrls: ['./layout-pasos.component.css'],
   animations: [
     trigger('menuCollapsed', [
-      state('expand', style({ width: '0', visibility: 'hidden' })),
-      state('collapsed', style({ width: '100%', visibility: 'visible' })),
+      state('expand', style({ width: '0', height: '100%', visibility: 'hidden' })),
+      state('collapsed', style({ width: '100%', height: '100%', visibility: 'visible' })),
       transition('expand <=> collapsed', animate('200ms')),
     ]),
   ],
@@ -33,6 +33,7 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit {
   isPaso3: boolean = false;
   isCollapsed = false;
   isLoading: boolean = false;
+  isMobile: boolean = false;
 
   constructor(
     private router: Router,
@@ -40,6 +41,7 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit {
     private sharedService: SharedService,
     private cdr: ChangeDetectorRef
   ) {
+    this.checkIsMobile();
     this.sharedService.isLoading$.subscribe({
       next: (value) => {
         if (this.isLoading && !value) {
@@ -52,7 +54,15 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    // this.cdr.detectChanges();
+    this.checkIsMobile();
+    window.addEventListener('resize', () => {
+      this.checkIsMobile();
+      this.cdr.detectChanges();
+    });
+  }
+
+  private checkIsMobile(): void {
+    this.isMobile = window.innerWidth < 768;
   }
 
   ngAfterViewInit(): void {

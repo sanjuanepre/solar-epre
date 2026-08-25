@@ -177,6 +177,67 @@ span{
 
 
 
+@media (max-width: 650px) {
+  .info-inicio {
+    padding: 10px 12px;
+  }
+
+  .info-component-panel {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .cantidad-paneles {
+    width: 100%;
+  }
+
+  .potencia-paneles {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .cantidad-paneles-contenido {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .slider {
+    flex: 1;
+    width: auto;
+  }
+
+  mat-slider {
+    width: 100%;
+  }
+
+  .unidad-component-simple-panel {
+    margin-left: 6px;
+    width: 58px;
+    min-width: 58px;
+    height: 32px;
+  }
+
+  .resultado-panel {
+    font-size: 20px;
+  }
+
+  #titulo-potencia {
+    margin-left: 0;
+    margin-bottom: 4px;
+  }
+
+  #power-select {
+    width: 100%;
+    min-width: 0;
+    margin-left: 0;
+    height: 36px;
+    font-size: 14px;
+  }
+}
+
 @media  (min-width: 1500px) {
   h3{
     font-size: 16px;
@@ -213,4 +274,5 @@ span{
   }
 
 }
+
 

@@ -19,15 +19,37 @@
   margin: 0;
   padding: 0;
   font-family: "Sodo Sans", sans-serif;
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+*::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 body {
   font-family: "Sodo Sans", sans-serif;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .toolbar {
   width: 100%;
   height: 90px;
+}
+
+@media (max-width: 1024px) {
+  .toolbar {
+    height: 68px;
+  }
+}
+
+@media (max-width: 768px) {
+  .toolbar {
+    height: 56px;
+  }
 }
 h1,
 h2,
@@ -118,11 +140,21 @@ h5 {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .info-container {
-  width: auto;
+  width: 100%;
   height: 100%;
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 /************************************************/
@@ -396,6 +428,30 @@ button[disabled] {
 
   .unidad p{
     margin: 0%;
+  }
+
+  @media (max-width: 768px) {
+    .titulo-general, .titulo-general-long {
+      font-size: 0.82em;
+      padding-left: 6px;
+      padding-right: 6px;
+      height: 32px;
+    }
+    .informacion-general {
+      height: 58px;
+      padding-left: 6px;
+      padding-right: 6px;
+    }
+    .tamaño-icon {
+      width: 28px;
+      height: 28px;
+    }
+    .resultado {
+      font-size: 18px;
+    }
+    .unidad {
+      font-size: 13px;
+    }
   }
 
   .small-sup {
@@ -687,26 +743,30 @@ input[type=number] {
 }
 
 
-/* estilos para que se cierre el modal*/
-@media (max-width: 760px) {
-  .responsive-dialog {
-    display: none !important; 
-  }
-
-  .responsive-backdrop {
-    display: none !important; 
-  }
+/* Reglas globales para modales y diálogos responsivos */
+.modal-container, .responsive-dialog {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/*estilos para que desaparezca el driver*/
-@media (max-width: 760px) {
-  .driver-active .driver-popover {
-    display: none !important;
+@media (max-width: 768px) {
+  #titulo {
+    height: 38px;
+    font-size: 15px;
   }
-}
 
-@media (max-width: 760px) {
-  .driver-active .driver-overlay {
-    display: none !important;
+  .boton {
+    gap: 8px;
+  }
+
+  #boton-siguiente, #boton-volver {
+    padding: 8px 14px;
+    font-size: 13px;
+    min-height: 42px;
+  }
+
+  .custom-snackbar, .error-snackbar {
+    margin-top: 60px !important;
   }
 }

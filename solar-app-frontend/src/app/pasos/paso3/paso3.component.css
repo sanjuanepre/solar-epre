@@ -1,31 +1,49 @@
 
-  .info-container {
-    background-color: white;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 10px;
-    flex: 1;
-    overflow: hidden; 
-  }
-  
-  .toolbar-pasos {
-    width: 100%;
-    margin-top: 0%;
-  }
-  
-  .informacion {
-    width: 100%;
-    height: 100%;
-    max-height: 100%;
-    margin-top: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 11px;
-    overflow-y: auto;
-    overflow-x:hidden; 
-    padding:5px;
-  }
+.resultados-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.container-graficos-wrapper {
+  width: 100%;
+}
+
+.info-container {
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden; 
+  box-sizing: border-box;
+}
+
+.toolbar-pasos {
+  width: 100%;
+  margin-top: 0%;
+}
+
+.informacion {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  overflow-y: auto !important;
+  overflow-x: hidden; 
+  padding: 5px;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+}
 
 /*cards*/
 :root {
@@ -36,12 +54,14 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(235px, 1fr));
   gap: 10px;
+  width: 100%;
 }
 
 .item {
   background-color: var(--gris);
-  min-width: 235px;
-  min-height:100px ;
+  min-width: 0;
+  width: 100%;
+  min-height: 100px;
   display: flex;
   flex-direction: column;
   border-radius: 8px;
@@ -65,26 +85,15 @@
   color: var(--font-light);
 }
 
-  /*************************************************************************/
-  /* Estilos para personalizar la barra de desplazamiento vertical */
+  .informacion {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
   .informacion::-webkit-scrollbar {
-    width: 8px; 
-  }
-
-  .informacion::-webkit-scrollbar-track {
-    background: #f1f1f1;
-  }
-  
-  .informacion::-webkit-scrollbar-thumb {
-    background: #b8b6b6;
-    border-radius: 4px; 
-  }
-  
-  .informacion::-webkit-scrollbar-thumb:hover {
-    background-color: var(--dark-green);
-  }
-  
-/************************************************************************/  
+    display: none;
+    width: 0;
+    height: 0;
+  }  
 /* Estilos para los botones secundarios  EDITAR/DESCARGAR/ENVIAR*/
 .action-buttons{
   width: 100%;
@@ -599,3 +608,101 @@
     transform: translateY(0);
   }
 }
+
+/* ===================================================
+   RESPONSIVE BREAKPOINTS PASO 3 (MÓVILES Y TABLETS)
+   =================================================== */
+
+@media (max-width: 768px) {
+  .selector-estructura-paso3-container {
+    margin: 4px 6px 6px 6px;
+    padding: 6px 8px;
+    border-radius: 10px;
+  }
+
+  .selector-estructura-paso3 {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .selector-group-left {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+
+  .selector-group-right {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .header-action-btn.toggle-panels-btn {
+    flex: 1;
+    height: 34px;
+    font-size: 11.5px;
+    padding: 4px 8px;
+    white-space: nowrap;
+  }
+
+  .header-action-btn.icon-btn {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+  }
+
+  .toggle-estructura-container {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding: 2px;
+  }
+
+  .btn-toggle-estructura {
+    padding: 6px 4px;
+    font-size: 11px;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .btn-toggle-estructura .text-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    width: 100%;
+  }
+
+  .item {
+    min-width: 0;
+    width: 100%;
+    min-height: 85px;
+  }
+
+  .ganancia-captacion-tooltip {
+    font-size: 11px;
+    padding: 4px 8px;
+    margin-top: 4px;
+  }
+
+  .container-hipotesis {
+    padding: 8px;
+    font-size: 11.5px;
+  }
+}
+
+@media (max-width: 350px) {
+  .container {
+    grid-template-columns: 1fr;
+  }
+}
+

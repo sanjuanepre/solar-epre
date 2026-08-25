@@ -110,26 +110,76 @@ span {
     }
 }
 
-/* Resoluciones entre 900px y 1200px */
+/* Resoluciones menores a 900px (Tablets) */
 @media (max-width: 900px) {
     #toolbar-content {
-        padding-left: 40px;
-        padding-right: 40px;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    .epre, .logo-varios {
+        gap: 14px;
     }
     #epre {
-        max-width: 80px;
-        margin-right: 30px;
+        max-width: 75px;
+        max-height: 42px;
+        object-fit: contain;
     }
     #solar {
-        max-width: 150px;
-        margin-right: 20px;
+        max-width: 135px;
+        max-height: 42px;
+        object-fit: contain;
     }
     #conicet {
-        max-width: 160px;
-        margin-right: 20px;
+        max-width: 120px;
+        max-height: 38px;
+        object-fit: contain;
     }
     #sanjuan {
-        max-width: 140px;
+        max-width: 100px;
+        max-height: 38px;
+        object-fit: contain;
     }
 }
+
+/* Resoluciones menores a 600px (Teléfonos Móviles) */
+@media (max-width: 600px) {
+    #toolbar-content {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    .epre, .logo-varios {
+        gap: 8px;
+    }
+    #epre {
+        max-width: 58px;
+        max-height: 34px;
+        object-fit: contain;
+    }
+    #solar {
+        max-width: 105px;
+        max-height: 34px;
+        object-fit: contain;
+    }
+    #conicet {
+        max-width: 80px;
+        max-height: 30px;
+        object-fit: contain;
+    }
+    #sanjuan {
+        max-width: 70px;
+        max-height: 30px;
+        object-fit: contain;
+    }
+}
+
+/* Teléfonos muy pequeños (<380px) */
+@media (max-width: 380px) {
+    #conicet {
+        display: none; /* Ocultar el logo secundario en pantallas ultra-estrechas para priorizar EPRE, AppSolar y San Juan */
+    }
+    #solar {
+        max-width: 95px;
+    }
+}
+
 

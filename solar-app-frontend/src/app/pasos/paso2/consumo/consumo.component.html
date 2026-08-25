@@ -17,6 +17,7 @@
         <input
           id="input-{{ i }}"
           type="number"
+          inputmode="numeric"
           [(ngModel)]="mes.consumo"
           [disabled]="!isEditable || isDisabled"
           (keyup.enter)="focusNextInput($event, i + 1)"

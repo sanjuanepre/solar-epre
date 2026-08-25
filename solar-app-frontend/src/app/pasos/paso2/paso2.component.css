@@ -2,10 +2,11 @@
   background-color: white;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   padding: 10px;
   flex: 1; 
+  min-height: 0;
   overflow: hidden; 
+  box-sizing: border-box;
 }
 
 .toolbar-pasos {
@@ -15,34 +16,28 @@
 
 .informacion {
   width: 100%;
-  height: 100%;
-  max-height: 100%;
+  flex: 1;
+  min-height: 0;
   margin-top: 0%;
   display: flex;
   flex-direction: column;
   gap: 7px;
-  overflow-y: auto;
-  overflow-x:hidden; 
+  overflow-y: auto !important;
+  overflow-x: hidden; 
   padding: 5px;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
 }
 
- /* Estilos para personalizar la barra de desplazamiento vertical */
+ .informacion {
+   scrollbar-width: none;
+   -ms-overflow-style: none;
+ }
  .informacion::-webkit-scrollbar {
-  width: 8px; 
-}
-
-.informacion::-webkit-scrollbar-track {
-  background: #f1f1f1; 
-}
-
-.informacion::-webkit-scrollbar-thumb {
-  background: #b8b6b6; 
-  border-radius: 4px; 
-}
-
-.informacion::-webkit-scrollbar-thumb:hover {
-  background: var(--dark-green); 
-}
+   display: none;
+   width: 0;
+   height: 0;
+ }
 
 .advertencia #recomendacion {
   text-align: left;
@@ -180,3 +175,25 @@ button[disabled] {
 #boton-volver-paso2 {
   visibility: hidden;
 }
+
+@media (max-width: 768px) {
+  .info-container {
+    padding: 10px 12px;
+  }
+  .info-inicio {
+    padding: 12px 12px;
+    gap: 10px;
+  }
+  .titulo-container-slider {
+    flex-direction: row;
+    height: auto;
+    align-items: center;
+    gap: 6px;
+  }
+  .slide {
+    padding: 2px 6px;
+  }
+  .total {
+    justify-content: center;
+  }
+}

@@ -75,35 +75,38 @@
 }
 
 /********************************/
-/* Estilos personalizados para el scroll */
+.content-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
 .content-scroll::-webkit-scrollbar {
-    width: 8px !important;
-}
-
-.content-scroll::-webkit-scrollbar-track {
-    background: #f1f1f1 !important;
-}
-
-.content-scroll::-webkit-scrollbar-thumb {
-    background: #b8b6b6;
-    border-radius: 4px !important;
-}
-
-.content-scroll::-webkit-scrollbar-thumb:hover {
-    background: var(--dark-green) !important;
+    display: none;
+    width: 0;
+    height: 0;
 }
 
 /* Estilos responsivos */
 @media (max-width: 768px) {
+    .modal-content {
+        width: 92%;
+        padding: 14px 16px;
+        max-height: 85vh;
+    }
+
     .tutorial-title {
-        font-size: 1.8em;
+        font-size: 1.3em;
+        margin-bottom: 12px;
     }
 
     .tutorial-section {
-        font-size: 1.1em;
+        font-size: 1.05em;
+        margin-top: 14px;
     }
 
     .tutorial-text {
-        font-size: 0.95em;
+        font-size: 0.9em;
+        line-height: 1.5;
+        margin-bottom: 10px;
     }
 }
+

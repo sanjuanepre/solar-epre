@@ -111,22 +111,14 @@ h2 {
   margin: 0;
 }
 
-/* Estilos personalizados para el scroll */
+.content-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
 .content-scroll::-webkit-scrollbar {
-  width: 8px;
-}
-
-.content-scroll::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-.content-scroll::-webkit-scrollbar-thumb {
-  background: #b8b6b6;
-  border-radius: 4px;
-}
-
-.content-scroll::-webkit-scrollbar-thumb:hover {
-  background: var(--dark-green);
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 #sub-titulo-terminos{
@@ -162,6 +154,34 @@ h2 {
 }
 
 
+@media (max-width: 768px) {
+  .modal-content {
+    width: 92%;
+    padding: 14px 16px;
+    max-height: 88vh;
+  }
+
+  h2 {
+    font-size: 18px;
+  }
+
+  .terms-content {
+    max-height: 48vh;
+    padding: 8px;
+    margin: 12px 0;
+  }
+
+  .terms-content p {
+    font-size: 13px;
+  }
+
+  #aceptar, #cerrar {
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+  }
+}
+
 @media (min-width: 1601px) {
   h2 {
     font-size: 24px;
@@ -178,4 +198,4 @@ h2 {
   #contactos{
     font-size: 16px;
   }
-}
+}

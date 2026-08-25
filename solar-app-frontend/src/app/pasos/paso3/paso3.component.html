@@ -1,4 +1,4 @@
-<span class="resultados" *ngIf="!isLoading">
+<div class="resultados-root" *ngIf="!isLoading">
   <div class="content" id="contentToConvert" [class.compact-header]="isScrolledDown">
     <div class="titulo" [class.compact]="isScrolledDown">
       <h2 id="titulo">RESULTADOS ESTIMADOS</h2>
@@ -113,27 +113,25 @@
         </div>
         <!--container-->
 
-        <div class="container-graficos">
-          <div class="item-grafico" id="graficos">
-            <app-graficos
-              [periodoVeinteanalEmisionesGEIEvitadasOriginal]="
-                periodoVeinteanalEmisionesGEIEvitadasOriginal
-              "
-              [periodoVeinteanalFlujoEnergia]="getFlujoEnergia()"
-              [periodoVeinteanalFlujoIngresosMonetarios]="
-                getFlujoIngresosMonetarios()
-              "
-              [periodoVeinteanalGeneracionFotovoltaica]="
-                getGeneracionFotovoltaica()
-              "
-              [consumoTotalAnual]="consumoTotalAnual"
-              [yearlyEnergyInitial]="yearlyEnergyAckWhDefault"
-              [proporcionAutoconsumo]="proporcionAutoconsumo"
-              [proporcionInyectada]="proporcionInyectada"
-              [inversionInicial]="costoInstalacion"
-            >
-            </app-graficos>
-          </div>
+        <div class="container-graficos-wrapper" id="graficos">
+          <app-graficos
+            [periodoVeinteanalEmisionesGEIEvitadasOriginal]="
+              periodoVeinteanalEmisionesGEIEvitadasOriginal
+            "
+            [periodoVeinteanalFlujoEnergia]="getFlujoEnergia()"
+            [periodoVeinteanalFlujoIngresosMonetarios]="
+              getFlujoIngresosMonetarios()
+            "
+            [periodoVeinteanalGeneracionFotovoltaica]="
+              getGeneracionFotovoltaica()
+            "
+            [consumoTotalAnual]="consumoTotalAnual"
+            [yearlyEnergyInitial]="yearlyEnergyAckWhDefault"
+            [proporcionAutoconsumo]="proporcionAutoconsumo"
+            [proporcionInyectada]="proporcionInyectada"
+            [inversionInicial]="costoInstalacion"
+          >
+          </app-graficos>
         </div>
         <!--container-graficos-->
 
@@ -230,7 +228,7 @@
       </div>
     </div>
   </div>
-</span>
+</div>
 
 <div class="modal-backdrop" *ngIf="isModalOpen">
   <div class="modal-container">

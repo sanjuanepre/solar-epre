@@ -1,12 +1,21 @@
 .content-paso-uno {
+  height: 100%;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+
   .info-container {
     background-color: white;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     padding: 10px;
     flex: 1; 
+    min-height: 0;
     overflow: hidden; 
+    box-sizing: border-box;
   }
  
   .toolbar-pasos {
@@ -16,15 +25,17 @@
  
   .informacion {
     width: 100%;
-    height: 100%;
-    max-height: 100%;
+    flex: 1;
+    min-height: 0;
     margin-top: 0%;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    overflow-y: auto; 
-    overflow-x:hidden; 
+    overflow-y: auto !important; 
+    overflow-x: hidden; 
     padding: 5px;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
   }
 
   .advertencia #recomendacion {
@@ -225,23 +236,15 @@
 }
 
 
- /* Estilos para personalizar la barra de desplazamiento vertical */
+ .informacion {
+   scrollbar-width: none;
+   -ms-overflow-style: none;
+ }
  .informacion::-webkit-scrollbar {
-  width: 8px; 
-}
-
-.informacion::-webkit-scrollbar-track {
-  background: #f1f1f1; 
-}
-
-.informacion::-webkit-scrollbar-thumb {
-  background: #b8b6b6; 
-  border-radius: 4px; 
-}
-
-.informacion::-webkit-scrollbar-thumb:hover {
-  background: var(--dark-green); 
-}
+   display: none;
+   width: 0;
+   height: 0;
+ }
 
 
 /********************************************************/
@@ -959,5 +962,76 @@ input:checked + .slider:before {
   font-weight: 700;
   margin-left: 2px;
 }
+
+/* ===================================================
+   RESPONSIVE BREAKPOINTS PASO 1 (MÓVILES Y TABLETS)
+   =================================================== */
+
+@media (max-width: 768px) {
+  .hud-map-toolbar {
+    top: 60px;
+    left: 8px;
+    right: 8px;
+    max-width: calc(100vw - 16px) !important;
+    padding: 4px 6px;
+    gap: 4px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
+  }
+
+  .hud-map-toolbar.sidebar-collapsed {
+    max-width: calc(100vw - 16px) !important;
+    opacity: 0.95;
+    transform: translateY(0);
+  }
+
+  .hud-btn {
+    padding: 6px 8px;
+    font-size: 12px;
+    min-height: 38px;
+  }
+
+  .hud-btn.hud-icon-only {
+    padding: 6px;
+    min-width: 38px;
+    justify-content: center;
+  }
+
+  .theme-selector {
+    display: none; /* Ocultar selector de tema en móviles para simplificar y dar espacio a las acciones clave */
+  }
+
+  .hud-metrics-badge {
+    padding: 4px 8px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .input-boton {
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  #buscar {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .estructura-selector-compact {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .banner-instrucciones {
+    padding: 8px 10px;
+    margin: 6px 0 10px 0;
+  }
+
+  .texto-banner {
+    font-size: 13px;
+  }
+}
+
 
 

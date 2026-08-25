@@ -257,7 +257,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       chart: {
         type: 'bar',
         height: 340,
-        width: 470,
+        width: '100%',
         stacked: true,
         background: 'transparent',
         toolbar: { show: false },
@@ -380,7 +380,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       chart: {
         type: 'donut',
         height: 340,
-        width: 470,
+        width: '100%',
         background: 'transparent',
         toolbar: { show: false },
       },
@@ -502,7 +502,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       ],
       chart: {
         height: 350,
-        width: 470,
+        width: '100%',
         type: 'bar',
         stacked: false,
         background: 'transparent',
