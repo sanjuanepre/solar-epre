@@ -3,21 +3,44 @@
   width: 100%;
 }
 
-select {
+.select-wrapper {
+  position: relative;
   width: 100%;
-  height: 40px;
+}
+
+.select-wrapper select {
+  width: 100%;
+  height: 44px;
   border: 2px solid var(--light-background);
-  border-radius: 8px; 
-  padding: 5px; 
+  border-radius: 8px;
+  padding: 5px 36px 5px 12px;
   font-size: 14px;
   font-family: 'Sodo Sans', sans-serif;
   color: var(--font-light);
-  transition: border-color 0.3s ease; 
+  background-color: #fff;
+  transition: border-color 0.3s ease;
+  /* Suprimir el picker nativo del SO en Android/iOS */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  cursor: pointer;
 }
 
-select:focus {
+.select-wrapper select:focus {
   border-color: var(--medium-green);
+  outline: none;
 }
+
+.select-arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--medium-green);
+  font-size: 12px;
+}
+
 
 .potencia-contratada{
   width: 100%;

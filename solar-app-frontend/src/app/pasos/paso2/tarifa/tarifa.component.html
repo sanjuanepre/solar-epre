@@ -1,14 +1,17 @@
 <div class="tarifa-container">
-  <select
-    #tarifaSelect
-    [(ngModel)]="tarifaContratada"
-    (change)="onTarifaChange()"
-  >
-    <option value="" disabled selected>Selecciones su tipo de tarifa</option>
-    <option *ngFor="let tarifa of tarifas" [value]="tarifa.value">
-      {{ tarifa.viewValue }}
-    </option>
-  </select>
+  <div class="select-wrapper">
+    <select
+      #tarifaSelect
+      [(ngModel)]="tarifaContratada"
+      (change)="onTarifaChange()"
+    >
+      <option value="" disabled selected>Seleccione su tipo de tarifa</option>
+      <option *ngFor="let tarifa of tarifas" [value]="tarifa.value">
+        {{ tarifa.viewValue }}
+      </option>
+    </select>
+    <span class="select-arrow">&#9660;</span>
+  </div>
 </div>
 <br />
 <div class="potencia-contratada" *ngIf="tarifaContratada">

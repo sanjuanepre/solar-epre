@@ -374,12 +374,15 @@
   display: inline-block;
   width: 50px;
   height: 26px;
+  flex-shrink: 0;
+  overflow: hidden; /* fix: contiene la palanca en Android/mobile */
 }
 
 .switch input {
   opacity: 0;
   width: 0;
   height: 0;
+  position: absolute;
 }
 
 .slider {
