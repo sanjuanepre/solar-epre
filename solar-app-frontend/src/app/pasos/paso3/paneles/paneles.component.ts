@@ -2,6 +2,7 @@ import {
   AfterViewInit,
   ChangeDetectorRef,
   Component,
+  HostListener,
   Input,
   OnDestroy,
   OnInit,
@@ -29,13 +30,45 @@ export class PanelesComponent implements OnInit, AfterViewInit, OnDestroy {
   // Control para el valor de la potencia de los paneles
   potenciaPanelesControl = new FormControl('');
 
-  maxPanelsArea$: number = 0; // Máximo número de paneles basado en el área
-  panelesSelectCount: number = 4; // Número de paneles seleccionados
-  plazoRecuperoInversion!: number; // Plazo de recuperación de inversión
-
-  // Observable para gestionar la destrucción del componente
+  maxPanelsArea$: number = 0;
+  panelesSelectCount: number = 4;
+  plazoRecuperoInversion!: number;
   private destroy$ = new Subject<void>();
   maxPanelsPerPotentiaMax!: number;
+  isPowerDropdownOpen: boolean = false;
+  powerOptions = [
+    { value: '400', label: '400 W' },
+    { value: '450', label: '450 W' },
+    { value: '500', label: '500 W' },
+    { value: '550', label: '550 W' },
+    { value: '600', label: '600 W' },
+    { value: '700', label: '700 W' },
+  ];
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.power-custom-select')) {
+      this.isPowerDropdownOpen = false;
+    }
+  }
+
+  togglePowerDropdown(event: MouseEvent): void {
+    event.stopPropagation();
+    this.isPowerDropdownOpen = !this.isPowerDropdownOpen;
+  }
+
+  selectPower(value: string, event: MouseEvent): void {
+    event.stopPropagation();
+    this.potenciaPanelesControl.setValue(value);
+    this.isPowerDropdownOpen = false;
+  }
+
+  getPowerLabel(): string {
+    const found = this.powerOptions.find(o => o.value === this.potenciaPanelesControl.value);
+    return found ? found.label : '400 W';
+  }
+
 
   constructor(
     private mapService: MapService,

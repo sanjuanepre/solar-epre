@@ -374,10 +374,11 @@ button[disabled] {
     justify-content: space-between;
     align-items: center;
     gap: 5px;
+    overflow: hidden;
   }
 
   .icono {
-    width: 20%;
+    flex-shrink: 0;
     display: flex;
     justify-content: flex-start;
     align-items: center;
@@ -389,25 +390,28 @@ button[disabled] {
   }
 
   .resultado-centro {
-    width: 80%;
-    height: 60%;
+    flex: 1;
+    min-width: 0;
     display: flex;
-    justify-content: right;
+    justify-content: flex-end;
+    align-items: flex-end;
     margin: 0%;
-    gap: 5px;
+    gap: 4px;
     padding-bottom: 0%;
+    overflow: hidden;
   }
 
   .resultado {
-    font-size: 23px;
+    font-size: clamp(14px, 4vw, 23px);
     color: var(--medium-green);
     font-weight: 600;
     margin: 0%;
     padding: 0%;
-    height: 90%; 
-    margin-top: auto; 
+    height: 90%;
+    margin-top: auto;
     display: flex;
-    align-items: flex-end;  
+    align-items: flex-end;
+    white-space: nowrap;
   }
 
   .resultado p{
