@@ -63,6 +63,16 @@
   transition: var(--transition-smooth);
 }
 
+.card-tarifa {
+  position: relative;
+  z-index: 20;
+}
+
+.card-consumo {
+  position: relative;
+  z-index: 1;
+}
+
 .titulo-container {
   display: flex;
   flex-direction: row;

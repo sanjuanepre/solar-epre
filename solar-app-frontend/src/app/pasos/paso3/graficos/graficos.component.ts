@@ -170,11 +170,59 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
     this.refreshAllCharts();
   }
 
+  private async exportChartOffscreen(options: any): Promise<string | undefined> {
+    if (!options) return undefined;
+    let tempDiv: HTMLDivElement | null = null;
+    let tempChart: any = null;
+    try {
+      tempDiv = document.createElement('div');
+      tempDiv.style.position = 'fixed';
+      tempDiv.style.left = '-9999px';
+      tempDiv.style.top = '-9999px';
+      tempDiv.style.width = '800px';
+      tempDiv.style.height = '300px';
+      tempDiv.style.zIndex = '-1000';
+      document.body.appendChild(tempDiv);
+
+      const exportOpts = {
+        ...options,
+        chart: {
+          ...options.chart,
+          width: 800,
+          height: 300,
+          background: '#ffffff',
+          animations: { enabled: false },
+        },
+      };
+
+      tempChart = new (ApexCharts as any)(tempDiv, exportOpts);
+      await tempChart.render();
+      await new Promise((resolve) => setTimeout(resolve, 80));
+      const data = await tempChart.dataURI();
+      if (data && 'imgURI' in data && data.imgURI) {
+        return data.imgURI;
+      }
+    } catch (err) {
+      console.warn('exportChartOffscreen falló, usando fallback:', err);
+    } finally {
+      try {
+        if (tempChart) tempChart.destroy();
+      } catch (_) {}
+      try {
+        if (tempDiv && tempDiv.parentNode) tempDiv.parentNode.removeChild(tempDiv);
+      } catch (_) {}
+    }
+    return undefined;
+  }
+
   async getChartsImages(): Promise<{ energiaConsumo?: string; ahorroRecupero?: string; emisiones?: string }> {
     const result: { energiaConsumo?: string; ahorroRecupero?: string; emisiones?: string } = {};
 
     try {
-      if (this.chartEnergiaConsumo) {
+      const offscreenImg = await this.exportChartOffscreen(this.getOptionsEnergiaConsumo(true));
+      if (offscreenImg) {
+        result.energiaConsumo = offscreenImg;
+      } else if (this.chartEnergiaConsumo) {
         const data = await this.chartEnergiaConsumo.dataURI();
         if (data && 'imgURI' in data && data.imgURI) {
           result.energiaConsumo = data.imgURI;
@@ -185,7 +233,10 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
     }
 
     try {
-      if (this.chartAhorroRecupero) {
+      const offscreenImg = await this.exportChartOffscreen(this.getOptionsAhorroRecupero(true));
+      if (offscreenImg) {
+        result.ahorroRecupero = offscreenImg;
+      } else if (this.chartAhorroRecupero) {
         const data = await this.chartAhorroRecupero.dataURI();
         if (data && 'imgURI' in data && data.imgURI) {
           result.ahorroRecupero = data.imgURI;
@@ -196,7 +247,10 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
     }
 
     try {
-      if (this.chartEmisiones) {
+      const offscreenImg = await this.exportChartOffscreen(this.getOptionsEmisionesExport());
+      if (offscreenImg) {
+        result.emisiones = offscreenImg;
+      } else if (this.chartEmisiones) {
         const data = await this.chartEmisiones.dataURI();
         if (data && 'imgURI' in data && data.imgURI) {
           result.emisiones = data.imgURI;
@@ -245,7 +299,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
   // ─────────────────────────────────────────────────
   // GRÁFICA 1: Energía consumida vs. generada (barras apiladas)
   // ─────────────────────────────────────────────────
-  private initializeChartEnergiaConsumo() {
+  private getOptionsEnergiaConsumo(forExport: boolean = false) {
     const propAutoconsumo = this.proporcionAutoconsumo ?? 0.8;
     const propInyectada = this.proporcionInyectada ?? 0.2;
 
@@ -253,14 +307,15 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
     const inyectadaKwh = this.yearlyEnergy * propInyectada;
     const compradadRedKwh = Math.max(0, this.consumoTotalAnual - autoconsumidaKwh);
 
-    const options = {
+    return {
       chart: {
         type: 'bar',
-        height: 340,
-        width: '100%',
+        height: forExport ? 300 : 340,
+        width: forExport ? 800 : '100%',
         stacked: true,
-        background: 'transparent',
+        background: forExport ? '#ffffff' : 'transparent',
         toolbar: { show: false },
+        animations: { enabled: !forExport },
       },
       series: [
         {
@@ -283,7 +338,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         categories: ['Consumo total anual', 'Generación anual FV'],
         labels: {
           style: {
-            fontSize: '11px',
+            fontSize: forExport ? '12px' : '11px',
             fontFamily: 'sodo sans, sans-serif',
             colors: ['#555', '#555'],
           },
@@ -296,19 +351,19 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
           style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
         },
         labels: {
-          formatter: (val: number): string => val.toLocaleString('de-DE'),
+          formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE') : '0',
         },
       },
       plotOptions: {
         bar: {
-          columnWidth: '50%',
+          columnWidth: forExport ? '35%' : '50%',
           borderRadius: 4,
         },
       },
       dataLabels: {
         enabled: true,
         style: {
-          fontSize: '10px',
+          fontSize: '11px',
           fontFamily: 'sodo sans, sans-serif',
           colors: ['#fff'],
         },
@@ -318,7 +373,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         },
       },
       tooltip: {
-        enabled: true,
+        enabled: !forExport,
         theme: 'light',
         y: {
           formatter: (val: number) =>
@@ -327,12 +382,15 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       },
       legend: {
         position: 'bottom',
-        fontSize: '11px',
+        fontSize: '12px',
         fontFamily: 'sodo sans, sans-serif',
       },
       fill: { opacity: 1 },
     };
+  }
 
+  private initializeChartEnergiaConsumo() {
+    const options = this.getOptionsEnergiaConsumo(false);
     this.chartEnergiaConsumo = new ApexCharts(
       document.querySelector('#chartSolLunaRef') as HTMLElement,
       options
@@ -452,10 +510,10 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
   // ─────────────────────────────────────────────────
   // GRÁFICA 3: Ahorros anuales + flujo de caja acumulado
   // ─────────────────────────────────────────────────
-  private initializeChartAhorroRecupero() {
+  private getOptionsAhorroRecupero(forExport: boolean = false) {
     const flujoData = this.periodoVeinteanalFlujoIngresosMonetarios;
     if (!flujoData || flujoData.length === 0) {
-      return;
+      return null;
     }
     const recuperoMeses = (this.recuperoInversionMeses != null && !isNaN(this.recuperoInversionMeses)) ? this.recuperoInversionMeses : 0;
     const recuperoInversionAnios = Math.round(recuperoMeses / 12);
@@ -479,7 +537,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
 
     const showAnnotation = recuperoMeses > 0 && !!anoStr && categories.includes(anoStr);
 
-    const options = {
+    return {
       series: [
         {
           name: 'Ahorro por autoconsumo',
@@ -501,13 +559,14 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         },
       ],
       chart: {
-        height: 350,
-        width: '100%',
+        height: forExport ? 300 : 350,
+        width: forExport ? 800 : '100%',
         type: 'bar',
         stacked: false,
-        background: 'transparent',
+        background: forExport ? '#ffffff' : 'transparent',
         toolbar: { show: false },
         zoom: { enabled: false },
+        animations: { enabled: !forExport },
       },
       stroke: {
         width: [0, 0, 3],
@@ -556,7 +615,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         },
       ],
       tooltip: {
-        enabled: true,
+        enabled: !forExport,
         theme: 'light',
         shared: true,
         intersect: false,
@@ -606,6 +665,11 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       dataLabels: { enabled: false },
       fill: { opacity: [0.85, 0.85, 1] },
     };
+  }
+
+  private initializeChartAhorroRecupero() {
+    const options = this.getOptionsAhorroRecupero(false);
+    if (!options) return;
 
     this.chartAhorroRecupero = new ApexCharts(
       document.querySelector('#chartAhorroRecuperoRef') as HTMLElement,
@@ -1026,5 +1090,85 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
     }
 
     return { categories, annualData, cumulativeData };
+  }
+
+  /**
+   * Genera las opciones optimizadas en alta resolución y formato apaisado
+   * para la exportación del gráfico de emisiones al PDF.
+   */
+  private getOptionsEmisionesExport() {
+    if (
+      !this.periodoVeinteanalEmisionesGEIEvitadasOriginal ||
+      this.periodoVeinteanalEmisionesGEIEvitadasOriginal.length === 0
+    ) {
+      return null;
+    }
+
+    const anioInicial = this.periodoVeinteanalEmisionesGEIEvitadasOriginal[0].year - 1;
+    const { categories, annualData, cumulativeData } = this.buildCO2Data(
+      this.periodoVeinteanalEmisionesGEIEvitadasOriginal,
+      anioInicial
+    );
+
+    return {
+      series: [
+        {
+          name: 'CO₂ evitado anual (Tn)',
+          type: 'bar',
+          data: annualData,
+          color: '#5aaa8a',
+        },
+        {
+          name: 'CO₂ evitado acumulado (Tn)',
+          type: 'line',
+          data: cumulativeData,
+          color: '#059669',
+        },
+      ],
+      chart: {
+        height: 300,
+        width: 800,
+        type: 'line',
+        background: '#ffffff',
+        toolbar: { show: false },
+        zoom: { enabled: false },
+        animations: { enabled: false },
+      },
+      stroke: {
+        curve: 'smooth',
+        width: [0, 3],
+      },
+      plotOptions: {
+        bar: {
+          columnWidth: '50%',
+          borderRadius: 3,
+        },
+      },
+      colors: ['#5aaa8a', '#059669'],
+      xaxis: {
+        categories: categories,
+        title: {
+          text: 'Año',
+          style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
+        },
+        labels: {
+          style: { fontSize: '10px' },
+        },
+      },
+      yaxis: {
+        title: {
+          text: 'Tn CO₂',
+          style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
+        },
+        labels: {
+          formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '0',
+        },
+      },
+      legend: {
+        position: 'bottom',
+        fontSize: '11px',
+        fontFamily: 'sodo sans, sans-serif',
+      },
+    };
   }
 }

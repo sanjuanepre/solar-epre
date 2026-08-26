@@ -277,14 +277,14 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
       background-color: #ffffff;
       border: 1px solid #e2e8f0;
       border-radius: 8px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       overflow: hidden;
       box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
     .chart-card-header {
       background-color: #1e293b;
       color: #ffffff;
-      padding: 6px 12px;
+      padding: 5px 12px;
       font-size: 8.5pt;
       font-weight: 700;
       display: flex;
@@ -303,16 +303,21 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
       font-size: 7.5pt;
     }
     .chart-img-wrapper {
-      padding: 8px 12px;
+      padding: 6px 12px;
       text-align: center;
       background-color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
     .chart-img-wrapper img {
-      max-width: 100%;
-      max-height: 190px;
-      width: auto;
+      width: 100%;
+      max-width: 680px;
+      max-height: 225px;
       height: auto;
       object-fit: contain;
+      display: block;
+      margin: 0 auto;
     }
   </style>
 </head>
