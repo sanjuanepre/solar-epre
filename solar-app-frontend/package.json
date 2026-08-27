@@ -1,6 +1,6 @@
 {
   "name": "gsdsj-front",
-  "version": "1.0.1-s",
+  "version": "1.1.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -36,6 +36,7 @@
     "chartjs-plugin-datalabels": "^2.2.0",
     "dotenv": "^16.4.5",
     "driver.js": "^1.3.1",
+    "geotiff": "^3.0.5",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.1",
     "ng-lazyload-image": "^9.1.3",
@@ -44,6 +45,8 @@
     "ngx-spinner": "^17.0.0",
     "node-fetch": "^3.3.2",
     "rxjs": "~7.8.0",
+    "terra-draw": "^1.32.2",
+    "terra-draw-google-maps-adapter": "^1.6.1",
     "tslib": "^2.3.0",
     "zone.js": "~0.13.0"
   },

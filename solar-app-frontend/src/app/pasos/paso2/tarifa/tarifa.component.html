@@ -1,15 +1,24 @@
 <div class="tarifa-container">
-  <select
-    #tarifaSelect
-    [(ngModel)]="tarifaContratada"
-    (change)="onTarifaChange()"
-  >
-    <option value="" disabled selected>Selecciones su tipo de tarifa</option>
-    <option *ngFor="let tarifa of tarifas" [value]="tarifa.value">
-      {{ tarifa.viewValue }}
-    </option>
-  </select>
+  <div class="custom-select" [class.open]="isDropdownOpen" (click)="toggleDropdown($event)">
+    <div class="custom-select-trigger">
+      <span [class.placeholder]="!tarifaContratada">
+        {{ tarifaContratada ? getSelectedLabel() : 'Seleccione su tipo de tarifa' }}
+      </span>
+      <span class="select-arrow" [class.rotated]="isDropdownOpen">&#9660;</span>
+    </div>
+    <div class="custom-options" *ngIf="isDropdownOpen">
+      <div
+        class="custom-option"
+        *ngFor="let tarifa of tarifas"
+        [class.selected]="tarifaContratada === tarifa.value"
+        (click)="selectTarifa(tarifa.value, $event)"
+      >
+        {{ tarifa.viewValue }}
+      </div>
+    </div>
+  </div>
 </div>
+<br />
 <br />
 <div class="potencia-contratada" *ngIf="tarifaContratada">
   <div class="potencia-content">

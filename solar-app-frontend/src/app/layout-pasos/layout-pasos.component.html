@@ -5,17 +5,27 @@
   </div>
   
   <div class="content-total">
-    
     <div class="mapa">
       <app-mapa></app-mapa>
     </div>
     <div class="custom-loader" *ngIf="isLoading"></div>
-    <div class="paso" [class.collapsed]="isCollapsed" [ngClass]="{'expanded': isPaso3 && !isCollapsed}">
-      
-      <div class="toggle-tab" (click)="toggleCollapse()">
+
+    <!-- Botón flotante móvil para alternar entre Mapa y Panel en Paso 1 -->
+    <button 
+      type="button"
+      class="mobile-view-toggle-btn" 
+      *ngIf="currentStep === 1"
+      (click)="toggleCollapse()"
+      [title]="isCollapsed ? 'Abrir panel de configuración' : 'Ver mapa a pantalla completa'">
+      <mat-icon>{{ isCollapsed ? 'tune' : 'map' }}</mat-icon>
+      <span>{{ isCollapsed ? 'Opciones y Datos' : 'Ver Mapa' }}</span>
+    </button>
+
+    <div class="paso" [class.collapsed]="isCollapsed" [ngClass]="{'expanded': isPaso3 && !isCollapsed, 'step-fullscreen': isMobile && (currentStep === 0 || currentStep === 2 || currentStep === 3)}">
+      <div class="toggle-tab" (click)="toggleCollapse()" *ngIf="!isMobile || currentStep === 1">
         <mat-icon>{{ isCollapsed ? 'chevron_left' : 'chevron_right' }}</mat-icon>
       </div>
-      <div [@menuCollapsed]="isCollapsed ? 'expand' : 'collapsed'">
+      <div class="paso-router-outlet-wrapper" [@menuCollapsed]="isCollapsed ? 'expand' : 'collapsed'">
         <ng-container>
           <router-outlet></router-outlet>
         </ng-container>

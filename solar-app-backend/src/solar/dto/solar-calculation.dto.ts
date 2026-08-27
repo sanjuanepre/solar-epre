@@ -20,5 +20,7 @@ export class SolarCalculationDto {
     parametros?: Parametros
     @ApiProperty()
     factorPotencia?: number | 1;
+    @ApiProperty()
+    tipoEstructura?: 'coplanar' | 'optimo';
   }
   

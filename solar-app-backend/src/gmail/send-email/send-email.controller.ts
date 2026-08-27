@@ -5,6 +5,7 @@ import {
   Param,
   Post,
   Query,
+  Res,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -117,17 +118,30 @@ export class SendEmailController {
   async sendEmailWithAttachment(
     @UploadedFile() file: Express.Multer.File,
     @Body('email') email: string,
+    @Res() res: any,
   ) {
-    await this.mailService.sendEmail(
-      email,
-      'Generación Solar Distribuida San Juan - RESULTADOS DE TU SIMULACIÓN',
-      this.body,
-      file,
-    );
-    console.log('Archivo recibido:', file);
-    console.log('Enviar a:', email);
+    try {
+      console.log(`[SendEmailController] Iniciando envío de correo a: ${email}`);
+      if (!process.env.PASS_GMAIL) {
+        console.warn('[SendEmailController] ADVERTENCIA: La variable de entorno PASS_GMAIL no está configurada en el backend.');
+      }
 
-    return { message: 'Correo enviado correctamente con el archivo adjunto' };
+      await this.mailService.sendEmail(
+        email,
+        'Generación Solar Distribuida San Juan - RESULTADOS DE TU SIMULACIÓN',
+        this.body,
+        file,
+      );
+      console.log('[SendEmailController] Correo enviado exitosamente a:', email);
+
+      return res.status(200).json({ message: 'Correo enviado correctamente con el archivo adjunto' });
+    } catch (error: any) {
+      console.error('[SendEmailController] Error al enviar email:', error);
+      return res.status(500).json({
+        error: 'MailSendError',
+        message: error?.message || 'No se pudo enviar el correo electrónico a través del servidor SMTP.',
+      });
+    }
   }
 
   @Get('send-email-change')

@@ -23,6 +23,12 @@
 
       </div>
     </div>
+
+    <!-- Badge de Estructura de Montaje -->
+    <div class="estructura-badge-card" [ngClass]="tipoEstructura">
+      <mat-icon class="badge-icon">{{ tipoEstructura === 'optimo' ? 'wb_sunny' : 'grid_on' }}</mat-icon>
+      <span>{{ tipoEstructura === 'optimo' ? 'Ángulo Óptimo (30°)' : 'Estructura Coplanar' }}</span>
+    </div>
     
   </div>
 </div>

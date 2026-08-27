@@ -376,8 +376,9 @@ export class LocationService {
     return lat >= -31.878 && lat <= -30.175 && lng >= -69.192 && lng <= -66.879;
   }
 
-  validatePolygonLocation(polygon: google.maps.Polygon, map: google.maps.Map) {
+  validatePolygonLocation(polygon: google.maps.Polygon, map: google.maps.Map, autoPan: boolean = false) {
     const path = polygon.getPath().getArray();
+    if (!path || path.length === 0) return null;
 
     // 1. Calcular el centroide del polígono
     const centroid = this.calculateCentroid(path);
@@ -387,13 +388,16 @@ export class LocationService {
       const nearbyLocation = this.findNearbyLocation(lat, lng);
       if (nearbyLocation) {
         this.sharedService.setNearbyLocation(nearbyLocation);
-        map.setZoom(22);
-        map.panTo(new google.maps.LatLng(lat, lng));
-        
+        if (autoPan) {
+          map.setZoom(22);
+          map.panTo(new google.maps.LatLng(lat, lng));
+        }
         return nearbyLocation;
       } else {
-        map.setZoom(22);
-        map.panTo({ lat, lng });
+        if (autoPan) {
+          map.setZoom(22);
+          map.panTo({ lat, lng });
+        }
         return { lat, lng };
       }
     } else {

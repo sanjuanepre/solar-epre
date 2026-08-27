@@ -23,4 +23,5 @@ export interface ResultadosFrontDTO {
     indicadoresFinancieros: any
 
   };
+  roofFactor?: number;
 }

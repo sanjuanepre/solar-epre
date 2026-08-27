@@ -1,23 +1,99 @@
 
 .tarifa-container {
   width: 100%;
+  position: relative;
+  z-index: 50; /* Ensure stacking context is above subsequent components */
 }
 
-select {
+/* Custom dropdown - reemplaza select nativo para evitar picker del SO en mobile */
+.custom-select {
+  position: relative;
   width: 100%;
-  height: 40px;
+  user-select: none;
+  -webkit-user-select: none;
+  background-color: #fff;
+}
+
+.custom-select-trigger {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 44px;
+  padding: 0 12px;
   border: 2px solid var(--light-background);
-  border-radius: 8px; 
-  padding: 5px; 
+  border-radius: 8px;
+  background-color: #fff;
+  cursor: pointer;
   font-size: 14px;
   font-family: 'Sodo Sans', sans-serif;
   color: var(--font-light);
-  transition: border-color 0.3s ease; 
+  transition: border-color 0.2s ease;
 }
 
-select:focus {
+.custom-select.open .custom-select-trigger {
   border-color: var(--medium-green);
+  border-radius: 8px 8px 0 0;
 }
+
+.custom-select-trigger .placeholder {
+  color: #9ca3af;
+}
+
+.select-arrow {
+  color: var(--medium-green);
+  font-size: 11px;
+  flex-shrink: 0;
+  margin-left: 8px;
+  transition: transform 0.2s ease;
+}
+
+.select-arrow.rotated {
+  transform: rotate(180deg);
+}
+
+.custom-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: #ffffff;
+  border: 2px solid var(--medium-green);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  z-index: 9999;
+  max-height: 260px;
+  overflow-y: auto;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.16);
+}
+
+.custom-option {
+  padding: 12px 14px;
+  font-size: 14px;
+  font-family: 'Sodo Sans', sans-serif;
+  color: var(--font-light);
+  background-color: #ffffff;
+  cursor: pointer;
+  border-bottom: 1px solid var(--light-background);
+  line-height: 1.4;
+  transition: background-color 0.15s ease;
+}
+
+.custom-option:last-child {
+  border-bottom: none;
+}
+
+.custom-option:hover,
+.custom-option:active {
+  background-color: #f0fdf4;
+  color: var(--medium-green);
+}
+
+.custom-option.selected {
+  background-color: #dcfce7;
+  color: var(--medium-green);
+  font-weight: 600;
+}
+
 
 .potencia-contratada{
   width: 100%;

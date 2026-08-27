@@ -9,18 +9,29 @@ if (environment.production) {
 
 function loadGoogleMapsScript(): Promise<void> {
   return new Promise((resolve, reject) => {
-    const existingScript = document.querySelector('script[src^="https://maps.googleapis.com/maps/api/js"]');
-    if (existingScript) {
-      // Script already exists
+    if ((window as any).google && (window as any).google.maps) {
       resolve();
       return;
     }
 
+    const existingScript = document.querySelector('script[src^="https://maps.googleapis.com/maps/api/js"]');
+    if (existingScript) {
+      const oldCallback = (window as any).__googleMapsCallback;
+      (window as any).__googleMapsCallback = () => {
+        if (oldCallback) oldCallback();
+        resolve();
+      };
+      return;
+    }
+
+    (window as any).__googleMapsCallback = () => {
+      resolve();
+    };
+
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${environment.googleMapsApiKey}&libraries=places,marker,geometry&loading=async&v=weekly`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${environment.googleMapsApiKey}&libraries=places,marker,geometry&v=weekly&loading=async&callback=__googleMapsCallback`;
     script.async = true;
     script.defer = true;
-    script.onload = () => resolve();
     script.onerror = () => reject(new Error('Error loading Google Maps API'));
     document.head.appendChild(script);
   });

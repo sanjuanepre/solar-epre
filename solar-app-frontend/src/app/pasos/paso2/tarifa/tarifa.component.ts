@@ -8,6 +8,7 @@ import {
   AfterViewInit,
   ChangeDetectorRef,
   OnDestroy,
+  HostListener,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
@@ -32,6 +33,8 @@ export class TarifaComponent implements OnInit, AfterViewInit, OnDestroy {
   inputPotenciaContratada: number | null = null;
   private isDialogOpen: boolean = false;
   private maxPanelsAllowed!: number;
+  isDropdownOpen: boolean = false;
+
   @Output() isCategorySelected = new EventEmitter<boolean>(false);
   @ViewChild('tarifaSelect') tarifaSelect!: ElementRef;
   tarifas: Tarifa[] = [
@@ -90,6 +93,31 @@ export class TarifaComponent implements OnInit, AfterViewInit, OnDestroy {
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef
   ) {}
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.custom-select')) {
+      this.isDropdownOpen = false;
+    }
+  }
+
+  toggleDropdown(event: MouseEvent): void {
+    event.stopPropagation();
+    this.isDropdownOpen = !this.isDropdownOpen;
+  }
+
+  selectTarifa(value: string, event: MouseEvent): void {
+    event.stopPropagation();
+    this.tarifaContratada = value;
+    this.isDropdownOpen = false;
+    this.onTarifaChange();
+  }
+
+  getSelectedLabel(): string {
+    const found = this.tarifas.find(t => t.value === this.tarifaContratada);
+    return found ? found.viewValue : '';
+  }
 
   ngOnInit(): void {
     console.log('Iniciando ngOnInit en TarifaComponent');

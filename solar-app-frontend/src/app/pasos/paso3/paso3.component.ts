@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { GmailService } from 'src/app/services/gmail.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -15,12 +15,15 @@ import { PdfService } from 'src/app/services/pdf.service';
 import { ParametrosFront } from 'src/app/interfaces/parametros-front';
 import { distinctUntilChanged, Subject, takeUntil, Subscription } from 'rxjs';
 import { EmisionesGeiEvitadasFront } from 'src/app/interfaces/emisiones-gei-evitadas-front';
+import { GraficosComponent } from './graficos/graficos.component';
+
 @Component({
   selector: 'app-paso3',
   templateUrl: './paso3.component.html',
   styleUrls: ['./paso3.component.css'],
 })
 export class Paso3Component implements OnInit, OnDestroy {
+  @ViewChild(GraficosComponent) graficosComponent?: GraficosComponent;
   isModalOpen = false;
   isCalculating = false;
   email: string = '';
@@ -35,7 +38,10 @@ export class Paso3Component implements OnInit, OnDestroy {
   costoMantenimiento!: number;
   tasaInflacionUsd!: number;
   fechaActual!: string;
+  fechaMesAnio!: string;
   categoriaTarifa!: string;
+  tipoEstructura: 'coplanar' | 'optimo' = 'coplanar';
+  roofFactor: number = 1.0;
   items: any[] = [];
   currentStep: number = 3;
   mostrarModal: boolean = false;
@@ -62,6 +68,19 @@ export class Paso3Component implements OnInit, OnDestroy {
   potenciaInstalacionW!: number;
   isCategoriaTarifaT1: boolean = false;
   periodoVeinteanalEmisionesGEIEvitadasOriginal: EmisionesGeiEvitadasFront[] = [];
+  isScrolledDown: boolean = false;
+  showPanels: boolean = true;
+
+  onScrollInformacion(event: Event) {
+    const target = event.target as HTMLElement;
+    if (target) {
+      const scrolled = target.scrollTop > 70;
+      if (this.isScrolledDown !== scrolled) {
+        this.isScrolledDown = scrolled;
+        this.cdr.detectChanges();
+      }
+    }
+  }
   constructor(
     private router: Router,
     private readonly gmailService: GmailService,
@@ -83,6 +102,7 @@ export class Paso3Component implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     console.log('Iniciando ngOnInit de Paso3Component');
+    this.showPanels = !this.mapService.isHeatmapActive();
     this.sharedService.isLoading$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe({
@@ -372,6 +392,12 @@ export class Paso3Component implements OnInit, OnDestroy {
       const parametros: ParametrosFront = this.resultadosFront.parametros!;
       console.log('Parámetros obtenidos:', parametros);
 
+      this.tipoEstructura = this.sharedService.getTipoEstructura();
+      console.log('Tipo de estructura cargada:', this.tipoEstructura);
+
+      this.roofFactor = this.resultadosFront.roofFactor || 1.0;
+      console.log('Factor de techo cargado:', this.roofFactor);
+
       this.eficienciaInstalacion =
         parametros.caracteristicasSistema.eficienciaInstalacion || 0.95;
       console.log('Eficiencia de instalación:', this.eficienciaInstalacion);
@@ -412,6 +438,39 @@ export class Paso3Component implements OnInit, OnDestroy {
     }
   }
 
+  async cambiarEstructura(tipo: 'coplanar' | 'optimo'): Promise<void> {
+    if (this.tipoEstructura === tipo || this.isCalculating) {
+      return;
+    }
+    console.log(`[Paso3Component] Cambiando estructura a: ${tipo}`);
+    this.isCalculating = true;
+    this.sharedService.setIsLoading(true);
+    this.sharedService.setTipoEstructura(tipo);
+    this.tipoEstructura = tipo;
+
+    try {
+      const resultados = await this.solarService.calculate();
+      console.log('[Paso3Component] Recálculo exitoso tras cambio de estructura:', resultados);
+      this.resultadosFront = resultados;
+      this.sharedService.setResultadosFront(resultados);
+      
+      // Volver a inicializar los datos en base a los nuevos resultados
+      this.initialLoadFields();
+      this.cdr.detectChanges();
+    } catch (error) {
+      console.error('[Paso3Component] Error al recalcular por cambio de estructura:', error);
+      this.snackBar.open(
+        'Error al recalcular los ahorros energéticos. Por favor intente de nuevo.',
+        'Cerrar',
+        { duration: 5000 }
+      );
+    } finally {
+      this.isCalculating = false;
+      this.sharedService.setIsLoading(false);
+      this.cdr.detectChanges();
+    }
+  }
+
   private handleInitializationSystemParametersError(error: unknown): void {
     if (error instanceof Error) {
       console.error('Error detallado:', error.message);
@@ -431,22 +490,93 @@ export class Paso3Component implements OnInit, OnDestroy {
     }
   }
 
-  downloadPDF(): void {
+  async buildPdfPayload() {
+    const resultados = this.sharedService.getResultadosFront();
+    const ahorroUsd = this.sharedService.getAhorroAnualUsd() ||
+      resultados?.periodoVeinteanalFlujoIngresosMonetarios?.[0]?.ahorroEnElectricidadTotalUsd ||
+      resultados?.resultadosFinancieros?.casoConCapitalPropio?.[0]?.ahorrosEnPesos || 0;
+    
+    let ahorroPorcentaje = resultados?.resultadosFinancieros?.casoConCapitalPropio?.[0]?.porcentajeAhorro || 0;
+    if (!ahorroPorcentaje && this.consumoTotalAnual && this.yearlyEnergyAckWhDefault) {
+      ahorroPorcentaje = Math.min(100, Math.round(((this.yearlyEnergyAckWhDefault * ((this.proporcionAutoconsumo || 100) / 100)) / this.consumoTotalAnual) * 100));
+    }
+
+    const paybackMeses = resultados?.resultadosFinancieros?.indicadoresFinancieros?.payBackMonths || (this.sharedService.getPlazoInversionValue() || 0);
+
+    let chartImages = undefined;
+    if (this.graficosComponent) {
+      try {
+        chartImages = await this.graficosComponent.getChartsImages();
+      } catch (e) {
+        console.warn('No se pudieron capturar las imágenes de los gráficos:', e);
+      }
+    }
+
+    return {
+      uniqueID: this.pdfService.uniqueID || this.pdfService.generateShortUUID(),
+      categoriaTarifa: this.categoriaTarifa || this.sharedService.getTarifaContratada(),
+      tipoEstructura: this.tipoEstructura,
+      roofFactor: this.roofFactor,
+      potenciaContratada: this.potenciaContratadaHip || 0,
+      panelesCantidad: this.panelesCantidad || 0,
+      panelCapacityW: this.panelCapacityW || 400,
+      costoInstalacion: this.costoInstalacion || 0,
+      ahorroEstimadoPesosAnual: ahorroUsd,
+      ahorroPorcentajeAnual: ahorroPorcentaje,
+      periodoRecuperoAnios: paybackMeses > 0 ? parseFloat((paybackMeses / 12).toFixed(1)) : 0,
+      potenciaPicoKw: (this.panelesCantidad * this.panelCapacityW) / 1000,
+      generacionAnualKwh: this.yearlyEnergyAckWhDefault || 0,
+      superficieTechoM2: this.sharedService.getAreaPanelsSelected() || 0,
+      emisionesGEIEvitadasTnAnual: (this.yearlyEnergyAckWhDefault * this.carbonOffsetFactorTnPerMWh) / 1000,
+      proporcionAutoconsumo: this.proporcionAutoconsumo || 0,
+      proporcionInyectada: (100 - (this.proporcionAutoconsumo || 0)),
+      textoArboles: this.graficosComponent?.textoArboles,
+      chartImages,
+    };
+  }
+
+  async downloadPDF(): Promise<void> {
     if (!this.isDownloading) {
       this.isDownloading = true;
-      this.pdfService
-        .generatePDF(true)
-        .then(() => { })
-        .catch(() => { })
-        .finally(() => (this.isDownloading = false));
+      try {
+        const payload = await this.buildPdfPayload();
+        this.pdfService
+          .downloadPdfBlob(payload)
+          .subscribe({
+            next: (blob) => {
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `resultado-id-${payload.uniqueID}.pdf`;
+              a.click();
+              window.URL.revokeObjectURL(url);
+              this.isDownloading = false;
+            },
+            error: (err) => {
+              console.error('Error al descargar el PDF:', err);
+              this.snackBar.open(
+                'No se pudo generar la descarga del PDF. Intente nuevamente.',
+                'Cerrar',
+                { duration: 4000 }
+              );
+              this.isDownloading = false;
+            },
+          });
+      } catch (e) {
+        console.error('Error preparando payload de PDF:', e);
+        this.isDownloading = false;
+      }
     }
   }
 
-  sendEmail(): void {
-    if (!this.isSendingMail) {
-      if (this.email) {
-        this.isSendingMail = true;
-        this.gmailService.sendEmailWithResults(this.email).then(() => {
+  async sendEmail(): Promise<void> {
+    if (!this.isSendingMail && this.email) {
+      this.isSendingMail = true;
+      try {
+        const payload = await this.buildPdfPayload();
+        this.gmailService
+          .sendEmailWithResults(this.email, payload)
+          .then(() => {
           this.isSendingMail = false;
           this.snackBar.open('El correo ha sido enviado exitosamente.', '', {
             duration: 5000,
@@ -455,7 +585,19 @@ export class Paso3Component implements OnInit, OnDestroy {
             verticalPosition: 'top',
           });
           this.closeModal();
+        })
+        .catch((err) => {
+          console.error('Error al enviar el email:', err);
+          this.isSendingMail = false;
+          this.snackBar.open(
+            'Hubo un problema al enviar el correo. Intente más tarde.',
+            'Cerrar',
+            { duration: 4000 }
+          );
         });
+      } catch (e) {
+        console.error('Error al preparar payload para email:', e);
+        this.isSendingMail = false;
       }
     }
   }
@@ -508,48 +650,22 @@ export class Paso3Component implements OnInit, OnDestroy {
     this.router.navigate(['pasos/2']);
   }
 
+  private readonly emptyArray: any[] = [];
+
   getEmisionesGEIEvitadas() {
-    try {
-      if (this.resultadosFront) {
-        return this.resultadosFront.periodoVeinteanalEmisionesGEIEvitadas;
-      }
-    } catch (error) {
-      console.log('this.resultadosFront no disponible');
-    }
-    return [];
+    return this.resultadosFront?.periodoVeinteanalEmisionesGEIEvitadas || this.emptyArray;
   }
 
   getFlujoEnergia() {
-    try {
-      if (this.resultadosFront) {
-        return this.resultadosFront.periodoVeinteanalFlujoEnergia;
-      }
-    } catch (error) {
-      console.log('this.resultadosFront no disponible');
-    }
-    return [];
+    return this.resultadosFront?.periodoVeinteanalFlujoEnergia || this.emptyArray;
   }
 
   getFlujoIngresosMonetarios() {
-    try {
-      if (this.resultadosFront) {
-        return this.resultadosFront.periodoVeinteanalFlujoIngresosMonetarios;
-      }
-    } catch (error) {
-      console.log('this.resultadosFront no disponible');
-    }
-    return [];
+    return this.resultadosFront?.periodoVeinteanalFlujoIngresosMonetarios || this.emptyArray;
   }
 
   getGeneracionFotovoltaica() {
-    try {
-      if (this.resultadosFront) {
-        return this.resultadosFront.periodoVeinteanalGeneracionFotovoltaica;
-      }
-    } catch (error) {
-      console.log('this.resultadosFront no disponible');
-    }
-    return [];
+    return this.resultadosFront?.periodoVeinteanalGeneracionFotovoltaica || this.emptyArray;
   }
 
   getTIR() {
@@ -564,18 +680,9 @@ export class Paso3Component implements OnInit, OnDestroy {
     }
   }
 
-  enabledDrawing() {
-    this.polygons = this.mapService.getPolygons();
-    this.polygons[0].setEditable(true);
-    this.mapService.disableDrawingMode();
-
-    // Mostrar el snackbar
-    this.snackBar.open('Superficie editable', '', {
-      duration: 5000,
-      panelClass: ['custom-snackbar'],
-      horizontalPosition: 'center',
-      verticalPosition: 'top',
-    });
+  togglePanelsVisibility() {
+    this.showPanels = !this.showPanels;
+    this.mapService.setPanelsVisibility(this.showPanels);
   }
 
   // Método para establecer el timestamp
@@ -626,6 +733,8 @@ export class Paso3Component implements OnInit, OnDestroy {
     const anio = now.getFullYear();
 
     this.fechaActual = `${mes} de ${anio}`;
+    const mesCap = mes.charAt(0).toUpperCase() + mes.slice(1);
+    this.fechaMesAnio = `${mesCap} ${anio}`;
   }
 
   openModal(): void {
@@ -681,7 +790,22 @@ export class Paso3Component implements OnInit, OnDestroy {
     this.sharedService.panelCapacityW$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe({
-        next: (capacity) => (this.potenciaPanelHip = capacity),
+        next: (capacity) => {
+          this.potenciaPanelHip = capacity;
+          this.panelCapacityW = capacity;
+          console.log('Paso 3: Capacidad de panel W actualizada:', capacity);
+          this.cdr.detectChanges();
+        },
+      });
+
+    this.sharedService.dimensionPanel$
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe({
+        next: (dimension) => {
+          this.dimensionPanel = dimension;
+          console.log('Paso 3: Dimensiones del panel actualizadas:', dimension);
+          this.cdr.detectChanges();
+        },
       });
 
 

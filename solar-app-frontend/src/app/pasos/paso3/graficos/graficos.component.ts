@@ -2,6 +2,8 @@ import {
   Component,
   Input,
   OnInit,
+  OnChanges,
+  SimpleChanges,
   ViewChild,
   ElementRef,
   AfterViewInit,
@@ -24,18 +26,20 @@ import * as ApexCharts from 'apexcharts';
   styleUrls: ['./graficos.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
+export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   @Input()
   periodoVeinteanalEmisionesGEIEvitadasOriginal!: EmisionesGeiEvitadasFront[];
   periodoVeinteanalEmisionesGEIEvitadasCopia: EmisionesGeiEvitadasFront[] = [];
   @Input() periodoVeinteanalFlujoEnergia!: FlujoEnergiaFront[];
   @Input()
   periodoVeinteanalFlujoIngresosMonetarios!: FlujoIngresosMonetariosFront[];
-  periodoVeinteanalFlujoIngresosMonetariosCopia: FlujoIngresosMonetariosFront[] =
-    [];
   @Input()
   periodoVeinteanalGeneracionFotovoltaica!: GeneracionFotovoltaicaFront[];
   @Input() consumoTotalAnual!: number;
+  @Input() yearlyEnergyInitial!: number;
+  @Input() proporcionAutoconsumo!: number;
+  @Input() proporcionInyectada!: number;
+  @Input() inversionInicial!: number;
 
   @ViewChild('emisionesChartRef')
   emisionesChartRef!: ElementRef<HTMLCanvasElement>;
@@ -48,18 +52,38 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
   carbonOffSet!: number;
   carbonOffSetInicialTon!: number;
   yearlyEnergy!: number;
-  @Input() yearlyEnergyInitial!: number;
   porcentajeCubierto: number = 0;
   chartEmisiones!: ApexCharts;
   chartAhorroRecupero!: ApexCharts;
-  private destroy$ = new Subject<void>(); // Subject para manejar desuscripciones
+  private destroy$ = new Subject<void>();
   ahorrosAnualesIniciales!: number;
   chartEnergiaConsumo!: ApexCharts;
+  chartDonutEnergia!: ApexCharts;
+  vistaCO2: 'anual' | 'comparativa' | 'acumulada' | 'gauge' = 'anual';
+  textoArboles: string = '';
 
   constructor(
     private sharedService: SharedService,
     private cdr: ChangeDetectorRef
   ) { }
+
+  cambiarVistaCO2(vista: 'anual' | 'comparativa' | 'acumulada' | 'gauge') {
+    this.vistaCO2 = vista;
+    this.renderChartEmisiones();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    let hasActualChange = false;
+    for (const propName in changes) {
+      if (changes[propName].currentValue !== changes[propName].previousValue) {
+        hasActualChange = true;
+        break;
+      }
+    }
+    if (hasActualChange) {
+      this.refreshAllCharts();
+    }
+  }
 
   ngOnInit(): void {
     if (!this.yearlyEnergyInitial) {
@@ -67,37 +91,58 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     this.yearlyEnergy = this.yearlyEnergyInitial;
 
-
     if (!this.recuperoInversionMeses) {
       this.recuperoInversionMeses = this.sharedService.getPlazoInversionValue();
     }
     if (!this.ahorrosAnualesIniciales) {
       this.ahorrosAnualesIniciales = this.sharedService.getAhorroAnualUsd();
     }
-    // Verificamos si periodoVeinteanalFlujoIngresosMonetarios existe antes de asignar
-    if (this.periodoVeinteanalFlujoIngresosMonetarios.length === 0) {
+    if (!this.periodoVeinteanalFlujoIngresosMonetarios || this.periodoVeinteanalFlujoIngresosMonetarios.length === 0) {
       const resultadosFront = this.sharedService.getResultadosFront();
-
-      if (resultadosFront.periodoVeinteanalFlujoIngresosMonetarios) {
+      if (resultadosFront && resultadosFront.periodoVeinteanalFlujoIngresosMonetarios) {
         this.periodoVeinteanalFlujoIngresosMonetarios =
           resultadosFront.periodoVeinteanalFlujoIngresosMonetarios;
-      } else {
-        console.warn('No se encontraron datos de FlujoIngresosMonetarios.');
+      }
+    }
+    if (!this.periodoVeinteanalEmisionesGEIEvitadasOriginal || this.periodoVeinteanalEmisionesGEIEvitadasOriginal.length === 0) {
+      const resultadosFront = this.sharedService.getResultadosFront();
+      if (resultadosFront && resultadosFront.periodoVeinteanalEmisionesGEIEvitadas) {
+        this.periodoVeinteanalEmisionesGEIEvitadasOriginal =
+          resultadosFront.periodoVeinteanalEmisionesGEIEvitadas;
       }
     }
     if (!this.carbonOffSetInicialTon) {
       this.carbonOffSetInicialTon = this.sharedService.getCarbonOffSetTnAnual();
     }
 
+    this.sharedService.resultadosFront$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (resultadosFront) => {
+          if (resultadosFront) {
+            if (resultadosFront.periodoVeinteanalFlujoIngresosMonetarios) {
+              this.periodoVeinteanalFlujoIngresosMonetarios = resultadosFront.periodoVeinteanalFlujoIngresosMonetarios;
+            }
+            if (resultadosFront.periodoVeinteanalEmisionesGEIEvitadas) {
+              this.periodoVeinteanalEmisionesGEIEvitadasOriginal = resultadosFront.periodoVeinteanalEmisionesGEIEvitadas;
+            }
+            if (resultadosFront.periodoVeinteanalFlujoEnergia) {
+              this.periodoVeinteanalFlujoEnergia = resultadosFront.periodoVeinteanalFlujoEnergia;
+            }
+            if (resultadosFront.periodoVeinteanalGeneracionFotovoltaica) {
+              this.periodoVeinteanalGeneracionFotovoltaica = resultadosFront.periodoVeinteanalGeneracionFotovoltaica;
+            }
+            this.refreshAllCharts();
+          }
+        },
+      });
+
     this.sharedService.yearlyEnergyAckWh$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe({
         next: (yearlyEnergy) => {
           this.yearlyEnergy = yearlyEnergy;
-          if (this.chartEnergiaConsumo) this.updateChartEnergiaConsumo();
-          if (this.chartAhorroRecupero) this.updateChartAhorroRecupero();
-          if (this.chartEmisiones)
-            this.updateChartEmisionesEvitadasAcumuladas();
+          this.refreshAllCharts();
         },
       });
 
@@ -105,11 +150,8 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe({
         next: (newPlazoRecupero) => {
-          if (this.recuperoInversionMeses === 0) {
-            this.recuperoInversionMeses = newPlazoRecupero;
-          }
           this.recuperoInversionMeses = newPlazoRecupero;
-          if (this.chartAhorroRecupero) this.updateChartAhorroRecupero();
+          this.refreshAllCharts();
         },
       });
 
@@ -118,175 +160,566 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
       .subscribe({
         next: (newEmisionesGeiEvitadas) => {
           this.carbonOffSet = newEmisionesGeiEvitadas;
-          if (this.chartEmisiones)
-            this.updateChartEmisionesEvitadasAcumuladas();
+          this.refreshAllCharts();
         },
       });
   }
 
   ngAfterViewInit(): void {
     this.carbonOffSetInicialTon = this.sharedService.getCarbonOffSetTnAnual();
+    this.refreshAllCharts();
+  }
 
-    this.initializeChartEnergiaConsumo();
-    this.initializeChartAhorroRecupero();
-    this.initializeChartEmisionesEvitadasAcumuladas();
+  private async exportChartOffscreen(options: any, width: number = 800, height: number = 300): Promise<string | undefined> {
+    if (!options) return undefined;
+    let tempDiv: HTMLDivElement | null = null;
+    let tempChart: any = null;
+    try {
+      tempDiv = document.createElement('div');
+      tempDiv.style.position = 'fixed';
+      tempDiv.style.left = '-9999px';
+      tempDiv.style.top = '-9999px';
+      tempDiv.style.width = `${width}px`;
+      tempDiv.style.height = `${height}px`;
+      tempDiv.style.zIndex = '-1000';
+      document.body.appendChild(tempDiv);
+
+      const exportOpts = {
+        ...options,
+        chart: {
+          ...options.chart,
+          width: width,
+          height: height,
+          background: '#ffffff',
+          animations: { enabled: false },
+        },
+      };
+
+      tempChart = new (ApexCharts as any)(tempDiv, exportOpts);
+      await tempChart.render();
+      await new Promise((resolve) => setTimeout(resolve, 80));
+      const data = await tempChart.dataURI();
+      if (data && 'imgURI' in data && data.imgURI) {
+        return data.imgURI;
+      }
+    } catch (err) {
+      console.warn('exportChartOffscreen falló, usando fallback:', err);
+    } finally {
+      try {
+        if (tempChart) tempChart.destroy();
+      } catch (_) {}
+      try {
+        if (tempDiv && tempDiv.parentNode) tempDiv.parentNode.removeChild(tempDiv);
+      } catch (_) {}
+    }
+    return undefined;
+  }
+
+  async getChartsImages(): Promise<{
+    energiaConsumo?: string;
+    donutDistribucion?: string;
+    ahorroRecupero?: string;
+    emisiones?: string;
+    emisionesAnual?: string;
+    emisionesComparativa?: string;
+    emisionesAcumulada?: string;
+    emisionesGauge?: string;
+  }> {
+    const result: {
+      energiaConsumo?: string;
+      donutDistribucion?: string;
+      ahorroRecupero?: string;
+      emisiones?: string;
+      emisionesAnual?: string;
+      emisionesComparativa?: string;
+      emisionesAcumulada?: string;
+      emisionesGauge?: string;
+    } = {};
+
+    // 1. Energía Consumo
+    try {
+      result.energiaConsumo = await this.exportChartOffscreen(this.getOptionsEnergiaConsumo(true), 550, 300);
+      if (!result.energiaConsumo && this.chartEnergiaConsumo) {
+        const data = await this.chartEnergiaConsumo.dataURI();
+        if (data && 'imgURI' in data && data.imgURI) {
+          result.energiaConsumo = data.imgURI;
+        }
+      }
+    } catch (e) {
+      console.warn('Error al exportar chartEnergiaConsumo:', e);
+    }
+
+    // 2. Donut Distribución
+    try {
+      result.donutDistribucion = await this.exportChartOffscreen(this.getOptionsDonutEnergia(true), 450, 300);
+      if (!result.donutDistribucion && this.chartDonutEnergia) {
+        const data = await this.chartDonutEnergia.dataURI();
+        if (data && 'imgURI' in data && data.imgURI) {
+          result.donutDistribucion = data.imgURI;
+        }
+      }
+    } catch (e) {
+      console.warn('Error al exportar chartDonutEnergia:', e);
+    }
+
+    // 3. Ahorro Recupero
+    try {
+      result.ahorroRecupero = await this.exportChartOffscreen(this.getOptionsAhorroRecupero(true), 800, 300);
+      if (!result.ahorroRecupero && this.chartAhorroRecupero) {
+        const data = await this.chartAhorroRecupero.dataURI();
+        if (data && 'imgURI' in data && data.imgURI) {
+          result.ahorroRecupero = data.imgURI;
+        }
+      }
+    } catch (e) {
+      console.warn('Error al exportar chartAhorroRecupero:', e);
+    }
+
+    // 4. Emisiones Anual
+    try {
+      result.emisionesAnual = await this.exportChartOffscreen(this.getOptionsEmisionesVista('anual', true), 550, 270);
+    } catch (e) {
+      console.warn('Error al exportar emisionesAnual:', e);
+    }
+
+    // 5. Emisiones Comparativa
+    try {
+      result.emisionesComparativa = await this.exportChartOffscreen(this.getOptionsEmisionesVista('comparativa', true), 550, 270);
+    } catch (e) {
+      console.warn('Error al exportar emisionesComparativa:', e);
+    }
+
+    // 6. Emisiones Acumulada
+    try {
+      result.emisionesAcumulada = await this.exportChartOffscreen(this.getOptionsEmisionesVista('acumulada', true), 550, 270);
+      result.emisiones = result.emisionesAcumulada || result.emisionesAnual;
+    } catch (e) {
+      console.warn('Error al exportar emisionesAcumulada:', e);
+    }
+
+    // 7. Emisiones Gauge
+    try {
+      result.emisionesGauge = await this.exportChartOffscreen(this.getOptionsEmisionesVista('gauge', true), 450, 270);
+    } catch (e) {
+      console.warn('Error al exportar emisionesGauge:', e);
+    }
+
+    return result;
+  }
+
+  refreshAllCharts(): void {
+    if (this.chartEnergiaConsumo) {
+      this.updateChartEnergiaConsumo();
+    } else {
+      this.initializeChartEnergiaConsumo();
+    }
+
+    if (this.chartDonutEnergia) {
+      this.updateChartDonutEnergia();
+    } else {
+      this.initializeChartDonutEnergia();
+    }
+
+    if (this.chartAhorroRecupero) {
+      this.updateChartAhorroRecupero();
+    } else {
+      this.initializeChartAhorroRecupero();
+    }
+
+    if (this.chartEmisiones) {
+      this.updateChartEmisionesEvitadasAcumuladas();
+    } else {
+      this.initializeChartEmisionesEvitadasAcumuladas();
+    }
+    this.cdr.markForCheck();
+    this.cdr.detectChanges();
   }
 
   ngOnDestroy(): void {
-    // Emitir un valor para cerrar las suscripciones
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  private initializeChartAhorroRecupero() {
-    this.periodoVeinteanalFlujoIngresosMonetariosCopia = JSON.parse(
-      JSON.stringify(this.periodoVeinteanalFlujoIngresosMonetarios)
-    );
+  // ─────────────────────────────────────────────────
+  // GRÁFICA 1: Energía consumida vs. generada (barras apiladas)
+  // ─────────────────────────────────────────────────
+  private getOptionsEnergiaConsumo(forExport: boolean = false) {
+    const propAutoconsumo = this.proporcionAutoconsumo ?? 0.8;
+    const propInyectada = this.proporcionInyectada ?? 0.2;
 
-    const recuperoInversionAnios = Math.round(this.recuperoInversionMeses / 12);
-    const primerAno =
-      this.periodoVeinteanalFlujoIngresosMonetariosCopia[0].year;
-    const anoRecuperoInversion = primerAno + recuperoInversionAnios;
+    const autoconsumidaKwh = this.yearlyEnergy * propAutoconsumo;
+    const inyectadaKwh = this.yearlyEnergy * propInyectada;
+    const compradadRedKwh = Math.max(0, this.consumoTotalAnual - autoconsumidaKwh);
 
-    // Tomamos el primer valor de ahorro e ingreso
-    const primerAhorro =
-      this.periodoVeinteanalFlujoIngresosMonetariosCopia[0]
-        .ahorroEnElectricidadTotalUsd;
-    const primerIngreso =
-      this.periodoVeinteanalFlujoIngresosMonetariosCopia[0]
-        .ingresoPorInyeccionElectricaUsd;
-
-    // Crear arrays con el valor constante del primer año para todo el periodo
-    const ahorroData = this.periodoVeinteanalFlujoIngresosMonetariosCopia.map(
-      (item, index, array) => {
-        if (index === 0) {
-          item.ahorroEnElectricidadTotalUsd = primerAhorro
-          return item.ahorroEnElectricidadTotalUsd
-        }
-        const prevItem = array[index - 1].ahorroEnElectricidadTotalUsd
-        array[index].ahorroEnElectricidadTotalUsd = prevItem * (1 - this.sharedService.getDegradacionPanel());
-        return array[index].ahorroEnElectricidadTotalUsd
-      }
-    );
-    const ingresoData = this.periodoVeinteanalFlujoIngresosMonetariosCopia.map(
-      (item, index, array) => {
-        if (index === 0) {
-          item.ingresoPorInyeccionElectricaUsd = primerIngreso
-          return item.ingresoPorInyeccionElectricaUsd
-        }
-        const prevItem = array[index - 1].ingresoPorInyeccionElectricaUsd
-        array[index].ingresoPorInyeccionElectricaUsd = prevItem * (1 - this.sharedService.getDegradacionPanel());
-        return array[index].ingresoPorInyeccionElectricaUsd
-      }
-    );
-
-    // Extraer los años para la gráfica
-    const categories = this.periodoVeinteanalFlujoIngresosMonetariosCopia.map(
-      (item) => item.year.toString()
-    );
-
-    const options = {
+    return {
+      chart: {
+        type: 'bar',
+        height: forExport ? 300 : 340,
+        width: forExport ? 550 : '100%',
+        stacked: true,
+        background: forExport ? '#ffffff' : 'transparent',
+        toolbar: { show: false },
+        animations: { enabled: !forExport },
+      },
       series: [
         {
-          name: 'Ahorro por autoconsumo de energía',
-          data: ahorroData,
-          color: '#96c0b2',
+          name: 'Autoconsumo solar',
+          data: [autoconsumidaKwh, autoconsumidaKwh],
+          color: '#5aaa8a',
         },
         {
-          name: 'Ingreso por excedente de energía',
+          name: 'Comprada a la red',
+          data: [compradadRedKwh, 0],
+          color: '#c8c8c8',
+        },
+        {
+          name: 'Inyectada a la red',
+          data: [0, inyectadaKwh],
+          color: '#e4c58d',
+        },
+      ],
+      xaxis: {
+        categories: ['Consumo total anual', 'Generación anual FV'],
+        labels: {
+          style: {
+            fontSize: forExport ? '12px' : '11px',
+            fontFamily: 'sodo sans, sans-serif',
+            colors: ['#555', '#555'],
+          },
+        },
+      },
+      yaxis: {
+        min: 0,
+        title: {
+          text: 'kWh',
+          style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
+        },
+        labels: {
+          formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE') : '0',
+        },
+      },
+      plotOptions: {
+        bar: {
+          columnWidth: forExport ? '40%' : '50%',
+          borderRadius: 4,
+        },
+      },
+      dataLabels: {
+        enabled: true,
+        style: {
+          fontSize: '11px',
+          fontFamily: 'sodo sans, sans-serif',
+          colors: ['#fff'],
+        },
+        formatter: (val: number): string => {
+          if (val <= 0) return '';
+          return val.toLocaleString('de-DE', { maximumFractionDigits: 0 });
+        },
+      },
+      tooltip: {
+        enabled: !forExport,
+        theme: 'light',
+        y: {
+          formatter: (val: number) =>
+            `${val.toLocaleString('de-DE', { maximumFractionDigits: 0 })} kWh`,
+        },
+      },
+      legend: {
+        position: 'bottom',
+        fontSize: '12px',
+        fontFamily: 'sodo sans, sans-serif',
+      },
+      fill: { opacity: 1 },
+    };
+  }
+
+  private initializeChartEnergiaConsumo() {
+    const options = this.getOptionsEnergiaConsumo(false);
+    this.chartEnergiaConsumo = new ApexCharts(
+      document.querySelector('#chartSolLunaRef') as HTMLElement,
+      options
+    );
+    this.chartEnergiaConsumo.render();
+    this.cdr.detectChanges();
+  }
+
+  private updateChartEnergiaConsumo() {
+    if (!this.chartEnergiaConsumo) return;
+    const propAutoconsumo = this.proporcionAutoconsumo ?? 0.8;
+    const propInyectada = this.proporcionInyectada ?? 0.2;
+    const autoconsumidaKwh = this.yearlyEnergy * propAutoconsumo;
+    const inyectadaKwh = this.yearlyEnergy * propInyectada;
+    const compradadRedKwh = Math.max(0, this.consumoTotalAnual - autoconsumidaKwh);
+
+    this.chartEnergiaConsumo.updateOptions({
+      series: [
+        { name: 'Autoconsumo solar', data: [autoconsumidaKwh, autoconsumidaKwh] },
+        { name: 'Comprada a la red', data: [compradadRedKwh, 0] },
+        { name: 'Inyectada a la red', data: [0, inyectadaKwh] },
+      ],
+    }, false, false);
+    this.cdr.detectChanges();
+  }
+
+  // ─────────────────────────────────────────────────
+  // GRÁFICA 2 (NUEVA): Donut de distribución energética
+  // ─────────────────────────────────────────────────
+  private getOptionsDonutEnergia(forExport: boolean = false) {
+    const propAutoconsumo = this.proporcionAutoconsumo ?? 0.8;
+    const propInyectada = this.proporcionInyectada ?? 0.2;
+
+    const autoconsumidaKwh = this.yearlyEnergy * propAutoconsumo;
+    const inyectadaKwh = this.yearlyEnergy * propInyectada;
+    const compradadRedKwh = Math.max(0, this.consumoTotalAnual - autoconsumidaKwh);
+    const total = autoconsumidaKwh + inyectadaKwh + compradadRedKwh;
+
+    const pctAutoconsumo = total > 0 ? Math.round((autoconsumidaKwh / total) * 100) : 0;
+    const pctInyectada = total > 0 ? Math.round((inyectadaKwh / total) * 100) : 0;
+    const pctRed = Math.max(0, 100 - pctAutoconsumo - pctInyectada);
+
+    return {
+      series: [pctAutoconsumo, pctInyectada, pctRed],
+      chart: {
+        type: 'donut',
+        height: forExport ? 300 : 340,
+        width: forExport ? 450 : '100%',
+        background: forExport ? '#ffffff' : 'transparent',
+        toolbar: { show: false },
+        animations: { enabled: !forExport },
+      },
+      labels: ['Autoconsumo solar', 'Inyección a la red', 'Comprada a la red'],
+      colors: ['#5aaa8a', '#e4c58d', '#c8c8c8'],
+      legend: {
+        position: 'bottom',
+        fontSize: '11px',
+        fontFamily: 'sodo sans, sans-serif',
+      },
+      dataLabels: {
+        enabled: true,
+        style: {
+          fontSize: '12px',
+          fontFamily: 'sodo sans, sans-serif',
+        },
+        formatter: (val: number) => `${Math.round(val)} %`,
+      },
+      plotOptions: {
+        pie: {
+          donut: {
+            size: '60%',
+            labels: {
+              show: true,
+              total: {
+                show: true,
+                label: 'Cobertura solar',
+                fontSize: '13px',
+                fontFamily: 'sodo sans, sans-serif',
+                color: '#555',
+                formatter: () => `${pctAutoconsumo + pctInyectada} %`,
+              },
+            },
+          },
+        },
+      },
+      tooltip: {
+        enabled: !forExport,
+        theme: 'light',
+        y: {
+          formatter: (val: number) => `${val} %`,
+        },
+      },
+    };
+  }
+
+  private initializeChartDonutEnergia() {
+    const options = this.getOptionsDonutEnergia(false);
+
+    this.chartDonutEnergia = new ApexCharts(
+      document.querySelector('#chartDonutEnergiaRef') as HTMLElement,
+      options
+    );
+    this.chartDonutEnergia.render();
+    this.cdr.detectChanges();
+  }
+
+  private updateChartDonutEnergia() {
+    if (!this.chartDonutEnergia) return;
+    const propAutoconsumo = this.proporcionAutoconsumo ?? 0.8;
+    const propInyectada = this.proporcionInyectada ?? 0.2;
+    const autoconsumidaKwh = this.yearlyEnergy * propAutoconsumo;
+    const inyectadaKwh = this.yearlyEnergy * propInyectada;
+    const compradadRedKwh = Math.max(0, this.consumoTotalAnual - autoconsumidaKwh);
+    const total = autoconsumidaKwh + inyectadaKwh + compradadRedKwh;
+    const pctAutoconsumo = total > 0 ? Math.round((autoconsumidaKwh / total) * 100) : 0;
+    const pctInyectada = total > 0 ? Math.round((inyectadaKwh / total) * 100) : 0;
+    const pctRed = Math.max(0, 100 - pctAutoconsumo - pctInyectada);
+    this.chartDonutEnergia.updateSeries([pctAutoconsumo, pctInyectada, pctRed]);
+    this.cdr.detectChanges();
+  }
+
+  // ─────────────────────────────────────────────────
+  // GRÁFICA 3: Ahorros anuales + flujo de caja acumulado
+  // ─────────────────────────────────────────────────
+  private getOptionsAhorroRecupero(forExport: boolean = false) {
+    const flujoData = this.periodoVeinteanalFlujoIngresosMonetarios;
+    if (!flujoData || flujoData.length === 0) {
+      return null;
+    }
+    const recuperoMeses = (this.recuperoInversionMeses != null && !isNaN(this.recuperoInversionMeses)) ? this.recuperoInversionMeses : 0;
+    const recuperoInversionAnios = Math.round(recuperoMeses / 12);
+    const primerAno = (flujoData[0] && flujoData[0].year != null && !isNaN(flujoData[0].year)) ? flujoData[0].year : new Date().getFullYear();
+    const anoRecuperoInversion = primerAno + recuperoInversionAnios;
+    const anoStr = (anoRecuperoInversion != null && !isNaN(anoRecuperoInversion)) ? anoRecuperoInversion.toString() : '';
+
+    const ahorroData = flujoData.map(item => item?.ahorroEnElectricidadTotalUsd ?? 0);
+    const ingresoData = flujoData.map(item => item?.ingresoPorInyeccionElectricaUsd ?? 0);
+    const categories = flujoData.map(item => (item?.year != null ? item.year.toString() : ''));
+
+    // Flujo de caja acumulado: empieza en -inversión y suma ahorros+ingresos cada año
+    const inversionInicial = this.inversionInicial ?? this.sharedService.getCostoInstalacion?.() ?? 0;
+    const flujoCajaAcumulado = flujoData.reduce((acc, item, index) => {
+      const prevVal = index === 0 ? -inversionInicial : acc[index - 1];
+      const ahorro = item?.ahorroEnElectricidadTotalUsd ?? 0;
+      const ingreso = item?.ingresoPorInyeccionElectricaUsd ?? 0;
+      acc.push(prevVal + ahorro + ingreso);
+      return acc;
+    }, [] as number[]);
+
+    const showAnnotation = recuperoMeses > 0 && !!anoStr && categories.includes(anoStr);
+
+    return {
+      series: [
+        {
+          name: 'Ahorro por autoconsumo',
+          type: 'bar',
+          data: ahorroData,
+          color: '#5aaa8a',
+        },
+        {
+          name: 'Ingreso por inyección',
+          type: 'bar',
           data: ingresoData,
           color: '#e4c58d',
         },
         {
-          name: 'Punto de recupero',
-          data: [''],
+          name: 'Flujo de caja acumulado',
+          type: 'line',
+          data: flujoCajaAcumulado,
           color: '#008ae3',
         },
       ],
       chart: {
-        height: 350,
-        width: 470,
-        type: 'line',
-        toolbar: {
-          show: false,
-        },
-        zoom: {
-          enabled: false,
-        },
+        height: forExport ? 300 : 350,
+        width: forExport ? 800 : '100%',
+        type: 'bar',
+        stacked: false,
+        background: forExport ? '#ffffff' : 'transparent',
+        toolbar: { show: false },
+        zoom: { enabled: false },
+        animations: { enabled: !forExport },
       },
       stroke: {
+        width: [0, 0, 3],
         curve: 'smooth',
-        colors: ['#96c0b2', '#e4c58d', '#008ae3'],
-        width: 3,
+        colors: ['transparent', 'transparent', '#008ae3'],
+      },
+      plotOptions: {
+        bar: {
+          columnWidth: '50%',
+          borderRadius: 3,
+        },
       },
       xaxis: {
         categories: categories,
         title: {
           text: 'Año',
-          style: {
-            fontSize: '12px',
-            fontFamily: 'sodo sans, sans-serif',
-          },
+          style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
           offsetY: -25,
         },
       },
-      yaxis: {
-        min: 0,
-        labels: {
-          formatter: (val: number): string => {
-            return val.toLocaleString('de-DE');
+      yaxis: [
+        {
+          seriesName: 'Ahorro por autoconsumo',
+          title: {
+            text: 'USD/año',
+            style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
+          },
+          labels: {
+            formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE', { maximumFractionDigits: 0 }) : '0',
           },
         },
-        title: {
-          text: 'USD',
-          style: {
-            fontSize: '12px',
-            fontFamily: 'sodo sans, sans-serif',
+        {
+          seriesName: 'Ingreso por inyección',
+          show: false,
+        },
+        {
+          opposite: true,
+          seriesName: 'Flujo de caja acumulado',
+          title: {
+            text: 'Flujo acumulado (USD)',
+            style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
+          },
+          labels: {
+            formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE', { maximumFractionDigits: 0 }) : '0',
           },
         },
-      },
+      ],
       tooltip: {
-        enabled: true,
+        enabled: !forExport,
         theme: 'light',
+        shared: true,
+        intersect: false,
         y: {
-          formatter: (val: number) => {
+          formatter: (val: number, { seriesIndex }: any) => {
+            if (val == null || isNaN(val)) return '0 USD';
             const valorTruncado = Math.round(val);
-            return `${valorTruncado.toLocaleString('de-DE')} USD/año`;
+            return seriesIndex === 2
+              ? `${valorTruncado.toLocaleString('de-DE')} USD`
+              : `${valorTruncado.toLocaleString('de-DE')} USD/año`;
           },
         },
       },
       annotations: {
-        xaxis: this.recuperoInversionMeses >= 0 ? [
+        yaxis: [
           {
-            x: anoRecuperoInversion.toString(),
+            y: 0,
+            borderColor: '#999',
+            borderWidth: 1,
+            strokeDashArray: 4,
+          },
+        ],
+        xaxis: showAnnotation ? [
+          {
+            x: anoStr,
             strokeDashArray: 5,
             borderColor: '#008ae3',
             borderWidth: 2,
-            showInLegend: true,
+            label: {
+              text: `Recupero (~${recuperoInversionAnios} años)`,
+              style: {
+                fontSize: '10px',
+                fontFamily: 'sodo sans, sans-serif',
+                background: '#e8f4ff',
+                color: '#008ae3',
+              },
+            },
           },
         ] : [],
       },
+      colors: ['#5aaa8a', '#e4c58d', '#008ae3'],
       legend: {
-        markers: {
-          width: 30,
-          height: 3,
-          strokeWidth: 3,
-          shape: 'line',
-          radius: 0,
-        },
         position: 'bottom',
-        formatter: (seriesName: string, opts: any) => {
-          // Personaliza la leyenda con margen de 4px entre la línea y el texto
-          if (seriesName === 'Punto de recupero') {
-            return `<span style="display: inline-block; width: 30px; height: 3px; border-top: 2px dashed #008ae3; margin-right: 4px;"></span>${seriesName}`;
-          }
-          return `<span style="display: inline-block; width: 30px; height: 3px; background-color: ${opts.w.globals.colors[opts.seriesIndex]
-            }; margin-right: 4px;"></span>${seriesName}`;
-        },
+        fontSize: '11px',
+        fontFamily: 'sodo sans, sans-serif',
       },
+      dataLabels: { enabled: false },
+      fill: { opacity: [0.85, 0.85, 1] },
     };
+  }
 
-    // Renderiza el gráfico
+  private initializeChartAhorroRecupero() {
+    const options = this.getOptionsAhorroRecupero(false);
+    if (!options) return;
+
     this.chartAhorroRecupero = new ApexCharts(
       document.querySelector('#chartAhorroRecuperoRef') as HTMLElement,
       options
@@ -297,445 +730,436 @@ export class GraficosComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private updateChartAhorroRecupero() {
     if (!this.chartAhorroRecupero) {
-      console.error('El gráfico no está inicializado.');
+      this.initializeChartAhorroRecupero();
       return;
     }
-    // Obtener el valor actualizado de los meses y calcular el año de recupero
-    const recuperoInversionAnios = Math.round(this.recuperoInversionMeses / 12);
-    const primerAno =
-      this.periodoVeinteanalFlujoIngresosMonetariosCopia[0].year;
+    const flujoData = this.periodoVeinteanalFlujoIngresosMonetarios;
+    if (!flujoData || flujoData.length === 0) return;
+
+    const recuperoMeses = (this.recuperoInversionMeses != null && !isNaN(this.recuperoInversionMeses)) ? this.recuperoInversionMeses : 0;
+    const recuperoInversionAnios = Math.round(recuperoMeses / 12);
+    const primerAno = (flujoData[0] && flujoData[0].year != null && !isNaN(flujoData[0].year)) ? flujoData[0].year : new Date().getFullYear();
     const anoRecuperoInversion = primerAno + recuperoInversionAnios;
+    const anoStr = (anoRecuperoInversion != null && !isNaN(anoRecuperoInversion)) ? anoRecuperoInversion.toString() : '';
 
-    // Actualizar la anotación del año de recupero
-    const updatedAnnotations = {
-      xaxis: this.recuperoInversionMeses >= 0 ? [
-        {
-          x: anoRecuperoInversion.toString(),
-          strokeDashArray: 5, // Estilo de línea de puntos
-          borderColor: '#008ae3', // Color celeste oscuro
-          borderWidth: 2, // Grosor de la línea
-        },
-      ] : [],
-    };
+    const ahorroData = flujoData.map(item => item?.ahorroEnElectricidadTotalUsd ?? 0);
+    const ingresoData = flujoData.map(item => item?.ingresoPorInyeccionElectricaUsd ?? 0);
+    const categories = flujoData.map(item => (item?.year != null ? item.year.toString() : ''));
 
-    // Tomamos el primer valor de ahorro e ingreso
-    const primerAhorro =
-      this.sharedService.getAhorroAnualUsd() * 0.80;
-    const primerIngreso =
-      this.sharedService.getAhorroAnualUsd() * 0.20;
+    const inversionInicial = this.inversionInicial ?? this.sharedService.getCostoInstalacion?.() ?? 0;
+    const flujoCajaAcumulado = flujoData.reduce((acc, item, index) => {
+      const prevVal = index === 0 ? -inversionInicial : acc[index - 1];
+      const ahorro = item?.ahorroEnElectricidadTotalUsd ?? 0;
+      const ingreso = item?.ingresoPorInyeccionElectricaUsd ?? 0;
+      acc.push(prevVal + ahorro + ingreso);
+      return acc;
+    }, [] as number[]);
 
-    // Crear arrays con el valor constante del primer año para todo el periodo
-    const ahorroData = this.periodoVeinteanalFlujoIngresosMonetariosCopia.map(
-      (item, index, array) => {
-        if (index === 0) {
-          item.ahorroEnElectricidadTotalUsd = primerAhorro
-          return item.ahorroEnElectricidadTotalUsd
-        }
-        const prevItem = array[index - 1].ahorroEnElectricidadTotalUsd
-        array[index].ahorroEnElectricidadTotalUsd = prevItem * (1 - this.sharedService.getDegradacionPanel());
-        return array[index].ahorroEnElectricidadTotalUsd
-      }
-    );
-    const ingresoData = this.periodoVeinteanalFlujoIngresosMonetariosCopia.map(
-      (item, index, array) => {
-        if (index === 0) {
-          item.ingresoPorInyeccionElectricaUsd = primerIngreso
-          return item.ingresoPorInyeccionElectricaUsd
-        }
-        const prevItem = array[index - 1].ingresoPorInyeccionElectricaUsd
-        array[index].ingresoPorInyeccionElectricaUsd = prevItem * (1 - this.sharedService.getDegradacionPanel());
-        return array[index].ingresoPorInyeccionElectricaUsd
-      }
-    );
-    // Actualizar los datos y las anotaciones en el gráfico
+    const showAnnotation = recuperoMeses > 0 && !!anoStr && categories.includes(anoStr);
+
     this.chartAhorroRecupero.updateOptions({
       series: [
-        {
-          name: 'Ahorro por autoconsumo de energía',
-          data: ahorroData,
-          color: '#96c0b2',
-        },
-        {
-          name: 'Ingreso por excedente de energía',
-          data: ingresoData,
-          color: '#e4c58d',
-        },
-        {
-          name: 'Punto de recupero',
-          data: [''],
-          color: '#008ae3',
-        },
+        { name: 'Ahorro por autoconsumo', data: ahorroData },
+        { name: 'Ingreso por inyección', data: ingresoData },
+        { name: 'Flujo de caja acumulado', data: flujoCajaAcumulado },
       ],
-      chart: {
-        height: 350,
-        width: 470,
-        type: 'line', // Tipo de gráfico general
-        toolbar: {
-          show: false,
-        },
-        zoom: {
-          enabled: false,
-        },
-      },
-      stroke: {
-        curve: 'smooth',
-        colors: ['#96c0b2', '#e4c58d'], // Colores de las líneas reales
-        width: 3, // Grosor de las líneas
-      },
-      yaxis: {
-        min: 0, // Asegura que el eje Y comience desde 0
-        labels: {
-          formatter: (val: number): string => {
-            return val.toLocaleString('de-DE');
+      annotations: {
+        yaxis: [{ y: 0, borderColor: '#999', borderWidth: 1, strokeDashArray: 4 }],
+        xaxis: showAnnotation ? [
+          {
+            x: anoStr,
+            strokeDashArray: 5,
+            borderColor: '#008ae3',
+            borderWidth: 2,
+            label: {
+              text: `Recupero (~${recuperoInversionAnios} años)`,
+              style: {
+                fontSize: '10px',
+                fontFamily: 'sodo sans, sans-serif',
+                background: '#e8f4ff',
+                color: '#008ae3',
+              },
+            },
           },
-        },
-        title: {
-          text: 'USD',
-          style: {
-            fontSize: '12px',
-            fontFamily: 'sodo sans, sans-serif',
-          },
-        },
+        ] : [],
       },
-      grid: {
-        borderColor: '#f1f1f1',
-      },
-      tooltip: {
-        enabled: true,
-        theme: 'light',
-        y: {
-          formatter: (val: number) => {
-            const valorTruncado = Math.round(val); // Redondear hacia abajo para quitar los decimales
-            return `${valorTruncado.toLocaleString('de-DE')} USD/año`; // Formatear con puntos de miles y agregar el texto
-          },
-        },
-      },
-      annotations: updatedAnnotations,
     });
-
-    // Forzar la detección de cambios si es necesario
     this.cdr.detectChanges();
   }
 
-  private initializeChartEnergiaConsumo() {
-    const options = {
-      chart: {
-        type: 'bar',
-        height: 350,
-        width: 470,
-        endingShape: 'rounded',
-        background: 'transparent',
-        toolbar: {
-          show: false, // Eliminar el menú del gráfico
-        },
-      },
-      series: [
-        {
-          data: [this.consumoTotalAnual, this.yearlyEnergy],
-          name: 'Valores',
-        },
-      ],
-      colors: ['#96c0b2', '#e4c58d'], // Colores para las barras
-      plotOptions: {
-        bar: {
-          columnWidth: '50%',
-          distributed: true, // Diferenciar colores entre las barras
-        },
-      },
-      xaxis: {
-        categories: ['Consumo total anual', 'Generación Anual'], // Etiquetas en el eje X
-        labels: {
-          show: false, // Ocultar las etiquetas del eje X
-        },
-      },
-      yaxis: {
-        min: 0, // Asegura que el eje Y comience desde 0
-        title: {
-          text: 'kWh', // Mostrar "kWh" como título del eje Y
-          style: {
-            fontSize: '12px',
-            fontFamily: 'sodo sans, sans-serif',
-          },
-        },
-        labels: {
-          formatter: (val: number): string => {
-            return val.toLocaleString('de-DE'); // Formato para valores en el eje Y
-          },
-        },
-      },
-      dataLabels: {
-        enabled: true, // Habilitar los datos dentro de las columnas
-        style: {
-          colors: ['#6d6b6b'], // Cambiar el color del texto a gris
-          fontSize: '10px', // Tamaño de letra más pequeño que el predeterminado
-          fontFamily: 'inherit', // Mantener la fuente predeterminada
-        },
-        formatter: (val: number): string => {
-          // Formatear el valor para mostrar con puntos de miles y sin decimales
-          return val.toLocaleString('de-DE', {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-          });
-        },
-      },
-      tooltip: {
-        enabled: true,
-        theme: 'light',
-        y: {
-          formatter: (val: number) => {
-            // Formatear el valor para mostrar con puntos de miles y sin decimales
-            return val.toLocaleString('de-DE', {
-              minimumFractionDigits: 0,
-              maximumFractionDigits: 0,
-            });
-          },
-        },
-      },
-      fill: {
-        type: 'gradient',
-        gradient: {
-          shade: 'dark',
-          gradientToColors: ['#96c0b2', '#e4c58d'], // Colores de gradiente para cada columna
-          shadeIntensity: 1,
-          type: 'vertical', // Orientación vertical del gradiente
-          opacityFrom: 1, // Opacidad completa en la parte superior
-          opacityTo: 0.5, // Opacidad parcial (transparente) en la parte inferior
-          stops: [0, 100], // Inicio y fin del gradiente
-        },
-      },
-    };
-
-    // Renderizar el gráfico Sol-Luna
-    this.chartEnergiaConsumo = new ApexCharts(
-      document.querySelector('#chartSolLunaRef') as HTMLElement,
-      options
-    );
-    this.chartEnergiaConsumo.render();
-    this.cdr.detectChanges(); // Forzar detección de cambios en Angular
-  }
-
-  private updateChartEnergiaConsumo() {
-    if (this.chartEnergiaConsumo) {
-      this.chartEnergiaConsumo.updateOptions(
-        {
-          series: [
-            {
-              data: [this.consumoTotalAnual, this.yearlyEnergy],
-              name: [' valor'],
-            },
-          ],
-        },
-        false,
-        false
-      ); // Los dos últimos parámetros indican que no se debe sobrescribir toda la configuración ni redibujar el gráfico completo
-      this.cdr.detectChanges();
-    }
-  }
-
+  // ─────────────────────────────────────────────────
+  // GRÁFICA 4: Emisiones CO₂ evitadas (Anual, Comparativa, Acumulada y Velocímetro)
+  // ─────────────────────────────────────────────────
   private initializeChartEmisionesEvitadasAcumuladas() {
+    this.renderChartEmisiones();
+  }
+
+  private updateChartEmisionesEvitadasAcumuladas(): void {
+    this.renderChartEmisiones();
+  }
+
+  private getOptionsEmisionesVista(vista: 'anual' | 'comparativa' | 'acumulada' | 'gauge', forExport: boolean = false) {
     if (
       !this.periodoVeinteanalEmisionesGEIEvitadasOriginal ||
       this.periodoVeinteanalEmisionesGEIEvitadasOriginal.length === 0
     ) {
-      console.error(
-        'periodoVeinteanalEmisionesGEIEvitadasOriginal no está definido o está vacío'
-      );
+      return null;
+    }
+
+    const anioInicial = this.periodoVeinteanalEmisionesGEIEvitadasOriginal[0].year - 1;
+    const { categories, annualData, cumulativeData } = this.buildCO2Data(
+      this.periodoVeinteanalEmisionesGEIEvitadasOriginal,
+      anioInicial
+    );
+
+    const totalCO2Acumulado = cumulativeData[cumulativeData.length - 1];
+    const carbonOffsetAnual = this.sharedService.getCarbonOffSetTnAnual();
+    const factor = carbonOffsetAnual / (this.yearlyEnergy || 1);
+    const baseCO2 = parseFloat((this.consumoTotalAnual * factor).toFixed(2));
+
+    if (vista === 'anual') {
+      return {
+        series: [
+          {
+            name: 'CO₂ evitado anual',
+            data: annualData,
+          },
+        ],
+        chart: {
+          height: forExport ? 260 : 320,
+          width: forExport ? 500 : '100%',
+          type: 'area',
+          background: forExport ? '#ffffff' : 'transparent',
+          toolbar: { show: false },
+          zoom: { enabled: false },
+          animations: { enabled: !forExport },
+        },
+        colors: ['#5aaa8a'],
+        stroke: {
+          curve: 'smooth',
+          colors: ['#5aaa8a'],
+          width: 3,
+        },
+        fill: {
+          type: 'gradient',
+          gradient: {
+            shade: 'light',
+            type: 'vertical',
+            opacityFrom: 0.6,
+            opacityTo: 0.1,
+          },
+        },
+        dataLabels: { enabled: false },
+        markers: {
+          size: 0,
+          colors: ['#5aaa8a'],
+          strokeColors: '#fff',
+          strokeWidth: 2,
+          hover: { size: 6 },
+        },
+        xaxis: {
+          categories: categories,
+          labels: {
+            rotate: -45,
+            style: { fontSize: '10px' },
+          },
+        },
+        yaxis: {
+          title: {
+            text: 'Ton CO₂/año',
+            style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
+          },
+          labels: {
+            formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '0',
+          },
+        },
+        tooltip: {
+          enabled: !forExport,
+          theme: 'light',
+          y: {
+            formatter: (value: number) => (value != null && !isNaN(value)) ? `${value.toLocaleString('de-DE')} tCO₂ evitado` : '0 tCO₂ evitado',
+          },
+        },
+      };
+    } else if (vista === 'comparativa') {
+      const baseSeries = Array(categories.length).fill(baseCO2);
+      const realSeries = annualData.map(val => parseFloat(Math.max(0, baseCO2 - val).toFixed(2)));
+
+      return {
+        series: [
+          {
+            name: 'Emisiones sin solar',
+            data: baseSeries,
+          },
+          {
+            name: 'Emisiones con solar',
+            data: realSeries,
+          },
+        ],
+        chart: {
+          height: forExport ? 260 : 320,
+          width: forExport ? 500 : '100%',
+          type: 'area',
+          background: forExport ? '#ffffff' : 'transparent',
+          toolbar: { show: false },
+          zoom: { enabled: false },
+          animations: { enabled: !forExport },
+        },
+        colors: ['#c8c8c8', '#5aaa8a'],
+        stroke: {
+          curve: 'smooth',
+          width: [2, 3],
+        },
+        fill: {
+          type: 'gradient',
+          gradient: {
+            shade: 'light',
+            type: 'vertical',
+            opacityFrom: 0.5,
+            opacityTo: 0.1,
+          },
+        },
+        dataLabels: { enabled: false },
+        xaxis: {
+          categories: categories,
+          labels: {
+            rotate: -45,
+            style: { fontSize: '10px' },
+          },
+        },
+        yaxis: {
+          title: {
+            text: 'Ton CO₂/año',
+            style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
+          },
+          labels: {
+            formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '0',
+          },
+        },
+        legend: {
+          position: 'bottom',
+          fontSize: '11px',
+          fontFamily: 'sodo sans, sans-serif',
+        },
+        tooltip: {
+          enabled: !forExport,
+          theme: 'light',
+          shared: true,
+          y: {
+            formatter: (value: number) => (value != null && !isNaN(value)) ? `${value.toLocaleString('de-DE')} tCO₂/año` : '0 tCO₂/año',
+          },
+        },
+      };
+    } else if (vista === 'acumulada') {
+      return {
+        series: [
+          {
+            name: 'CO₂ evitado acumulado',
+            data: cumulativeData,
+          },
+        ],
+        chart: {
+          height: forExport ? 260 : 320,
+          width: forExport ? 500 : '100%',
+          type: 'area',
+          background: forExport ? '#ffffff' : 'transparent',
+          toolbar: { show: false },
+          zoom: { enabled: false },
+          animations: { enabled: !forExport },
+        },
+        colors: ['#5aaa8a'],
+        stroke: {
+          curve: 'smooth',
+          colors: ['#5aaa8a'],
+          width: 3,
+        },
+        fill: {
+          type: 'gradient',
+          gradient: {
+            shade: 'light',
+            type: 'vertical',
+            opacityFrom: 0.6,
+            opacityTo: 0.1,
+          },
+        },
+        dataLabels: { enabled: false },
+        markers: {
+          size: 0,
+          colors: ['#5aaa8a'],
+          strokeColors: '#fff',
+          strokeWidth: 2,
+          hover: { size: 6 },
+        },
+        xaxis: {
+          categories: categories,
+          labels: {
+            rotate: -45,
+            style: { fontSize: '10px' },
+          },
+        },
+        yaxis: {
+          title: {
+            text: 'Ton CO₂ acumuladas',
+            style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
+          },
+          labels: {
+            formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '0',
+          },
+        },
+        tooltip: {
+          enabled: !forExport,
+          theme: 'light',
+          y: {
+            formatter: (value: number) => (value != null && !isNaN(value)) ? `${value.toLocaleString('de-DE')} tCO₂ acumulado` : '0 tCO₂ acumulado',
+          },
+        },
+      };
+    } else if (vista === 'gauge') {
+      const totalBaseCO2_20Years = baseCO2 * (this.periodoVeinteanalEmisionesGEIEvitadasOriginal?.length || 1);
+      const percent = Math.min(100, Math.round((totalCO2Acumulado / (totalBaseCO2_20Years || 1)) * 100));
+
+      return {
+        series: [percent],
+        chart: {
+          type: 'radialBar',
+          height: forExport ? 260 : 320,
+          width: forExport ? 450 : '100%',
+          background: forExport ? '#ffffff' : 'transparent',
+          offsetY: -10,
+          animations: { enabled: !forExport },
+        },
+        plotOptions: {
+          radialBar: {
+            startAngle: -135,
+            endAngle: 135,
+            hollow: {
+              size: '70%',
+            },
+            track: {
+              background: '#e7e7e7',
+              strokeWidth: '97%',
+              margin: 5,
+            },
+            dataLabels: {
+              name: {
+                show: true,
+                label: 'Descarbonización',
+                color: '#555',
+                fontSize: '14px',
+                fontFamily: 'sodo sans, sans-serif',
+                offsetY: 20
+              },
+              value: {
+                show: true,
+                fontSize: '32px',
+                fontFamily: 'sodo sans, sans-serif',
+                color: '#5aaa8a',
+                fontWeight: 'bold',
+                offsetY: -20,
+                formatter: (val: number) => `${val != null && !isNaN(val) ? val : 0}%`
+              }
+            }
+          }
+        },
+        fill: {
+          type: 'gradient',
+          gradient: {
+            shade: 'dark',
+            type: 'horizontal',
+            shadeIntensity: 0.5,
+            gradientToColors: ['#5aaa8a'],
+            inverseColors: true,
+            opacityFrom: 1,
+            opacityTo: 1,
+            stops: [0, 100]
+          }
+        },
+        colors: ['#e4c58d'],
+        stroke: {
+          lineCap: 'round'
+        },
+        subtitle: {
+          text: `Evitas el ${percent}% de tus emisiones eléctricas totales`,
+          align: 'center',
+          style: {
+            fontSize: '11px',
+            fontFamily: 'sodo sans, sans-serif',
+            color: '#555',
+          },
+        },
+      };
+    }
+    return null;
+  }
+
+  private renderChartEmisiones() {
+    if (this.chartEmisiones) {
+      try {
+        this.chartEmisiones.destroy();
+      } catch (e) {
+        console.error('Error destroying chartEmisiones', e);
+      }
+    }
+
+    if (
+      !this.periodoVeinteanalEmisionesGEIEvitadasOriginal ||
+      this.periodoVeinteanalEmisionesGEIEvitadasOriginal.length === 0
+    ) {
       return;
     }
 
-    // Añadir el punto inicial en 0 para el primer año
-    const modifiedData = [
-      { year: 2024, emisionesTonCO2: 0 },
-      ...this.periodoVeinteanalEmisionesGEIEvitadasOriginal,
-    ];
+    const anioInicial = this.periodoVeinteanalEmisionesGEIEvitadasOriginal[0].year - 1;
+    const { cumulativeData } = this.buildCO2Data(
+      this.periodoVeinteanalEmisionesGEIEvitadasOriginal,
+      anioInicial
+    );
 
-    // Calcula las diferencias y simula la degradación
-    const seriesData = modifiedData.map((item, index, array) => {
-      if (index === 0) {
-        return {
-          year: item.year,
-          diferencia: 0, // Sin degradación en el primer año
-        };
-      }
-      if (index === 1) {
-        return {
-          year: item.year,
-          diferencia: this.sharedService.getCarbonOffSetTnAnual(),
-        };
-      }
-      const prevItem = array[index - 1];
-      const degradacion = this.sharedService.getDegradacionPanel();
-      const emisionesReducidas = Math.abs(
-        prevItem.emisionesTonCO2 - item.emisionesTonCO2 * degradacion
-      );
-      return {
-        year: item.year,
-        diferencia: emisionesReducidas,
-      };
-    });
+    const totalCO2Acumulado = cumulativeData[cumulativeData.length - 1];
+    const anos = cumulativeData.length - 1; // 20 años
+    const arbolesequivalentes = Math.round(totalCO2Acumulado / (0.02 * anos));
 
-    // Extrae los años y el acumulado para el gráfico
-    const categories = seriesData.map((d) => d.year.toString());
+    this.textoArboles = `Equivale a absorber el CO<sub>2</sub> de ≈ <strong>${arbolesequivalentes.toLocaleString('de-DE')}</strong> árboles en ${anos} años`;
 
-    const data = seriesData.map((d) => d.diferencia);
-    // Configura el gráfico
-    const options = {
-      series: [
-        {
-          name: 'Emisiones CO₂ Acumuladas',
-          data: data,
-          color: '#96c0b2',
-        },
-      ],
-      chart: {
-        height: 350,
-        width: 470,
-        type: 'area',
-        className: 'chart-specific-1',
-        toolbar: {
-          show: false,
-        },
-        zoom: {
-          enabled: false,
-        },
-      },
-      dataLabels: {
-        enabled: false,
-      },
-      stroke: {
-        curve: 'smooth',
-        colors: ['#96c0b2'],
-        width: 3,
-      },
-      fill: {
-        type: 'gradient',
-        gradient: {
-          shade: 'dark',
-          gradientToColors: ['#e4c58d'],
-          shadeIntensity: 0.8,
-          type: 'vertical',
-          opacityFrom: 0.8,
-          opacityTo: 0.3,
-          stops: [0, 100, 100, 100],
-        },
-      },
-      markers: {
-        size: 0,
-        colors: ['#96c0b2'],
-        strokeColors: '#fff',
-        strokeWidth: 2,
-        hover: {
-          size: 7,
-        },
-      },
-      xaxis: {
-        categories: categories,
-        title: {
-          text: 'Año',
-          style: {
-            fontSize: '12px',
-            fontFamily: 'sodo sans, sans-serif',
-          },
-          offsetY: -25, // Ajusta la distancia entre el texto "Año" y el gráfico
-        },
-      },
-      yaxis: {
-        min: 0,
-        labels: {
-          formatter: (val: number): string => {
-            return val.toLocaleString('de-DE');
-          },
-        },
-        title: {
-          text: 'Ton CO₂',
-          style: {
-            fontSize: '12px',
-            fontFamily: 'sodo sans, sans-serif',
-          },
-        },
-      },
+    const options = this.getOptionsEmisionesVista(this.vistaCO2, false);
+    if (!options) return;
 
-      tooltip: {
-        enabled: true,
-        theme: 'light',
-        x: {
-          format: 'yyyy',
-        },
-        y: {
-          formatter: (value: number) => {
-            return `${value.toLocaleString('de-DE', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })} tCO₂/año`;
-          },
-        },
-        marker: {
-          show: false,
-        },
-        style: {
-          fontSize: '12px',
-          fontFamily: 'sodo sans, sans-serif',
-        },
-      },
-    };
-
-    // Inicializa y renderiza el gráfico
     this.chartEmisiones = new ApexCharts(
       document.querySelector('#emisionesChartRef') as HTMLElement,
       options
     );
-
     this.chartEmisiones.render();
   }
 
-  private updateChartEmisionesEvitadasAcumuladas(): void {
-    // Copiar los datos originales para trabajar con ellos sin mutar el original
-    this.periodoVeinteanalEmisionesGEIEvitadasCopia = JSON.parse(
-      JSON.stringify(this.periodoVeinteanalEmisionesGEIEvitadasOriginal)
-    );
+  /**
+   * Construye los datos de CO₂ evitado anual y acumulado año a año
+   * a partir de la tasa anual (carbonOffSetTnAnual) y la degradación del panel.
+   */
+  private buildCO2Data(
+    source: { year: number; emisionesTonCO2: number }[],
+    anioInicial: number
+  ): { categories: string[]; annualData: number[]; cumulativeData: number[] } {
+    const carbonOffSetAnual = this.sharedService.getCarbonOffSetTnAnual() || 0;
+    const degradacion = this.sharedService.getDegradacionPanel() || 0.005;
+    const totalYears = source ? source.length : 0;
 
-    // Calcular el factor de proporcionalidad basado en el nuevo valor de carbon offset
-    const factor =
-      this.sharedService.getCarbonOffSetTnAnual() / this.carbonOffSetInicialTon;
+    const startYr = (anioInicial != null && !isNaN(anioInicial)) ? anioInicial : (new Date().getFullYear() - 1);
+    const categories: string[] = [startYr.toString()];
+    const annualData: number[] = [0];
+    const cumulativeData: number[] = [0];
 
-    // Aplicar el factor a las emisiones para recalcularlas proporcionalmente
-    const seriesData = this.periodoVeinteanalEmisionesGEIEvitadasCopia.map(
-      (item, index) => {
-        if (index === 0) {
-          return {
-            year: item.year,
-            emisionesTonCO2: 0,
-          };
-        }
-        if (index === 1) {
-          return {
-            year: item.year,
-            emisionesTonCO2: this.sharedService.getCarbonOffSetTnAnual(),
-          };
-        }
-        return {
-          year: item.year,
-          emisionesTonCO2: item.emisionesTonCO2 * factor, 
-        };
-      }
-    );
+    let acumulado = 0;
+    let anualActual = carbonOffSetAnual;
+    for (let i = 0; i < totalYears; i++) {
+      acumulado += anualActual;
+      const yr = (source && source[i] && source[i].year != null && !isNaN(source[i].year))
+        ? source[i].year
+        : (startYr + 1 + i);
+      categories.push(yr.toString());
+      annualData.push(parseFloat((anualActual || 0).toFixed(2)));
+      cumulativeData.push(parseFloat((acumulado || 0).toFixed(2)));
+      anualActual *= (1 - degradacion);
+    }
 
-    // Extraer los años y los valores recalculados para el gráfico
-    const categories = seriesData.map((d) => d.year.toString());
-    const data = seriesData.map((d) => d.emisionesTonCO2);
-    // Actualiza el gráfico con los nuevos datos
-    this.chartEmisiones.updateOptions({
-      series: [
-        {
-          name: 'Emisiones CO₂ Acumuladas',
-          data: data,
-          color: '#96c0b2',
-        },
-      ],
-      xaxis: {
-        categories: categories,
-      },
-    });
-    this.cdr.detectChanges();
+    return { categories, annualData, cumulativeData };
   }
 }

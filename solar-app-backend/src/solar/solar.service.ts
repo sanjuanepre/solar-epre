@@ -5,6 +5,7 @@ import { CalculadoraService } from '../calculadora/calculadora.service';
 import { SolarData } from '../interfaces/solar-data/solar-data.interface';
 import { PanelConfig } from '../interfaces/panel-config/panel-config.interface';
 import { ResultadosDto } from '../interfaces/resultados-dto/resultados-dto.interface';
+import { SolarDataLayersResponse } from './dto/solar-data-layers.interface';
 
 @Injectable()
 export class SolarService {
@@ -102,6 +103,16 @@ export class SolarService {
       solarDataApi.solarPotential,
       dto.panelsSelected,
     );
+
+    // Si el tipo de estructura es 'optimo' (inclinación de 30° al Norte), aplicamos el factor de transposición
+    if (dto.tipoEstructura === 'optimo') {
+      const roofFactor = this.calculateRoofFactor(solarDataApi.solarPotential, dto.panelsSelected);
+      solarPanelConfig.yearlyEnergyDcKwh = (solarPanelConfig.yearlyEnergyDcKwh || 0) / (roofFactor || 1);
+      if (isNaN(solarPanelConfig.yearlyEnergyDcKwh)) {
+        solarPanelConfig.yearlyEnergyDcKwh = 0;
+      }
+    }
+
    /*  console.log(
       'Configuración de paneles calculada:',
       JSON.stringify(solarPanelConfig, null, 2),
@@ -109,9 +120,17 @@ export class SolarService {
 
     const yearlysAnualConfigurations =
       solarDataApi.solarPotential.solarPanelConfigs.map((item: any) => {
+        let energyDc = item.yearlyEnergyDcKwh || 0;
+        if (dto.tipoEstructura === 'optimo') {
+          const factor = this.calculateRoofFactor(solarDataApi.solarPotential, item.panelsCount);
+          energyDc = energyDc / (factor || 1);
+          if (isNaN(energyDc)) {
+            energyDc = 0;
+          }
+        }
         return {
           panelsCount: item.panelsCount,
-          yearlyEnergyDcKwh: item.yearlyEnergyDcKwh,
+          yearlyEnergyDcKwh: energyDc,
         };
       });
     // console.log('Configuraciones anuales:', JSON.stringify(yearlysAnualConfigurations, null, 2));
@@ -146,6 +165,9 @@ export class SolarService {
       dto,
     );
     // console.log('Resultado del cálculo de ahorros:', JSON.stringify(result, null, 2));
+
+    const roofFactor = this.calculateRoofFactor(solarDataApi.solarPotential, dto.panelsSelected);
+    result.roofFactor = roofFactor;
 
     return result;
   }
@@ -311,4 +333,137 @@ export class SolarService {
       adjustedSolarDataNearby,
     );
   }
+
+  /**
+   * Obtiene las URLs de las capas de datos solares (GeoTIFFs) desde la Google Solar API.
+   * Incluye: flujo anual, flujo mensual, máscara de edificio, DSM, etc.
+   * Las URLs son temporalmente firmadas y deben utilizarse de inmediato o cachearse en backend.
+   */
+  async getSolarDataLayers(
+    latitude: number,
+    longitude: number,
+    radiusMeters: number = 30,
+  ): Promise<SolarDataLayersResponse> {
+    if (isNaN(latitude) || isNaN(longitude)) {
+      throw new HttpException(
+        'Coordenadas inválidas',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const apiKey = process.env.GOOGLE_API_KEY;
+
+    const params = new URLSearchParams({
+      'location.latitude': latitude.toFixed(5),
+      'location.longitude': longitude.toFixed(5),
+      radiusMeters: radiusMeters.toString(),
+      view: 'FULL_LAYERS',
+      key: apiKey,
+    });
+
+    const url = `https://solar.googleapis.com/v1/dataLayers:get?${params}`;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-cache',
+        signal: controller.signal,
+        headers: {
+          Pragma: 'no-cache',
+          'Cache-Control': 'no-cache',
+        },
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        let errorMsg = 'Error desconocido';
+        try {
+          const errorContent = await response.json();
+          errorMsg = errorContent.error?.message ?? JSON.stringify(errorContent);
+        } catch {
+          errorMsg = `HTTP ${response.status}`;
+        }
+        console.warn(`[SolarService] dataLayers:get falló (${errorMsg}). Retornando mock.`);
+        return this.getMockDataLayers(latitude, longitude);
+      }
+
+      const data: SolarDataLayersResponse = await response.json();
+      return data;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      console.warn(`[SolarService] Error en dataLayers:get (${error.message}). Retornando mock.`);
+      return this.getMockDataLayers(latitude, longitude);
+    }
+  }
+
+  /**
+   * Datos de fallback para desarrollo local o cuando la API de Solar no está disponible.
+   */
+  private getMockDataLayers(latitude: number, longitude: number): SolarDataLayersResponse {
+    return {
+      imageryDate: { year: 2023, month: 6, day: 15 },
+      imageryProcessedDate: { year: 2024, month: 1, day: 10 },
+      dsmUrl: null,
+      rgbUrl: null,
+      maskUrl: null,
+      annualFluxUrl: null,
+      monthlyFluxUrl: null,
+      hourlyShadeUrls: [],
+      imageryQuality: 'LOW',
+      isMock: true,
+    };
+  }
+
+  /**
+   * Calcula el factor de captación anual relativo del tejado (F_techo) a partir de los pitch y azimuth
+   * de cada segmento de tejado en la configuración de paneles de referencia, para latitud -31.5° (San Juan).
+   */
+  private calculateRoofFactor(solarPotential: any, panelsSelected: number): number {
+    if (!solarPotential || !solarPotential.solarPanelConfigs || solarPotential.solarPanelConfigs.length === 0) {
+      return 1.0;
+    }
+
+    const configs = solarPotential.solarPanelConfigs;
+    let closestConfig = configs[0];
+    let minDiff = Math.abs((configs[0].panelsCount || 0) - (panelsSelected || 0));
+
+    for (const config of configs) {
+      const diff = Math.abs((config.panelsCount || 0) - (panelsSelected || 0));
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestConfig = config;
+      }
+    }
+
+    if (!closestConfig || !closestConfig.roofSegmentSummaries || closestConfig.roofSegmentSummaries.length === 0) {
+      return 1.0;
+    }
+
+    let totalPanels = 0;
+    let weightedFactorSum = 0;
+
+    closestConfig.roofSegmentSummaries.forEach((segment: any) => {
+      const pitchRad = (segment.pitchDegrees || 0) * Math.PI / 180;
+      const azimuthRad = (segment.azimuthDegrees || 0) * Math.PI / 180;
+
+      // Inclinación óptima anual es 30° en San Juan
+      const pitchOptRad = 30 * Math.PI / 180;
+
+      // Pérdidas por desviación de inclinación y de orientación (azimuth)
+      const loss = 1.2 * (1 - Math.cos(pitchRad - pitchOptRad)) + 
+                   0.8 * Math.pow(Math.sin(pitchRad), 2) * (1 - Math.cos(azimuthRad));
+
+      const segmentFactor = Math.max(0.5, 1 - loss);
+
+      weightedFactorSum += segmentFactor * (segment.panelsCount || 0);
+      totalPanels += (segment.panelsCount || 0);
+    });
+
+    const factor = totalPanels > 0 ? (weightedFactorSum / totalPanels) : 1.0;
+    return isNaN(factor) || factor <= 0 ? 1.0 : factor;
+  }
 }
+

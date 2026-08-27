@@ -12,8 +12,8 @@ export class RecalculateService {
    
    }
 
-  async recalculateyearlyEnergyACkWh(panels400WCount: number, factorPotencia: number): Promise<boolean> {
-    return await this.solarApiService.recalculate(panels400WCount, factorPotencia);
+  async recalculateyearlyEnergyACkWh(panelsCount: number, factorPotencia: number): Promise<boolean> {
+    return await this.solarApiService.recalculate(panelsCount, factorPotencia);
   }
 
 }

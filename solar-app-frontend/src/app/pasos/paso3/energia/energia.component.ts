@@ -27,6 +27,7 @@ export class EnergiaComponent implements OnInit, AfterViewInit, OnDestroy {
   @Output() recalculoTerminado: EventEmitter<boolean> =
     new EventEmitter<boolean>();
   factorPotencia: number = 1;
+  tipoEstructura: 'coplanar' | 'optimo' = 'coplanar';
 
   constructor(
     private sharedService: SharedService,
@@ -36,6 +37,13 @@ export class EnergiaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     console.log('ngOnInit: Inicializando componente EnergiaComponent');
+    
+    this.sharedService.tipoEstructura$
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((tipo) => {
+        this.tipoEstructura = tipo || 'coplanar';
+        this.cdr.detectChanges();
+      });
     console.log(
       'Valor inicial de yearlyEnergyAckWhInitial:',
       this.yearlyEnergyAckWhInitial
@@ -70,7 +78,7 @@ export class EnergiaComponent implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     console.log('ngAfterViewInit: La vista ha sido inicializada');
 
-    // Nos suscribimos al observable de potencia de instalación
+    // Nos suscribimos al observable de potencia de instalación (cantidad de paneles)
     this.sharedService.panelsCountSelected$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((panelsCountSelected) => {
@@ -78,7 +86,18 @@ export class EnergiaComponent implements OnInit, AfterViewInit, OnDestroy {
           'Suscripción panelsCountSelected$: Recibido nueva potencia:',
           panelsCountSelected
         );
-        this.updateYearlyEnergy(); // Llamamos a la función de actualización de energía
+        this.updateYearlyEnergy();
+      });
+
+    // Nos suscribimos al observable de capacidad de panel para actualizar la energía al cambiar la potencia
+    this.sharedService.panelCapacityW$
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((panelCapacity) => {
+        console.log(
+          'Suscripción panelCapacityW$: Recibido nueva capacidad:',
+          panelCapacity
+        );
+        this.updateYearlyEnergy();
       });
   }
 
@@ -94,11 +113,11 @@ export class EnergiaComponent implements OnInit, AfterViewInit, OnDestroy {
   private async updateYearlyEnergy(): Promise<void> {
     if (!this.sharedService.getIsLoading()) this.recalculoIniciado.emit(true);
     const panelCapacity = this.sharedService.getPanelCapacityW();
-    let panels400WCount = this.sharedService.getPanelsSelected();
-    const factorPotencia = 400 / 400;
+    let panelsCount = this.sharedService.getPanelsSelected();
+    const factorPotencia = panelCapacity / 400;
 
     await this.recalculateService
-      .recalculateyearlyEnergyACkWh(panels400WCount, factorPotencia)
+      .recalculateyearlyEnergyACkWh(panelsCount, factorPotencia)
       .then((recalculoOk) => {
         this.cdr.detectChanges();
         console.log('recalculoOk:', recalculoOk);

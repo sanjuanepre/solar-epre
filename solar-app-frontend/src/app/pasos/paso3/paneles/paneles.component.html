@@ -33,14 +33,20 @@
 
     <div class="potencia-paneles">
       <h3 id="titulo-potencia">Potencia de paneles</h3>
-      <div class="seleccion-potencia" >
-        <select id="power-select" [formControl]="potenciaPanelesControl">
-          <option value="400" selected>400 W</option>
-          <!-- <option value="450">450 W</option>
-          <option value="500">500 W</option>
-          <option value="600">600 W</option>
-          <option value="700">700 W</option> -->
-        </select>
+      <div class="seleccion-potencia">
+        <div class="power-custom-select" [class.open]="isPowerDropdownOpen" (click)="togglePowerDropdown($event)">
+          <div class="power-select-trigger">
+            <span>{{ getPowerLabel() }}</span>
+            <span class="power-arrow" [class.rotated]="isPowerDropdownOpen">&#9660;</span>
+          </div>
+          <div class="power-options" *ngIf="isPowerDropdownOpen">
+            <div class="power-option" *ngFor="let opt of powerOptions"
+              [class.selected]="potenciaPanelesControl.value === opt.value"
+              (click)="selectPower(opt.value, $event)">
+              {{ opt.label }}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

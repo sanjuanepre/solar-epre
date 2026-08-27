@@ -10,6 +10,16 @@ import { Router } from '@angular/router';
   providedIn: 'root',
 })
 export class SharedService {
+  // Catálogo de dimensiones físicas de paneles por potencia (metros)
+  private static readonly PANEL_DIMENSIONS: Record<number, DimensionPanel> = {
+    400: { height: 1.722, width: 1.134 },
+    450: { height: 1.903, width: 1.134 },
+    500: { height: 2.094, width: 1.134 },
+    550: { height: 2.278, width: 1.134 },
+    600: { height: 2.278, width: 1.134 },
+    700: { height: 2.384, width: 1.303 },
+  };
+
   private maxPanelsPerMaxPotenciaSubject = new BehaviorSubject<number>(0);
   maxPanelsPerMaxPotencia$ = this.maxPanelsPerMaxPotenciaSubject.asObservable();
 
@@ -22,7 +32,8 @@ export class SharedService {
   private inversionUsdSubject = new BehaviorSubject<number>(0);
   inversionUsd$ = this.inversionUsdSubject.asObservable();
 
-  private dimensionPanel!: { height: number; width: number };
+  private dimensionPanelSubject = new BehaviorSubject<DimensionPanel>({ height: 1.722, width: 1.134 });
+  dimensionPanel$ = this.dimensionPanelSubject.asObservable();
   private areaPanelsSelectedSubject = new BehaviorSubject<number>(0);
   areaPanelsSelected$ = this.areaPanelsSelectedSubject.asObservable();
 
@@ -36,6 +47,11 @@ export class SharedService {
   YearlyAnualConfigurations$ =
     this.yearlysAnualConfigurationSubject.asObservable();
 
+  private termsAcceptedSubject = new BehaviorSubject<boolean>(
+    localStorage.getItem('termsAccepted') === 'true'
+  );
+  termsAccepted$ = this.termsAcceptedSubject.asObservable();
+
   private tutorialShownSubject = new BehaviorSubject<boolean>(false);
   tutorialShown$ = this.tutorialShownSubject.asObservable();
   private predefinedCoordinatesSubject = new BehaviorSubject<boolean>(false);
@@ -43,6 +59,13 @@ export class SharedService {
   nearbyLocation: any;
   private isLoadingSubject = new BehaviorSubject<boolean>(false);
   isLoading$ = this.isLoadingSubject.asObservable();
+
+  private sidebarCollapsedSubject = new BehaviorSubject<boolean>(false);
+  sidebarCollapsed$ = this.sidebarCollapsedSubject.asObservable();
+
+  setSidebarCollapsed(collapsed: boolean) {
+    this.sidebarCollapsedSubject.next(collapsed);
+  }
   private panelsCountSelectedSubject = new BehaviorSubject<number>(0);
   panelsCountSelected$ = this.panelsCountSelectedSubject.asObservable();
   private plazoInversionSubject = new BehaviorSubject<number>(0);
@@ -83,6 +106,9 @@ export class SharedService {
   private tarifaIntercambioUsdkWhSubject = new BehaviorSubject<number>(0);
   tarifaIntercambioUsdkWh$ = this.tarifaIntercambioUsdkWhSubject.asObservable();
 
+  private tipoEstructuraSubject = new BehaviorSubject<'coplanar' | 'optimo'>('coplanar');
+  tipoEstructura$ = this.tipoEstructuraSubject.asObservable();
+
   private initialState = {
     tarifaContratada: '',
     yearlysAnualConfigurations: [],
@@ -93,7 +119,8 @@ export class SharedService {
     costoInstalacion: 0,
     plazoInversion: 0,
     tarifaIntercambioUsdkWh: 0,
-    potenciaMaxAsignadaW: 0
+    potenciaMaxAsignadaW: 0,
+    tipoEstructura: 'coplanar' as 'coplanar' | 'optimo'
   };
 
 
@@ -112,6 +139,15 @@ export class SharedService {
     const tarifa = this.tarifaContratadaSubject.getValue();
     console.log('Obteniendo tarifa contratada: ', tarifa);
     return tarifa;
+  }
+
+  setTermsAccepted(value: boolean): void {
+    localStorage.setItem('termsAccepted', value ? 'true' : 'false');
+    this.termsAcceptedSubject.next(value);
+  }
+
+  getTermsAccepted(): boolean {
+    return this.termsAcceptedSubject.getValue() || localStorage.getItem('termsAccepted') === 'true';
   }
 
   setTutorialShown(value: boolean): void {
@@ -179,12 +215,19 @@ export class SharedService {
   setPanelCapacityW(value: number) {
     console.log('Seteando capacidad de panel en W: ', value);
     this.panelCapacityWSubject.next(value);
+    // Sincronizar dimensiones del panel con la potencia seleccionada
+    const dimension = this.getDimensionByCapacity(value);
+    this.setDimensionPanels(dimension);
   }
 
   getPanelCapacityW(): number {
     const capacity = this.panelCapacityWSubject.getValue();
     console.log('Obteniendo capacidad de panel en W: ', capacity);
     return capacity;
+  }
+
+  getDimensionByCapacity(watts: number): DimensionPanel {
+    return SharedService.PANEL_DIMENSIONS[watts] || SharedService.PANEL_DIMENSIONS[400];
   }
 
   setYearlyEnergyAckWh(value: number): void {
@@ -348,16 +391,13 @@ export class SharedService {
     return value;
   }
   getDimensionPanel(): DimensionPanel {
-    const dimension = this.dimensionPanel || {
-      height: 1.879,
-      width: 1.045,
-    };
+    const dimension = this.dimensionPanelSubject.getValue();
     console.log('Obteniendo dimensiones del panel:', dimension);
     return dimension;
   }
   setDimensionPanels(dimensionPanel: DimensionPanel) {
     console.log('Estableciendo dimensiones del panel:', dimensionPanel);
-    this.dimensionPanel = dimensionPanel;
+    this.dimensionPanelSubject.next(dimensionPanel);
   }
 
   setYearlysAnualConfigurations(
@@ -455,8 +495,8 @@ export class SharedService {
     // Redirigir al inicio de la aplicación
     // Recargar la página para asegurar un estado limpio
     // redirigir a pasos/1 y recargar mapa
-    this.router.navigate(['/'], { replaceUrl: true }).then(() => {
-      console.log('Redirigiendo al inicio de la aplicación');
+    this.router.navigate(['/pasos/1'], { replaceUrl: true }).then(() => {
+      console.log('Redirigiendo al inicio del cálculo (/pasos/1)');
     });
   }
 
@@ -477,6 +517,17 @@ export class SharedService {
   
   getMaxPanelsPerMaxPotencia() {
     return this.maxPanelsPerMaxPotenciaSubject.getValue();
+  }
+
+  setTipoEstructura(value: 'coplanar' | 'optimo') {
+    console.log('Estableciendo tipo de estructura:', value);
+    this.tipoEstructuraSubject.next(value);
+  }
+
+  getTipoEstructura(): 'coplanar' | 'optimo' {
+    const value = this.tipoEstructuraSubject.getValue();
+    console.log('Obteniendo tipo de estructura:', value);
+    return value;
   }
 
 }
