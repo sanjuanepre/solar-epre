@@ -20,10 +20,26 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
   const formatNumero = (val: number, dec = 1) =>
     new Intl.NumberFormat('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(val || 0);
 
-  const hasCharts = Boolean(
+  const hasFinancialPage = Boolean(
     data.chartImages &&
-    (data.chartImages.energiaConsumo || data.chartImages.ahorroRecupero || data.chartImages.emisiones)
+    (data.chartImages.energiaConsumo || data.chartImages.donutDistribucion || data.chartImages.ahorroRecupero)
   );
+
+  const hasEnvironmentalPage = Boolean(
+    data.chartImages &&
+    (data.chartImages.emisionesAnual ||
+     data.chartImages.emisionesComparativa ||
+     data.chartImages.emisionesAcumulada ||
+     data.chartImages.emisionesGauge ||
+     data.chartImages.emisiones)
+  );
+
+  let totalPages = 1;
+  if (hasFinancialPage && hasEnvironmentalPage) {
+    totalPages = 3;
+  } else if (hasFinancialPage || hasEnvironmentalPage) {
+    totalPages = 2;
+  }
 
   return `
 <!DOCTYPE html>
@@ -272,8 +288,40 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
       line-height: 1.2;
     }
 
-    /* SECCION GRAFICAS - PAGINA 2 */
-    .chart-card {
+    /* SECCION GRAFICAS - ESTILOS */
+    .charts-grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .chart-card-half {
+      background-color: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      display: flex;
+      flex-direction: column;
+    }
+    .chart-card-half .chart-img-wrapper {
+      padding: 6px 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex: 1;
+    }
+    .chart-card-half .chart-img-wrapper img {
+      width: 100%;
+      max-width: 320px;
+      max-height: 180px;
+      height: auto;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .chart-card-full {
       background-color: #ffffff;
       border: 1px solid #e2e8f0;
       border-radius: 8px;
@@ -281,6 +329,22 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
       overflow: hidden;
       box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
+    .chart-card-full .chart-img-wrapper {
+      padding: 6px 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .chart-card-full .chart-img-wrapper img {
+      width: 100%;
+      max-width: 680px;
+      max-height: 205px;
+      height: auto;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+    }
+
     .chart-card-header {
       background-color: #1e293b;
       color: #ffffff;
@@ -302,22 +366,25 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
       justify-content: center;
       font-size: 7.5pt;
     }
-    .chart-img-wrapper {
-      padding: 6px 12px;
-      text-align: center;
-      background-color: #ffffff;
+
+    /* BANNER DESTACADO DE ARBOLES */
+    .arboles-banner {
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      border: 1px solid #86efac;
+      border-left: 5px solid #10b981;
+      border-radius: 8px;
+      padding: 9px 14px;
+      margin-bottom: 10px;
       display: flex;
-      justify-content: center;
       align-items: center;
+      gap: 10px;
+      font-size: 9.5pt;
+      color: #166534;
     }
-    .chart-img-wrapper img {
-      width: 100%;
-      max-width: 680px;
-      max-height: 225px;
-      height: auto;
-      object-fit: contain;
-      display: block;
-      margin: 0 auto;
+    .arboles-banner svg {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
     }
   </style>
 </head>
@@ -336,7 +403,7 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
       </div>
       <div class="banner-meta">
         <div class="id-badge">ID: ${uniqueId}</div>
-        <div class="date-badge">Fecha: ${fechaStr}</div>
+        <div class="date-badge">Página 1 de ${totalPages}</div>
       </div>
     </div>
 
@@ -437,9 +504,9 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
   </div>
 
   ${
-    hasCharts
+    hasFinancialPage
       ? `
-  <!-- PÁGINA 2: GRÁFICAS -->
+  <!-- PÁGINA 2: ANÁLISIS ENERGÉTICO Y FINANCIERO -->
   <div class="page page-break">
     <div class="top-logo-bar">
       <img src="${HEADER_LOGO_BASE64}" alt="EPRE - Generacion Solar Distribuida San Juan" />
@@ -447,38 +514,58 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
 
     <div class="banner-header">
       <div class="banner-title">
-        <h1>Gráficas y Proyecciones Solar</h1>
-        <p>Análisis visual de energía, flujo financiero e impacto ambiental</p>
+        <h1>Análisis Energético y Proyección Financiera</h1>
+        <p>Distribución del flujo de energía y balance económico a 20 años</p>
       </div>
       <div class="banner-meta">
         <div class="id-badge">ID: ${uniqueId}</div>
-        <div class="date-badge">Página 2 de 2</div>
+        <div class="date-badge">Página 2 de ${totalPages}</div>
       </div>
     </div>
 
-    ${
-      data.chartImages?.energiaConsumo
-        ? `
-    <div class="chart-card">
-      <div class="chart-card-header">
-        <span class="badge">1</span>
-        <span>Energía consumida y generada (kWh/año)</span>
+    <!-- Fila 1: 2 Gráficas lado a lado (Energía y Donut) -->
+    <div class="charts-grid-2col">
+      ${
+        data.chartImages?.energiaConsumo
+          ? `
+      <div class="chart-card-half">
+        <div class="chart-card-header">
+          <span class="badge">1</span>
+          <span>Energía consumida y generada</span>
+        </div>
+        <div class="chart-img-wrapper">
+          <img src="${data.chartImages.energiaConsumo}" alt="Gráfica Energía Consumida y Generada" />
+        </div>
       </div>
-      <div class="chart-img-wrapper">
-        <img src="${data.chartImages.energiaConsumo}" alt="Gráfica Energía Consumida y Generada" />
-      </div>
-    </div>
-    `
-        : ''
-    }
+      `
+          : ''
+      }
 
+      ${
+        data.chartImages?.donutDistribucion
+          ? `
+      <div class="chart-card-half">
+        <div class="chart-card-header">
+          <span class="badge">2</span>
+          <span>Distribución de energía anual</span>
+        </div>
+        <div class="chart-img-wrapper">
+          <img src="${data.chartImages.donutDistribucion}" alt="Gráfica Distribución de Energía Anual" />
+        </div>
+      </div>
+      `
+          : ''
+      }
+    </div>
+
+    <!-- Fila 2: Gráfica Full Width Ahorros y Flujo 20 años -->
     ${
       data.chartImages?.ahorroRecupero
         ? `
-    <div class="chart-card">
+    <div class="chart-card-full">
       <div class="chart-card-header">
-        <span class="badge">2</span>
-        <span>Ahorros anuales y punto de recupero de la inversión</span>
+        <span class="badge">3</span>
+        <span>Ahorros anuales y flujo de caja acumulado (20 años)</span>
       </div>
       <div class="chart-img-wrapper">
         <img src="${data.chartImages.ahorroRecupero}" alt="Gráfica Ahorros Anuales y Recupero" />
@@ -488,21 +575,116 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
         : ''
     }
 
+    <div class="footer-container" style="margin-top: 10px;">
+      <div class="footer-info">
+        <strong>E.P.R.E. San Juan</strong> - Calculadora Solar Distribuida
+        <a class="footer-url" href="https://solar.epresanjuan.gob.ar" target="_blank">https://solar.epresanjuan.gob.ar</a>
+      </div>
+    </div>
+  </div>
+  `
+      : ''
+  }
+
+  ${
+    hasEnvironmentalPage
+      ? `
+  <!-- PÁGINA 3: IMPACTO AMBIENTAL Y REDUCCIÓN DE EMISIONES CO2 -->
+  <div class="page page-break">
+    <div class="top-logo-bar">
+      <img src="${HEADER_LOGO_BASE64}" alt="EPRE - Generacion Solar Distribuida San Juan" />
+    </div>
+
+    <div class="banner-header">
+      <div class="banner-title">
+        <h1>Impacto Ambiental y Reducción de Emisiones CO₂</h1>
+        <p>Contribución a la sostenibilidad y mitigación del cambio climático</p>
+      </div>
+      <div class="banner-meta">
+        <div class="id-badge">ID: ${uniqueId}</div>
+        <div class="date-badge">Página ${hasFinancialPage ? 3 : 2} de ${totalPages}</div>
+      </div>
+    </div>
+
     ${
-      data.chartImages?.emisiones
+      data.textoArboles
         ? `
-    <div class="chart-card">
-      <div class="chart-card-header">
-        <span class="badge">3</span>
-        <span>Emisiones de CO₂ evitadas acumuladas</span>
-      </div>
-      <div class="chart-img-wrapper">
-        <img src="${data.chartImages.emisiones}" alt="Gráfica Emisiones CO2 Evitadas" />
-      </div>
+    <div class="arboles-banner">
+      <svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+      <div>${data.textoArboles}</div>
     </div>
     `
         : ''
     }
+
+    <!-- Grid 2x2: Las 4 sub-gráficas de Emisiones CO2 -->
+    <div class="charts-grid-2col">
+      ${
+        data.chartImages?.emisionesAnual
+          ? `
+      <div class="chart-card-half">
+        <div class="chart-card-header">
+          <span class="badge">1</span>
+          <span>Emisiones evitadas año a año</span>
+        </div>
+        <div class="chart-img-wrapper">
+          <img src="${data.chartImages.emisionesAnual}" alt="Gráfica Emisiones Anual" />
+        </div>
+      </div>
+      `
+          : ''
+      }
+
+      ${
+        data.chartImages?.emisionesComparativa
+          ? `
+      <div class="chart-card-half">
+        <div class="chart-card-header">
+          <span class="badge">2</span>
+          <span>Comparativa: Sin solar vs Con solar</span>
+        </div>
+        <div class="chart-img-wrapper">
+          <img src="${data.chartImages.emisionesComparativa}" alt="Gráfica Comparativa Emisiones" />
+        </div>
+      </div>
+      `
+          : ''
+      }
+    </div>
+
+    <div class="charts-grid-2col">
+      ${
+        data.chartImages?.emisionesAcumulada || data.chartImages?.emisiones
+          ? `
+      <div class="chart-card-half">
+        <div class="chart-card-header">
+          <span class="badge">3</span>
+          <span>Emisiones CO₂ evitadas acumuladas</span>
+        </div>
+        <div class="chart-img-wrapper">
+          <img src="${data.chartImages.emisionesAcumulada || data.chartImages.emisiones}" alt="Gráfica Emisiones Acumuladas" />
+        </div>
+      </div>
+      `
+          : ''
+      }
+
+      ${
+        data.chartImages?.emisionesGauge
+          ? `
+      <div class="chart-card-half">
+        <div class="chart-card-header">
+          <span class="badge">4</span>
+          <span>Índice de descarbonización</span>
+        </div>
+        <div class="chart-img-wrapper">
+          <img src="${data.chartImages.emisionesGauge}" alt="Gráfica Velocímetro Descarbonización" />
+        </div>
+      </div>
+      `
+          : ''
+      }
+    </div>
 
     <div class="footer-container" style="margin-top: 10px;">
       <div class="footer-info">

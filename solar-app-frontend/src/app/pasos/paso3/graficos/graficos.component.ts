@@ -170,7 +170,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
     this.refreshAllCharts();
   }
 
-  private async exportChartOffscreen(options: any): Promise<string | undefined> {
+  private async exportChartOffscreen(options: any, width: number = 800, height: number = 300): Promise<string | undefined> {
     if (!options) return undefined;
     let tempDiv: HTMLDivElement | null = null;
     let tempChart: any = null;
@@ -179,8 +179,8 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       tempDiv.style.position = 'fixed';
       tempDiv.style.left = '-9999px';
       tempDiv.style.top = '-9999px';
-      tempDiv.style.width = '800px';
-      tempDiv.style.height = '300px';
+      tempDiv.style.width = `${width}px`;
+      tempDiv.style.height = `${height}px`;
       tempDiv.style.zIndex = '-1000';
       document.body.appendChild(tempDiv);
 
@@ -188,8 +188,8 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         ...options,
         chart: {
           ...options.chart,
-          width: 800,
-          height: 300,
+          width: width,
+          height: height,
           background: '#ffffff',
           animations: { enabled: false },
         },
@@ -215,14 +215,31 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
     return undefined;
   }
 
-  async getChartsImages(): Promise<{ energiaConsumo?: string; ahorroRecupero?: string; emisiones?: string }> {
-    const result: { energiaConsumo?: string; ahorroRecupero?: string; emisiones?: string } = {};
+  async getChartsImages(): Promise<{
+    energiaConsumo?: string;
+    donutDistribucion?: string;
+    ahorroRecupero?: string;
+    emisiones?: string;
+    emisionesAnual?: string;
+    emisionesComparativa?: string;
+    emisionesAcumulada?: string;
+    emisionesGauge?: string;
+  }> {
+    const result: {
+      energiaConsumo?: string;
+      donutDistribucion?: string;
+      ahorroRecupero?: string;
+      emisiones?: string;
+      emisionesAnual?: string;
+      emisionesComparativa?: string;
+      emisionesAcumulada?: string;
+      emisionesGauge?: string;
+    } = {};
 
+    // 1. Energía Consumo
     try {
-      const offscreenImg = await this.exportChartOffscreen(this.getOptionsEnergiaConsumo(true));
-      if (offscreenImg) {
-        result.energiaConsumo = offscreenImg;
-      } else if (this.chartEnergiaConsumo) {
+      result.energiaConsumo = await this.exportChartOffscreen(this.getOptionsEnergiaConsumo(true), 550, 300);
+      if (!result.energiaConsumo && this.chartEnergiaConsumo) {
         const data = await this.chartEnergiaConsumo.dataURI();
         if (data && 'imgURI' in data && data.imgURI) {
           result.energiaConsumo = data.imgURI;
@@ -232,11 +249,23 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       console.warn('Error al exportar chartEnergiaConsumo:', e);
     }
 
+    // 2. Donut Distribución
     try {
-      const offscreenImg = await this.exportChartOffscreen(this.getOptionsAhorroRecupero(true));
-      if (offscreenImg) {
-        result.ahorroRecupero = offscreenImg;
-      } else if (this.chartAhorroRecupero) {
+      result.donutDistribucion = await this.exportChartOffscreen(this.getOptionsDonutEnergia(true), 450, 300);
+      if (!result.donutDistribucion && this.chartDonutEnergia) {
+        const data = await this.chartDonutEnergia.dataURI();
+        if (data && 'imgURI' in data && data.imgURI) {
+          result.donutDistribucion = data.imgURI;
+        }
+      }
+    } catch (e) {
+      console.warn('Error al exportar chartDonutEnergia:', e);
+    }
+
+    // 3. Ahorro Recupero
+    try {
+      result.ahorroRecupero = await this.exportChartOffscreen(this.getOptionsAhorroRecupero(true), 800, 300);
+      if (!result.ahorroRecupero && this.chartAhorroRecupero) {
         const data = await this.chartAhorroRecupero.dataURI();
         if (data && 'imgURI' in data && data.imgURI) {
           result.ahorroRecupero = data.imgURI;
@@ -246,18 +275,33 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       console.warn('Error al exportar chartAhorroRecupero:', e);
     }
 
+    // 4. Emisiones Anual
     try {
-      const offscreenImg = await this.exportChartOffscreen(this.getOptionsEmisionesExport());
-      if (offscreenImg) {
-        result.emisiones = offscreenImg;
-      } else if (this.chartEmisiones) {
-        const data = await this.chartEmisiones.dataURI();
-        if (data && 'imgURI' in data && data.imgURI) {
-          result.emisiones = data.imgURI;
-        }
-      }
+      result.emisionesAnual = await this.exportChartOffscreen(this.getOptionsEmisionesVista('anual', true), 550, 270);
     } catch (e) {
-      console.warn('Error al exportar chartEmisiones:', e);
+      console.warn('Error al exportar emisionesAnual:', e);
+    }
+
+    // 5. Emisiones Comparativa
+    try {
+      result.emisionesComparativa = await this.exportChartOffscreen(this.getOptionsEmisionesVista('comparativa', true), 550, 270);
+    } catch (e) {
+      console.warn('Error al exportar emisionesComparativa:', e);
+    }
+
+    // 6. Emisiones Acumulada
+    try {
+      result.emisionesAcumulada = await this.exportChartOffscreen(this.getOptionsEmisionesVista('acumulada', true), 550, 270);
+      result.emisiones = result.emisionesAcumulada || result.emisionesAnual;
+    } catch (e) {
+      console.warn('Error al exportar emisionesAcumulada:', e);
+    }
+
+    // 7. Emisiones Gauge
+    try {
+      result.emisionesGauge = await this.exportChartOffscreen(this.getOptionsEmisionesVista('gauge', true), 450, 270);
+    } catch (e) {
+      console.warn('Error al exportar emisionesGauge:', e);
     }
 
     return result;
@@ -311,7 +355,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       chart: {
         type: 'bar',
         height: forExport ? 300 : 340,
-        width: forExport ? 800 : '100%',
+        width: forExport ? 550 : '100%',
         stacked: true,
         background: forExport ? '#ffffff' : 'transparent',
         toolbar: { show: false },
@@ -356,7 +400,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       },
       plotOptions: {
         bar: {
-          columnWidth: forExport ? '35%' : '50%',
+          columnWidth: forExport ? '40%' : '50%',
           borderRadius: 4,
         },
       },
@@ -420,7 +464,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
   // ─────────────────────────────────────────────────
   // GRÁFICA 2 (NUEVA): Donut de distribución energética
   // ─────────────────────────────────────────────────
-  private initializeChartDonutEnergia() {
+  private getOptionsDonutEnergia(forExport: boolean = false) {
     const propAutoconsumo = this.proporcionAutoconsumo ?? 0.8;
     const propInyectada = this.proporcionInyectada ?? 0.2;
 
@@ -433,14 +477,15 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
     const pctInyectada = total > 0 ? Math.round((inyectadaKwh / total) * 100) : 0;
     const pctRed = Math.max(0, 100 - pctAutoconsumo - pctInyectada);
 
-    const options = {
+    return {
       series: [pctAutoconsumo, pctInyectada, pctRed],
       chart: {
         type: 'donut',
-        height: 340,
-        width: '100%',
-        background: 'transparent',
+        height: forExport ? 300 : 340,
+        width: forExport ? 450 : '100%',
+        background: forExport ? '#ffffff' : 'transparent',
         toolbar: { show: false },
+        animations: { enabled: !forExport },
       },
       labels: ['Autoconsumo solar', 'Inyección a la red', 'Comprada a la red'],
       colors: ['#5aaa8a', '#e4c58d', '#c8c8c8'],
@@ -476,13 +521,17 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         },
       },
       tooltip: {
-        enabled: true,
+        enabled: !forExport,
         theme: 'light',
         y: {
           formatter: (val: number) => `${val} %`,
         },
       },
     };
+  }
+
+  private initializeChartDonutEnergia() {
+    const options = this.getOptionsDonutEnergia(false);
 
     this.chartDonutEnergia = new ApexCharts(
       document.querySelector('#chartDonutEnergiaRef') as HTMLElement,
@@ -749,20 +798,12 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
     this.renderChartEmisiones();
   }
 
-  private renderChartEmisiones() {
-    if (this.chartEmisiones) {
-      try {
-        this.chartEmisiones.destroy();
-      } catch (e) {
-        console.error('Error destroying chartEmisiones', e);
-      }
-    }
-
+  private getOptionsEmisionesVista(vista: 'anual' | 'comparativa' | 'acumulada' | 'gauge', forExport: boolean = false) {
     if (
       !this.periodoVeinteanalEmisionesGEIEvitadasOriginal ||
       this.periodoVeinteanalEmisionesGEIEvitadasOriginal.length === 0
     ) {
-      return;
+      return null;
     }
 
     const anioInicial = this.periodoVeinteanalEmisionesGEIEvitadasOriginal[0].year - 1;
@@ -772,20 +813,12 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
     );
 
     const totalCO2Acumulado = cumulativeData[cumulativeData.length - 1];
-    const anos = cumulativeData.length - 1; // 20 años
-    // 1 árbol absorbe ~20 kg (0.02 tCO₂) de CO2 por año. En 20 años absorbe 0.4 tCO₂.
-    const arbolesequivalentes = Math.round(totalCO2Acumulado / (0.02 * anos));
-
-    this.textoArboles = `Equivale a absorber el CO<sub>2</sub> de ≈ <strong>${arbolesequivalentes.toLocaleString('de-DE')}</strong> árboles en ${anos} años`;
-
     const carbonOffsetAnual = this.sharedService.getCarbonOffSetTnAnual();
     const factor = carbonOffsetAnual / (this.yearlyEnergy || 1);
     const baseCO2 = parseFloat((this.consumoTotalAnual * factor).toFixed(2));
 
-    let options: any;
-
-    if (this.vistaCO2 === 'anual') {
-      options = {
+    if (vista === 'anual') {
+      return {
         series: [
           {
             name: 'CO₂ evitado anual',
@@ -793,12 +826,13 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
           },
         ],
         chart: {
-          height: 320,
-          width: '100%',
+          height: forExport ? 260 : 320,
+          width: forExport ? 500 : '100%',
           type: 'area',
-          background: 'transparent',
+          background: forExport ? '#ffffff' : 'transparent',
           toolbar: { show: false },
           zoom: { enabled: false },
+          animations: { enabled: !forExport },
         },
         colors: ['#5aaa8a'],
         stroke: {
@@ -840,18 +874,18 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
           },
         },
         tooltip: {
-          enabled: true,
+          enabled: !forExport,
           theme: 'light',
           y: {
             formatter: (value: number) => (value != null && !isNaN(value)) ? `${value.toLocaleString('de-DE')} tCO₂ evitado` : '0 tCO₂ evitado',
           },
         },
       };
-    } else if (this.vistaCO2 === 'comparativa') {
+    } else if (vista === 'comparativa') {
       const baseSeries = Array(categories.length).fill(baseCO2);
       const realSeries = annualData.map(val => parseFloat(Math.max(0, baseCO2 - val).toFixed(2)));
 
-      options = {
+      return {
         series: [
           {
             name: 'Emisiones sin solar',
@@ -863,12 +897,13 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
           },
         ],
         chart: {
-          height: 320,
-          width: '100%',
+          height: forExport ? 260 : 320,
+          width: forExport ? 500 : '100%',
           type: 'area',
-          background: 'transparent',
+          background: forExport ? '#ffffff' : 'transparent',
           toolbar: { show: false },
           zoom: { enabled: false },
+          animations: { enabled: !forExport },
         },
         colors: ['#c8c8c8', '#5aaa8a'],
         stroke: {
@@ -907,7 +942,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
           fontFamily: 'sodo sans, sans-serif',
         },
         tooltip: {
-          enabled: true,
+          enabled: !forExport,
           theme: 'light',
           shared: true,
           y: {
@@ -915,8 +950,8 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
           },
         },
       };
-    } else if (this.vistaCO2 === 'acumulada') {
-      options = {
+    } else if (vista === 'acumulada') {
+      return {
         series: [
           {
             name: 'CO₂ evitado acumulado',
@@ -924,12 +959,13 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
           },
         ],
         chart: {
-          height: 320,
-          width: '100%',
+          height: forExport ? 260 : 320,
+          width: forExport ? 500 : '100%',
           type: 'area',
-          background: 'transparent',
+          background: forExport ? '#ffffff' : 'transparent',
           toolbar: { show: false },
           zoom: { enabled: false },
+          animations: { enabled: !forExport },
         },
         colors: ['#5aaa8a'],
         stroke: {
@@ -971,24 +1007,26 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
           },
         },
         tooltip: {
-          enabled: true,
+          enabled: !forExport,
           theme: 'light',
           y: {
             formatter: (value: number) => (value != null && !isNaN(value)) ? `${value.toLocaleString('de-DE')} tCO₂ acumulado` : '0 tCO₂ acumulado',
           },
         },
       };
-    } else if (this.vistaCO2 === 'gauge') {
+    } else if (vista === 'gauge') {
       const totalBaseCO2_20Years = baseCO2 * (this.periodoVeinteanalEmisionesGEIEvitadasOriginal?.length || 1);
       const percent = Math.min(100, Math.round((totalCO2Acumulado / (totalBaseCO2_20Years || 1)) * 100));
 
-      options = {
+      return {
         series: [percent],
         chart: {
           type: 'radialBar',
-          height: 320,
-          width: '100%',
+          height: forExport ? 260 : 320,
+          width: forExport ? 450 : '100%',
+          background: forExport ? '#ffffff' : 'transparent',
           offsetY: -10,
+          animations: { enabled: !forExport },
         },
         plotOptions: {
           radialBar: {
@@ -1051,6 +1089,39 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         },
       };
     }
+    return null;
+  }
+
+  private renderChartEmisiones() {
+    if (this.chartEmisiones) {
+      try {
+        this.chartEmisiones.destroy();
+      } catch (e) {
+        console.error('Error destroying chartEmisiones', e);
+      }
+    }
+
+    if (
+      !this.periodoVeinteanalEmisionesGEIEvitadasOriginal ||
+      this.periodoVeinteanalEmisionesGEIEvitadasOriginal.length === 0
+    ) {
+      return;
+    }
+
+    const anioInicial = this.periodoVeinteanalEmisionesGEIEvitadasOriginal[0].year - 1;
+    const { cumulativeData } = this.buildCO2Data(
+      this.periodoVeinteanalEmisionesGEIEvitadasOriginal,
+      anioInicial
+    );
+
+    const totalCO2Acumulado = cumulativeData[cumulativeData.length - 1];
+    const anos = cumulativeData.length - 1; // 20 años
+    const arbolesequivalentes = Math.round(totalCO2Acumulado / (0.02 * anos));
+
+    this.textoArboles = `Equivale a absorber el CO<sub>2</sub> de ≈ <strong>${arbolesequivalentes.toLocaleString('de-DE')}</strong> árboles en ${anos} años`;
+
+    const options = this.getOptionsEmisionesVista(this.vistaCO2, false);
+    if (!options) return;
 
     this.chartEmisiones = new ApexCharts(
       document.querySelector('#emisionesChartRef') as HTMLElement,
@@ -1090,85 +1161,5 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
     }
 
     return { categories, annualData, cumulativeData };
-  }
-
-  /**
-   * Genera las opciones optimizadas en alta resolución y formato apaisado
-   * para la exportación del gráfico de emisiones al PDF.
-   */
-  private getOptionsEmisionesExport() {
-    if (
-      !this.periodoVeinteanalEmisionesGEIEvitadasOriginal ||
-      this.periodoVeinteanalEmisionesGEIEvitadasOriginal.length === 0
-    ) {
-      return null;
-    }
-
-    const anioInicial = this.periodoVeinteanalEmisionesGEIEvitadasOriginal[0].year - 1;
-    const { categories, annualData, cumulativeData } = this.buildCO2Data(
-      this.periodoVeinteanalEmisionesGEIEvitadasOriginal,
-      anioInicial
-    );
-
-    return {
-      series: [
-        {
-          name: 'CO₂ evitado anual (Tn)',
-          type: 'bar',
-          data: annualData,
-          color: '#5aaa8a',
-        },
-        {
-          name: 'CO₂ evitado acumulado (Tn)',
-          type: 'line',
-          data: cumulativeData,
-          color: '#059669',
-        },
-      ],
-      chart: {
-        height: 300,
-        width: 800,
-        type: 'line',
-        background: '#ffffff',
-        toolbar: { show: false },
-        zoom: { enabled: false },
-        animations: { enabled: false },
-      },
-      stroke: {
-        curve: 'smooth',
-        width: [0, 3],
-      },
-      plotOptions: {
-        bar: {
-          columnWidth: '50%',
-          borderRadius: 3,
-        },
-      },
-      colors: ['#5aaa8a', '#059669'],
-      xaxis: {
-        categories: categories,
-        title: {
-          text: 'Año',
-          style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
-        },
-        labels: {
-          style: { fontSize: '10px' },
-        },
-      },
-      yaxis: {
-        title: {
-          text: 'Tn CO₂',
-          style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
-        },
-        labels: {
-          formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '0',
-        },
-      },
-      legend: {
-        position: 'bottom',
-        fontSize: '11px',
-        fontFamily: 'sodo sans, sans-serif',
-      },
-    };
   }
 }

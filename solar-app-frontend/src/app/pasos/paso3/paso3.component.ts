@@ -530,6 +530,7 @@ export class Paso3Component implements OnInit, OnDestroy {
       emisionesGEIEvitadasTnAnual: (this.yearlyEnergyAckWhDefault * this.carbonOffsetFactorTnPerMWh) / 1000,
       proporcionAutoconsumo: this.proporcionAutoconsumo || 0,
       proporcionInyectada: (100 - (this.proporcionAutoconsumo || 0)),
+      textoArboles: this.graficosComponent?.textoArboles,
       chartImages,
     };
   }

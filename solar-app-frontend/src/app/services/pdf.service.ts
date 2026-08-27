@@ -25,10 +25,16 @@ export interface GeneratePdfPayload {
   flujoEnergia?: number[];
   flujoIngresos?: number[];
   generacionFotovoltaica?: number[];
+  textoArboles?: string;
   chartImages?: {
     energiaConsumo?: string;
+    donutDistribucion?: string;
     ahorroRecupero?: string;
     emisiones?: string;
+    emisionesAnual?: string;
+    emisionesComparativa?: string;
+    emisionesAcumulada?: string;
+    emisionesGauge?: string;
   };
 }
 
