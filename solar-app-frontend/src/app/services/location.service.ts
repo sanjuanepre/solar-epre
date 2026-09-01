@@ -331,18 +331,8 @@ export class LocationService {
       if (geocodeResult) {
         const lat = geocodeResult.lat;
         const lng = geocodeResult.lng;
-        const predefinedLocation = this.findNearbyLocation(lat, lng);
 
-        if (predefinedLocation) {
-          const predefinedLatLng = new google.maps.LatLng(
-            predefinedLocation.lat,
-            predefinedLocation.lng
-          );
-          marker.position = predefinedLatLng;
-          this.sharedService.setNearbyLocation(predefinedLocation);
-
-          return predefinedLatLng;
-        } else if (this.isWithinSanJuan(lat, lng)) {
+        if (this.isWithinSanJuan(lat, lng)) {
           const selectedLatLng = new google.maps.LatLng(lat, lng);
           marker.position = selectedLatLng;
           map.setZoom(22);
@@ -389,21 +379,11 @@ export class LocationService {
     const lat = centroid.lat;
     const lng = centroid.lng;
     if (this.isWithinSanJuan(lat, lng)) {
-      const nearbyLocation = this.findNearbyLocation(lat, lng);
-      if (nearbyLocation) {
-        this.sharedService.setNearbyLocation(nearbyLocation);
-        if (autoPan) {
-          map.setZoom(22);
-          map.panTo(new google.maps.LatLng(lat, lng));
-        }
-        return nearbyLocation;
-      } else {
-        if (autoPan) {
-          map.setZoom(22);
-          map.panTo({ lat, lng });
-        }
-        return { lat, lng };
+      if (autoPan) {
+        map.setZoom(22);
+        map.panTo({ lat, lng });
       }
+      return { lat, lng };
     } else {
       this.snackBar.open(
         'El área seleccionada está fuera de la Provincia de San Juan.',

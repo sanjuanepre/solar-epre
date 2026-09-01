@@ -9,7 +9,6 @@ import { DimensionPanel } from 'src/app/interfaces/dimension-panel';
 import { MapService } from 'src/app/services/map.service';
 import { ConsumoTarifaService } from 'src/app/services/consumo-tarifa.service';
 import { ConsumoService } from 'src/app/services/consumo.service';
-import { NearbyLocationService } from 'src/app/services/nearby-location.service';
 import { Paso2Component } from '../paso2/paso2.component';
 import { PdfService } from 'src/app/services/pdf.service';
 import { ParametrosFront } from 'src/app/interfaces/parametros-front';
@@ -90,7 +89,6 @@ export class Paso3Component implements OnInit, OnDestroy {
     private mapService: MapService,
     private consumoTarifaService: ConsumoTarifaService,
     private consumoService: ConsumoService,
-    private nearbyService: NearbyLocationService,
     private pdfService: PdfService,
     private cdr: ChangeDetectorRef
   ) {
@@ -125,57 +123,28 @@ export class Paso3Component implements OnInit, OnDestroy {
     this.setTimestamp();
     console.log('Timestamp establecido:', this.timestamp);
 
-    if (!this.sharedService.getNearbyLocation()) {
-      console.log('No hay ubicación cercana, calculando...');
-      this.solarService
-        .calculate()
-        .then((resultados) => {
-          console.log('Resultados obtenidos:', resultados);
-          this.resultadosFront = resultados;
-        })
-        .then(() => {
-          console.log('Cargando campos iniciales');
-          this.initialLoadFields();
-          this.cdr.detectChanges();
-        })
-        .then(() => {
-          console.log('Cálculo completado, estableciendo isLoading a false');
-          this.sharedService.setIsLoading(false);
-          this.cdr.detectChanges();
-        })
-        .catch((error) => {
-          /* console.error('Error al calcular:', error);
-          this.sharedService.setIsLoading(false);
-          this.snackBar.open(
-            'Hubo un problema al calcular los ahorros solares. Inténtelo más tarde.',
-            'Cerrar',
-            {
-              duration: 5000,
-              panelClass: ['error-snackbar'],
-              horizontalPosition: 'center',
-              verticalPosition: 'top',
-            }
-          ); */
-          this.sharedService.resetAll();
-        });
-    } else {
-      console.log('Usando ubicación cercana para cálculos');
-      this.nearbyService
-        .calculate(this.sharedService.getNearbyLocation())
-        .then((resultado) => {
-          console.log('Resultado de ubicación cercana:', resultado);
-          this.resultadosFront = resultado;
-        })
-        .then(() => {
-          console.log('Cargando campos iniciales');
-          this.initialLoadFields();
-        })
-        .catch((error) => console.error('Error en cálculo cercano:', error));
-      console.log(
-        'Cálculo cercano completado, estableciendo isLoading a false'
-      );
-      this.sharedService.setIsLoading(false);
-    }
+    console.log('Iniciando cálculo solar integral...');
+    this.solarService
+      .calculate()
+      .then((resultados) => {
+        console.log('Resultados obtenidos:', resultados);
+        this.resultadosFront = resultados;
+      })
+      .then(() => {
+        console.log('Cargando campos iniciales');
+        this.initialLoadFields();
+        this.cdr.detectChanges();
+      })
+      .then(() => {
+        console.log('Cálculo completado, estableciendo isLoading a false');
+        this.sharedService.setIsLoading(false);
+        this.cdr.detectChanges();
+      })
+      .catch((error) => {
+        console.error('Error al calcular resultados solares:', error);
+        this.sharedService.setIsLoading(false);
+        this.sharedService.resetAll();
+      });
   }
 
   ngOnDestroy(): void {
