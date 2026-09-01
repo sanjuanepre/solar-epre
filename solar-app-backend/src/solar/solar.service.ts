@@ -288,6 +288,7 @@ export class SolarService {
 
   async calculateSolarSavingsNearby(
     solarDataNearby: SolarData,
+    solarCalculationWithParameters: SolarCalculationDto
   ): Promise<ResultadosDto> {
     const {
       yearlyEnergyAcKwh,
@@ -308,6 +309,7 @@ export class SolarService {
     // Llamar al servicio con los datos ajustados
     return await this.calculadoraService.calculateEnergySavings(
       adjustedSolarDataNearby,
+      solarCalculationWithParameters
     );
   }
 

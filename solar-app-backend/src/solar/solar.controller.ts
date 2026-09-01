@@ -72,8 +72,35 @@ export class SolarController {
   @Post('calculate-nearby')
   async calculateSolarSavingsNearby(
     @Body() solarDataNearby: SolarData,
-  ): Promise<ResultadosDto> {
-    return await this.solarService.calculateSolarSavingsNearby(solarDataNearby);
+    @Res() res: Response,
+  ): Promise<void> {
+    try {
+      const dto = new SolarCalculationDto();
+      dto.annualConsumption = solarDataNearby.annualConsumption;
+      dto.categoriaSeleccionada = solarDataNearby.tarifaCategory;
+      dto.panelsSelected = solarDataNearby.panels.panelsSelected;
+      dto.potenciaMaxAsignada = 0; 
+      dto.polygonArea = 0;
+      dto.polygonCoordinates = [];
+      dto.factorPotencia = 1;
+      dto.tipoEstructura = 'optimo';
+
+      const solarCalculationWithParameters =
+        await this.sheetsService.addParametersToSolarCalculationDto(dto);
+
+      const resultados = await this.solarService.calculateSolarSavingsNearby(
+        solarDataNearby,
+        solarCalculationWithParameters
+      );
+      res.status(200).json(resultados);
+    } catch (error: any) {
+      console.error('Error al calcular el ahorro solar nearby:', error);
+      res.status(500).json({
+        mensaje: 'No se pudo calcular el ahorro solar nearby.',
+        error: error?.message || String(error),
+        stack: error?.stack,
+      });
+    }
   }
 
   @Get('solarData')

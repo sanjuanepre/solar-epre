@@ -16,11 +16,12 @@ export class CalculadoraService {
   // Método principal para calcular el ahorro energético
   calculateEnergySavings(solarData: SolarData, solarCalculationWithParameters?: SolarCalculationDto): any {
     // Obtener datos del API de Solar
-    const yearlyEnergyACKwh: number = solarData.yearlyEnergyAcKwh * solarCalculationWithParameters.factorPotencia;
+    const factorPotencia = solarCalculationWithParameters?.factorPotencia ?? 1.0;
+    const yearlyEnergyACKwh: number = solarData.yearlyEnergyAcKwh * factorPotencia;
     const tarifaCategory: Tarifa = new Tarifa(
       solarData.tarifaCategory,
-      solarCalculationWithParameters.potenciaMaxAsignada,
-      solarCalculationWithParameters.parametros?.cuadroTarifarioActual,
+      solarCalculationWithParameters?.potenciaMaxAsignada ?? 0,
+      solarCalculationWithParameters?.parametros?.cuadroTarifarioActual,
     );
     const annualConsumption = solarData.annualConsumption;
 
