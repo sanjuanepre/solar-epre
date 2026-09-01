@@ -16,12 +16,14 @@
           <mat-slider
             class="custom-slider"
             min="4"
+            [max]="maxAllowedPanels"
             step="1"
+            (input)="onSliderChange()"
             (change)="onSliderChange()"
             discrete
             [displayWith]="formatLabel"
           >
-            <input matSliderThumb [(ngModel)]="panelesSelectCount" #slider />
+            <input matSliderThumb [(ngModel)]="panelesSelectCount" [max]="maxAllowedPanels" (ngModelChange)="onSliderChange()" #slider />
           </mat-slider>
         </div>
         <div class="unidad-component-simple-panel">

@@ -31,6 +31,7 @@ export class PanelesComponent implements OnInit, AfterViewInit, OnDestroy {
   potenciaPanelesControl = new FormControl('');
 
   maxPanelsArea$: number = 0;
+  maxAllowedPanels: number = 4;
   panelesSelectCount: number = 4;
   plazoRecuperoInversion!: number;
   private destroy$ = new Subject<void>();
@@ -146,15 +147,15 @@ export class PanelesComponent implements OnInit, AfterViewInit, OnDestroy {
     const capacity = this.panelCapacityW || this.sharedService.getPanelCapacityW() || 600;
     const maxByTariff = maxPotenciaW > 0 ? Math.floor(maxPotenciaW / capacity) : 9999;
     const maxByArea = this.maxPanelsArea$ > 0 ? this.maxPanelsArea$ : 9999;
-    const maxAllowed = Math.max(4, Math.min(maxByArea, maxByTariff));
+    this.maxAllowedPanels = Math.max(4, Math.min(maxByArea, maxByTariff));
 
     if (this.slider) {
-      this.slider.max = maxAllowed;
+      this.slider.max = this.maxAllowedPanels;
     }
-    if (this.panelesSelectCount > maxAllowed) {
-      this.panelesSelectCount = maxAllowed;
-      this.sharedService.setPanelsCountSelected(maxAllowed);
-      this.mapService.reDrawPanels(maxAllowed);
+    if (this.panelesSelectCount > this.maxAllowedPanels) {
+      this.panelesSelectCount = this.maxAllowedPanels;
+      this.sharedService.setPanelsCountSelected(this.maxAllowedPanels);
+      this.mapService.reDrawPanels(this.maxAllowedPanels);
     }
     this.cdr.detectChanges();
   }
@@ -173,13 +174,12 @@ export class PanelesComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onSliderChange() {
     console.log('PanelesComponent: onSliderChange iniciado');
-    if (this.panelesSelectCount > this.slider.max) {
-      this.panelesSelectCount = this.slider.max;
+    if (this.panelesSelectCount > this.maxAllowedPanels) {
+      this.panelesSelectCount = this.maxAllowedPanels;
     }
 
     this.mapService.reDrawPanels(this.panelesSelectCount);
     this.sharedService.setPanelsCountSelected(this.panelesSelectCount);
-    // this.updateMaxPanels();
   }
 
   updateMaxPanels() {
