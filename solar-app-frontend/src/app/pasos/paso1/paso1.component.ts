@@ -495,7 +495,7 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
     const coordinates = this.mapService.getPolygonCoordinates();
     if (!coordinates || coordinates.length === 0) return;
 
-    // Calcular el centroide del polígono
+    // Calcular el centroide y radio aproximado del polígono
     let sumLat = 0;
     let sumLng = 0;
     coordinates.forEach(coord => {
@@ -505,6 +505,15 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
     const lat = sumLat / coordinates.length;
     const lng = sumLng / coordinates.length;
 
+    let maxDist = 0;
+    coordinates.forEach(coord => {
+      const dLat = (coord.lat - lat) * 111320;
+      const dLng = (coord.lng - lng) * 111320 * Math.cos(lat * Math.PI / 180);
+      const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+      if (dist > maxDist) maxDist = dist;
+    });
+    const radiusMeters = Math.min(100, Math.max(30, Math.round(maxDist * 1.25)));
+
     this.zone.run(() => {
       this.isHeatmapLoading = true;
       this.heatmapAvailable = false;
@@ -512,8 +521,8 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
     });
 
     try {
-      console.log(`[Paso1Component] Consultando dataLayers para centroide: (${lat}, ${lng})`);
-      const response = await this.solarApiService.getDataLayers(lat, lng);
+      console.log(`[Paso1Component] Consultando dataLayers para centroide: (${lat}, ${lng}) con radio ${radiusMeters}m`);
+      const response = await this.solarApiService.getDataLayers(lat, lng, radiusMeters);
       
       this.zone.run(() => {
         if (response && response.annualFluxUrl) {
@@ -526,9 +535,9 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
           this.showHeatmap = false;
           this.annualFluxUrl = '';
           this.snackBar.open(
-            'No hay datos de radiación solar detallados disponibles para esta zona específica.',
-            'Cerrar',
-            { duration: 4000 }
+            'Ubicación sin mapa de calor satelital LIDAR. El cálculo continuará con valores de radiación provincial de referencia.',
+            'Entendido',
+            { duration: 5000 }
           );
         }
       });
