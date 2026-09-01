@@ -889,7 +889,8 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
     const totalCO2Acumulado = cumulativeData[cumulativeData.length - 1];
     const carbonOffsetAnual = this.sharedService.getCarbonOffSetTnAnual();
     const factor = carbonOffsetAnual / (this.yearlyEnergy || 1);
-    const baseCO2 = parseFloat((this.consumoTotalAnual * factor).toFixed(2));
+    const consumoAnual = this.consumoTotalAnual || 0;
+    const baseCO2 = parseFloat((consumoAnual * factor).toFixed(2));
 
     if (vista === 'anual') {
       return {
