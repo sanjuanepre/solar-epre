@@ -127,15 +127,15 @@ export class SolarService {
       panels: {
         panelsCountApi: solarPanelConfig.panelsCount,
         panelsSelected: dto.panelsSelected,
-        panelCapacityW: solarDataApi.solarPotential.panelCapacityWatts,
+        panelCapacityW: solarDataApi.solarPotential.panelCapacityWatts || 400,
         panelSize: {
-          height: solarDataApi.solarPotential.panelHeightMeters,
-          width: solarDataApi.solarPotential.panelWidthMeters,
+          height: solarDataApi.solarPotential.panelHeightMeters || 1.65,
+          width: solarDataApi.solarPotential.panelWidthMeters || 0.99,
         },
         yearlysAnualConfigurations,
       },
       carbonOffsetFactorKgPerMWh:
-        solarDataApi.solarPotential.carbonOffsetFactorKgPerMwh,
+        solarDataApi.solarPotential.carbonOffsetFactorKgPerMwh || 397,
       tarifaCategory: dto.categoriaSeleccionada,
     };
 
