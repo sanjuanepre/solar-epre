@@ -821,6 +821,12 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       ],
       xaxis: {
         categories: categories,
+        tickAmount: 10,
+        labels: {
+          rotate: -35,
+          rotateAlways: false,
+          hideOverlappingLabels: true,
+        },
       },
       annotations: {
         yaxis: [{ y: 0, borderColor: '#94a3b8', borderWidth: 1.5, strokeDashArray: 4 }],
@@ -921,7 +927,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         },
         xaxis: {
           categories: categories,
-          tickAmount: forExport ? 10 : 8,
+          tickAmount: forExport ? 10 : 10,
           labels: {
             rotate: -35,
             rotateAlways: false,
@@ -1006,7 +1012,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         dataLabels: { enabled: false },
         xaxis: {
           categories: categories,
-          tickAmount: forExport ? 10 : 8,
+          tickAmount: forExport ? 10 : 10,
           labels: {
             rotate: -35,
             rotateAlways: false,
@@ -1100,7 +1106,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         },
         xaxis: {
           categories: categories,
-          tickAmount: forExport ? 10 : 8,
+          tickAmount: forExport ? 10 : 10,
           labels: {
             rotate: -35,
             rotateAlways: false,
@@ -1209,10 +1215,10 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
           lineCap: 'round'
         },
         subtitle: {
-          text: `Evitas el ${percent}% de tus emisiones eléctricas totales`,
+          text: `Con la instalación de Generación Distribuida dimensionada, reduces el ${percent}% de las emisiones de CO₂ respecto a un Suministro convencional`,
           align: 'center',
           style: {
-            fontSize: '12px',
+            fontSize: '11.5px',
             fontFamily: 'sodo sans, sans-serif',
             color: '#475569',
           },

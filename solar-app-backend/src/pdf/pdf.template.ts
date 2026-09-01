@@ -12,7 +12,7 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
   const estructuraTexto =
     data.tipoEstructura === 'optimo'
       ? 'Estructura inclinada al Norte (30°)'
-      : 'Coplanar al tejado (inclinación natural)';
+      : 'Coplanar a la superficie (inclinación natural)';
 
   const formatMoneda = (val: number) =>
     new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(val || 0);
@@ -484,7 +484,7 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
 
     <div class="footer-container">
       <div class="footer-info">
-        <strong>E.P.R.E. San Juan</strong> - Calculadora Solar Distribuida
+        <strong>E.P.R.E. San Juan</strong> - Calculadora Solar Distribuida v2.0
         <a class="footer-url" href="https://solar.epresanjuan.gob.ar" target="_blank">https://solar.epresanjuan.gob.ar</a>
       </div>
       ${
@@ -577,7 +577,7 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
 
     <div class="footer-container" style="margin-top: 10px;">
       <div class="footer-info">
-        <strong>E.P.R.E. San Juan</strong> - Calculadora Solar Distribuida
+        <strong>E.P.R.E. San Juan</strong> - Calculadora Solar Distribuida v2.0
         <a class="footer-url" href="https://solar.epresanjuan.gob.ar" target="_blank">https://solar.epresanjuan.gob.ar</a>
       </div>
     </div>
@@ -688,7 +688,7 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
 
     <div class="footer-container" style="margin-top: 10px;">
       <div class="footer-info">
-        <strong>E.P.R.E. San Juan</strong> - Calculadora Solar Distribuida
+        <strong>E.P.R.E. San Juan</strong> - Calculadora Solar Distribuida v2.0
         <a class="footer-url" href="https://solar.epresanjuan.gob.ar" target="_blank">https://solar.epresanjuan.gob.ar</a>
       </div>
     </div>
