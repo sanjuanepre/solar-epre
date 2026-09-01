@@ -275,16 +275,14 @@ export class Paso3Component implements OnInit, OnDestroy {
         this.resultadosFront.solarData.panels.panelsCountApi;
       console.log('Cantidad de paneles:', this.panelesCantidad);
 
-      this.dimensionPanel = this.resultadosFront.solarData.panels.panelSize;
+      // Usar la capacidad elegida en sharedService (por defecto 600 W)
+      this.panelCapacityW = this.sharedService.getPanelCapacityW() || 600;
+      this.dimensionPanel = this.sharedService.getDimensionByCapacity(this.panelCapacityW);
+      console.log('Capacidad del panel en W:', this.panelCapacityW);
       console.log('Dimensiones del panel:', this.dimensionPanel);
 
       this.sharedService.setPanelsCountSelected(this.panelesCantidad);
       this.sharedService.setDimensionPanels(this.dimensionPanel);
-
-      this.panelCapacityW =
-        this.resultadosFront.solarData.panels.panelCapacityW;
-      console.log('Capacidad del panel en W:', this.panelCapacityW);
-
       this.sharedService.setPanelCapacityW(this.panelCapacityW);
 
       const eficienciaInstalacion =

@@ -66,7 +66,7 @@ export class PanelesComponent implements OnInit, AfterViewInit, OnDestroy {
 
   getPowerLabel(): string {
     const found = this.powerOptions.find(o => o.value === this.potenciaPanelesControl.value);
-    return found ? found.label : '400 W';
+    return found ? found.label : '600 W';
   }
 
 
@@ -80,11 +80,11 @@ export class PanelesComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     console.log('PanelesComponent: ngOnInit iniciado');
-    this.panelCapacityW = this.sharedService.getPanelCapacityW();
+    this.panelCapacityW = this.sharedService.getPanelCapacityW() || 600;
     this.panelesSelectCount = this.sharedService.getPanelsSelected();
-    // Establecer valor inicial para la potencia de los paneles
+    // Establecer valor inicial para la potencia de los paneles (600 W por defecto)
     this.potenciaPanelesControl.setValue(
-      this.panelCapacityW.toString() || '400'
+      this.panelCapacityW.toString() || '600'
     );
 
     // Subscripción al plazo de recuperación de la inversión
@@ -98,6 +98,14 @@ export class PanelesComponent implements OnInit, AfterViewInit, OnDestroy {
         this.plazoRecuperoInversion = plazo;
       });
 
+    // Suscribirse a la potencia máxima asignada de la tarifa
+    this.sharedService.potenciaMaxAsignadaW$
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((maxPotencia) => {
+        console.log('PanelesComponent: Nueva potencia máxima por tarifa:', maxPotencia);
+        this.updateSliderLimits();
+      });
+
     // Suscribirse al cambio de la capacidad de los paneles
     this.potenciaPanelesControl.valueChanges
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
@@ -106,18 +114,11 @@ export class PanelesComponent implements OnInit, AfterViewInit, OnDestroy {
           'PanelesComponent: Cambio en potenciaPanelesControl:',
           value
         );
-        const panelCapacity = parseInt(value, 10);
+        const panelCapacity = parseInt(value, 10) || 600;
         this.sharedService.setPanelCapacityW(panelCapacity);
         this.panelCapacityW = panelCapacity;
 
-        const maxPotenciaInstalacion = this.sharedService.getPotenciaMaxAsignadaW();
-        const maxAllowedPanels = Math.floor(maxPotenciaInstalacion / panelCapacity);
-
-        if (this.panelesSelectCount > maxAllowedPanels) {
-          this.panelesSelectCount = maxAllowedPanels;
-          this.sharedService.setPanelsCountSelected(this.panelesSelectCount);
-        }
-
+        this.updateSliderLimits();
         this.mapService.reDrawPanels(this.panelesSelectCount);
       });
 
@@ -141,22 +142,26 @@ export class PanelesComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   updateSliderLimits() {
-    const maxAllowed = this.maxPanelsArea$ || this.panelesSelectCount;
+    const maxPotenciaW = this.sharedService.getPotenciaMaxAsignadaW();
+    const capacity = this.panelCapacityW || this.sharedService.getPanelCapacityW() || 600;
+    const maxByTariff = maxPotenciaW > 0 ? Math.floor(maxPotenciaW / capacity) : 9999;
+    const maxByArea = this.maxPanelsArea$ > 0 ? this.maxPanelsArea$ : 9999;
+    const maxAllowed = Math.max(4, Math.min(maxByArea, maxByTariff));
+
     if (this.slider) {
       this.slider.max = maxAllowed;
     }
     if (this.panelesSelectCount > maxAllowed) {
       this.panelesSelectCount = maxAllowed;
       this.sharedService.setPanelsCountSelected(maxAllowed);
+      this.mapService.reDrawPanels(maxAllowed);
     }
     this.cdr.detectChanges();
   }
 
   ngAfterViewInit(): void {
     console.log('PanelesComponent: ngAfterViewInit iniciado');
-    if(this.slider) {
-      this.slider.max = this.panelesSelectCount;
-    }
+    this.updateSliderLimits();
   }
 
   ngOnDestroy(): void {

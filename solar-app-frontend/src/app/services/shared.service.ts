@@ -16,7 +16,7 @@ export class SharedService {
     450: { height: 1.903, width: 1.134 },
     500: { height: 2.094, width: 1.134 },
     550: { height: 2.278, width: 1.134 },
-    600: { height: 2.278, width: 1.134 },
+    600: { height: 2.172, width: 1.303 },
     700: { height: 2.384, width: 1.303 },
   };
 
@@ -32,7 +32,7 @@ export class SharedService {
   private inversionUsdSubject = new BehaviorSubject<number>(0);
   inversionUsd$ = this.inversionUsdSubject.asObservable();
 
-  private dimensionPanelSubject = new BehaviorSubject<DimensionPanel>({ height: 1.722, width: 1.134 });
+  private dimensionPanelSubject = new BehaviorSubject<DimensionPanel>({ height: 2.172, width: 1.303 });
   dimensionPanel$ = this.dimensionPanelSubject.asObservable();
   private areaPanelsSelectedSubject = new BehaviorSubject<number>(0);
   areaPanelsSelected$ = this.areaPanelsSelectedSubject.asObservable();
@@ -73,7 +73,7 @@ export class SharedService {
   private isUpdating = false;
   private expandStep3Subject = new BehaviorSubject<boolean>(false);
   expandStep3$ = this.expandStep3Subject.asObservable();
-  private panelCapacityWSubject = new BehaviorSubject<number>(400);
+  private panelCapacityWSubject = new BehaviorSubject<number>(600);
   panelCapacityW$ = this.panelCapacityWSubject.asObservable();
   private yearlyEnergyAckWhSubject = new BehaviorSubject<number>(0);
   yearlyEnergyAckWh$ = this.yearlyEnergyAckWhSubject.asObservable();
@@ -92,7 +92,7 @@ export class SharedService {
   >({});
   resultadosFront$ = this.resultadosFrontSubject.asObservable();
 
-  private factorPotenciaSubject = new BehaviorSubject<number>(1);
+  private factorPotenciaSubject = new BehaviorSubject<number>(1.5);
   factorPotencia$ = this.factorPotenciaSubject.asObservable();
 
   private maxPanelsPerSuperfaceSubject = new BehaviorSubject<number>(0);
@@ -114,7 +114,7 @@ export class SharedService {
     yearlysAnualConfigurations: [],
     yearlyEnergyAckWh: 0,
     panelsCountSelected: 4,
-    panelCapacityW: 400,
+    panelCapacityW: 600,
     eficienciaInstalacion: 0,
     costoInstalacion: 0,
     plazoInversion: 0,
@@ -528,6 +528,15 @@ export class SharedService {
     const value = this.tipoEstructuraSubject.getValue();
     console.log('Obteniendo tipo de estructura:', value);
     return value;
+  }
+
+  getMaxPanelsByTariff(watts?: number): number {
+    const panelWatts = watts || this.getPanelCapacityW() || 600;
+    const maxPotenciaW = this.getPotenciaMaxAsignadaW();
+    if (!maxPotenciaW || maxPotenciaW <= 0) {
+      return 9999;
+    }
+    return Math.floor(maxPotenciaW / panelWatts);
   }
 
 }

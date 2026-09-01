@@ -104,41 +104,22 @@ export class SolarService {
       dto.panelsSelected,
     );
 
-    // Si el tipo de estructura es 'optimo' (inclinación de 30° al Norte), aplicamos el factor de transposición
-    if (dto.tipoEstructura === 'optimo') {
-      const roofFactor = this.calculateRoofFactor(solarDataApi.solarPotential, dto.panelsSelected);
-      solarPanelConfig.yearlyEnergyDcKwh = (solarPanelConfig.yearlyEnergyDcKwh || 0) / (roofFactor || 1);
-      if (isNaN(solarPanelConfig.yearlyEnergyDcKwh)) {
-        solarPanelConfig.yearlyEnergyDcKwh = 0;
-      }
-    }
-
-   /*  console.log(
-      'Configuración de paneles calculada:',
-      JSON.stringify(solarPanelConfig, null, 2),
-    ); */
+    // Factor de estructura e inclinación: +12% directo para 'optimo' (30° al Norte) respecto a 'coplanar'
+    const factorEstructura = dto.tipoEstructura === 'optimo' ? 1.12 : 1.0;
+    solarPanelConfig.yearlyEnergyDcKwh = (solarPanelConfig.yearlyEnergyDcKwh || 0) * factorEstructura;
 
     const yearlysAnualConfigurations =
       solarDataApi.solarPotential.solarPanelConfigs.map((item: any) => {
-        let energyDc = item.yearlyEnergyDcKwh || 0;
-        if (dto.tipoEstructura === 'optimo') {
-          const factor = this.calculateRoofFactor(solarDataApi.solarPotential, item.panelsCount);
-          energyDc = energyDc / (factor || 1);
-          if (isNaN(energyDc)) {
-            energyDc = 0;
-          }
-        }
+        const energyDc = (item.yearlyEnergyDcKwh || 0) * factorEstructura;
         return {
           panelsCount: item.panelsCount,
           yearlyEnergyDcKwh: energyDc,
         };
       });
-    // console.log('Configuraciones anuales:', JSON.stringify(yearlysAnualConfigurations, null, 2));
 
     const yearlyEnergyAcKwh =
       solarPanelConfig.yearlyEnergyDcKwh *
       dto.parametros.caracteristicasSistema.eficienciaInstalacion;
-    // console.log(`Energía AC anual calculada: ${yearlyEnergyAcKwh} kWh`);
 
     const solarData: SolarData = {
       annualConsumption: dto.annualConsumption,
@@ -157,17 +138,13 @@ export class SolarService {
         solarDataApi.solarPotential.carbonOffsetFactorKgPerMwh,
       tarifaCategory: dto.categoriaSeleccionada,
     };
-    // console.log('Datos solares preparados:', JSON.stringify(solarData, null, 2));
 
-    // console.log('Calculando ahorros de energía...');
     const result = await this.calculadoraService.calculateEnergySavings(
       solarData,
       dto,
     );
-    // console.log('Resultado del cálculo de ahorros:', JSON.stringify(result, null, 2));
 
-    const roofFactor = this.calculateRoofFactor(solarDataApi.solarPotential, dto.panelsSelected);
-    result.roofFactor = roofFactor;
+    result.roofFactor = dto.tipoEstructura === 'optimo' ? (1 / 1.12) : 1.0;
 
     return result;
   }

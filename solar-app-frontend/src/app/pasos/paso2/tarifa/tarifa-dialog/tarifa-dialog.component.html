@@ -1,14 +1,11 @@
 <div class="dialog-container">
-  `
   <h2 mat-dialog-title>Potencia excedida</h2>
   <mat-dialog-content>
-    La superficie seleccionada permitiría la instalación de
-    {{ data.potenciaInstalada | number : "1.0-2" }} kW en paneles fotovoltaicos.
-    Dicho valor supera la potencia máxima admisible de
+    La superficie seleccionada supera la potencia máxima admisible de
     {{ data.potenciaMaxAsignada | number : "1.0-2" }} kW para la categoría
-    {{ data.tarifaContratada }} seleccionada. Presione aceptar para adecuar la
-    superficie seleccionada, o cancelar para volver al paso anterior y elegir
-    otra superficie.
+    {{ data.tarifaContratada }} seleccionada.
+    <br><br>
+    Presione <strong>Aceptar</strong> para adecuar la cantidad de paneles al límite máximo permitido, o <strong>Cancelar</strong> para volver al paso anterior y delimitar otra superficie.
   </mat-dialog-content>
   <mat-dialog-actions>
     <div class="botones-modal">
@@ -25,5 +22,4 @@
       </button>
     </div>
   </mat-dialog-actions>
-  `
 </div>

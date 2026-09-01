@@ -16,9 +16,9 @@
               [class.active]="tipoEstructura === 'coplanar'"
               (click)="cambiarEstructura('coplanar')"
               [disabled]="isLoading || isCalculating"
-              [title]="isScrolledDown ? 'Estructura Coplanar al tejado' : ''">
+              [title]="isScrolledDown ? 'Estructura Coplanar a la superficie' : ''">
               <mat-icon class="text-icon">grid_on</mat-icon>
-              <span>Coplanar al tejado</span>
+              <span>Coplanar a la superficie</span>
             </button>
             <button 
               type="button"
@@ -26,9 +26,9 @@
               [class.active]="tipoEstructura === 'optimo'"
               (click)="cambiarEstructura('optimo')"
               [disabled]="isLoading || isCalculating"
-              [title]="isScrolledDown ? 'Ángulo Óptimo (30° Norte)' : ''">
+              [title]="isScrolledDown ? 'Ángulo Óptimo (30° al Norte)' : ''">
               <mat-icon class="text-icon font-sun">wb_sunny</mat-icon>
-              <span>Ángulo Óptimo (30° Norte)</span>
+              <span>Ángulo Óptimo (30° al Norte)</span>
             </button>
           </div>
         </div>
@@ -58,10 +58,10 @@
         </div>
       </div>
 
-      <div class="ganancia-captacion-tooltip" *ngIf="!isScrolledDown && tipoEstructura === 'optimo' && roofFactor < 1.0">
+      <div class="ganancia-captacion-tooltip" *ngIf="!isScrolledDown && tipoEstructura === 'optimo'">
         <mat-icon class="ganancia-icon">trending_up</mat-icon>
         <span>
-          ¡Captación solar optimizada en un <strong>+{{ (1 / roofFactor - 1) * 100 | number:'1.0-0' }}%</strong> en comparación con la inclinación natural del tejado!
+          ¡Generación anual optimizada en un <strong>+12%</strong> en comparación con la instalación coplanar!
         </span>
       </div>
     </div>

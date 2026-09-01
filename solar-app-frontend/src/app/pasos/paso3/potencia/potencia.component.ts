@@ -261,7 +261,7 @@ export class PotenciaComponent implements OnInit, OnDestroy {
   }
 
   private ajustarNumeroPaneles(potenciaMaximaPermitida: number): void {
-    const maxPanels = Math.round(potenciaMaximaPermitida / this.panelCapacityW);
+    const maxPanels = Math.floor(potenciaMaximaPermitida / this.panelCapacityW);
     console.log(`Número máximo de paneles calculado: ${maxPanels}`);
     this.panelsCountSelected = maxPanels;
     this.sharedService.setPanelsCountSelected(this.panelsCountSelected);

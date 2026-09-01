@@ -33,7 +33,7 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
   isHeatmapLoading: boolean = false;
   annualFluxUrl: string = '';
   drawingState: 'INACTIVE' | 'START' | 'DRAWING' | 'CLOSED' = 'INACTIVE';
-  instructionText: string = 'Busque la ubicación de su propiedad y seleccione una herramienta (Polígono o Rectángulo) para delimitar su techo.';
+  instructionText: string = 'Busque la ubicación prevista y luego elija una herramienta de selección (Polígono o Rectángulo) para delimitar el área de la instalación.';
   tipoEstructura: 'coplanar' | 'optimo' = 'coplanar';
   isSidebarCollapsed: boolean = false;
 
@@ -479,7 +479,7 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
 
       case 'static':
       default:
-        this.instructionText = 'Busque la ubicación de su propiedad y luego elija una herramienta (Polígono o Rectángulo) para delimitar su techo.';
+        this.instructionText = 'Busque la ubicación prevista y luego elija una herramienta de selección (Polígono o Rectángulo) para delimitar el área de la instalación.';
         break;
     }
   }
