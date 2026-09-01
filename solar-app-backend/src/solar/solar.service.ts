@@ -11,11 +11,58 @@ import { SolarDataLayersResponse } from './dto/solar-data-layers.interface';
 export class SolarService {
   constructor(private readonly calculadoraService: CalculadoraService) {}
 
+  // Polígono perimetral oficial simplificado de la Provincia de San Juan
+  private static readonly SAN_JUAN_POLYGON: { lat: number; lng: number }[] = [
+    { lat: -28.37, lng: -69.80 }, // Noroeste Iglesia / Límite Chile - La Rioja
+    { lat: -28.30, lng: -69.25 }, // Norte Iglesia / La Rioja
+    { lat: -28.45, lng: -68.80 }, // Norte Jáchal / La Rioja
+    { lat: -28.95, lng: -68.45 }, // Huaco / La Rioja
+    { lat: -30.00, lng: -67.25 }, // Ischigualasto / Valle Fértil Norte
+    { lat: -30.50, lng: -67.15 }, // Valle Fértil Este
+    { lat: -31.10, lng: -67.20 }, // Valle Fértil Sureste
+    { lat: -31.60, lng: -66.85 }, // Bermejo / Caucete Este / La Rioja - San Luis
+    { lat: -31.95, lng: -66.75 }, // El Encón / Desaguadero Sureste
+    { lat: -32.25, lng: -67.40 }, // Límite Sur Caucete / 25 de Mayo / Mendoza
+    { lat: -32.40, lng: -68.20 }, // Lagunas de Guanacache / 25 de Mayo Sur
+    { lat: -32.65, lng: -68.70 }, // Sarmiento Sur / Media Agua / Mendoza
+    { lat: -32.35, lng: -69.50 }, // Barreal Sur / Calingasta / Mendoza
+    { lat: -32.20, lng: -70.40 }, // Paso de los Patos / Suroeste Calingasta / Chile
+    { lat: -31.50, lng: -70.55 }, // Cordillera Central Calingasta / Chile
+    { lat: -30.50, lng: -70.30 }, // Paso de Agua Negra / Iglesia / Chile
+    { lat: -29.30, lng: -69.95 }, // Cordillera Norte Iglesia / Chile
+  ];
+
+  public isWithinSanJuan(lat: number, lng: number): boolean {
+    if (lat < -32.70 || lat > -28.25 || lng < -70.70 || lng > -66.70) {
+      return false;
+    }
+
+    const polygon = SolarService.SAN_JUAN_POLYGON;
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+      const xi = polygon[i].lng, yi = polygon[i].lat;
+      const xj = polygon[j].lng, yj = polygon[j].lat;
+
+      const intersect = ((yi > lat) !== (yj > lat))
+          && (lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi);
+      if (intersect) inside = !inside;
+    }
+
+    return inside;
+  }
+
   async getSolarData(latitude: number, longitude: number): Promise<any> {
     // Verifica si las coordenadas son válidas
     if (isNaN(latitude) || isNaN(longitude)) {
       throw new HttpException(
         'Invalid coordinates received',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (!this.isWithinSanJuan(latitude, longitude)) {
+      throw new HttpException(
+        'La ubicación se encuentra fuera del territorio de la Provincia de San Juan.',
         HttpStatus.BAD_REQUEST,
       );
     }
