@@ -290,10 +290,9 @@ export class SolarService {
     solarDataNearby: SolarData,
     solarCalculationWithParameters: SolarCalculationDto
   ): Promise<ResultadosDto> {
-    const {
-      yearlyEnergyAcKwh,
-      panels: { panelsCountApi, panelsSelected },
-    } = solarDataNearby;
+    const yearlyEnergyAcKwh = solarDataNearby?.yearlyEnergyAcKwh ?? 0;
+    const panelsCountApi = solarDataNearby?.panels?.panelsCountApi ?? 1;
+    const panelsSelected = solarDataNearby?.panels?.panelsSelected ?? 1;
     // Calcular la proporción entre panelsSelected y panelsCountApi
     const proportion = panelsSelected / panelsCountApi;
 

@@ -48,7 +48,7 @@ export class Tarifa {
 
     if (tarifarioActual) {
       const cuadro = tarifarioActual.find((tarifa) => {
-        return this.categoria.startsWith(tarifa.nombre);
+        return this.categoria && typeof this.categoria === 'string' && this.categoria.startsWith(tarifa.nombre);
       });
 
       if (cuadro) {
@@ -69,9 +69,13 @@ export class Tarifa {
     const cargosPorDefecto = Tarifa.cargosPorCategoria[this.categoria];
 
     if (!cargosPorDefecto) {
-      throw new Error(
-        `No se encontraron cargos por defecto para la categoría ${this.categoria}.`,
-      );
+      console.warn(`No se encontraron cargos por defecto para la categoría ${this.categoria}. Usando T1-R1 por defecto.`);
+      const defaultCargos = Tarifa.cargosPorCategoria[TarifaCategoria.T1_R1];
+      return {
+        consumo: defaultCargos.consumo,
+        inyeccion: defaultCargos.inyeccion,
+        impuestos: 0,
+      };
     }
 
     return {

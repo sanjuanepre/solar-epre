@@ -91,7 +91,7 @@ export class VariablesOnlineService {
       if (!rows || rows.length === 0) {
         throw new Error('No se encontraron datos en el rango especificado.');
       }
-      const categoriaSeleccionada = solarCalculationDto.categoriaSeleccionada;
+      const categoriaSeleccionada = solarCalculationDto.categoriaSeleccionada || '';
       const tipoCambioArs = economicas.tipoCambioArs;
 
       // Buscar valores por etiqueta, o usar los índices tradicionales como fallback

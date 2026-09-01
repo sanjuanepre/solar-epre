@@ -78,7 +78,7 @@ export class SolarController {
       const dto = new SolarCalculationDto();
       dto.annualConsumption = solarDataNearby.annualConsumption;
       dto.categoriaSeleccionada = solarDataNearby.tarifaCategory;
-      dto.panelsSelected = solarDataNearby.panels.panelsSelected;
+      dto.panelsSelected = solarDataNearby?.panels?.panelsSelected ?? 0;
       dto.potenciaMaxAsignada = 0; 
       dto.polygonArea = 0;
       dto.polygonCoordinates = [];
