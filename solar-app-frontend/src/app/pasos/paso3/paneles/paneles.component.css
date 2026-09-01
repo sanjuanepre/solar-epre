@@ -11,6 +11,8 @@
   gap: 8px;
   box-shadow: var(--shadow-sm);
   transition: var(--transition-smooth);
+  position: relative;
+  overflow: visible;
 }
 
 .info-inicio:hover {
@@ -126,6 +128,11 @@ h3{
   width: 110px;
   user-select: none;
   -webkit-user-select: none;
+  z-index: 10;
+}
+
+.power-custom-select.open {
+  z-index: 1000;
 }
 
 .power-select-trigger {
@@ -141,12 +148,13 @@ h3{
   font-size: 14px;
   font-weight: bold;
   color: var(--medium-green);
-  transition: border-color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .power-custom-select.open .power-select-trigger {
   border-color: var(--medium-green);
   border-radius: 8px 8px 0 0;
+  background-color: #f8fafc;
 }
 
 .power-arrow {
@@ -162,15 +170,17 @@ h3{
 
 .power-options {
   position: absolute;
-  bottom: 100%;
+  top: 100%;
   left: 0;
   right: 0;
   background-color: #fff;
   border: 2px solid var(--medium-green);
-  border-bottom: none;
-  border-radius: 8px 8px 0 0;
-  z-index: 1000;
-  box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  z-index: 1001;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  max-height: 240px;
+  overflow-y: auto;
 }
 
 .power-option {
@@ -183,8 +193,9 @@ h3{
   transition: background-color 0.15s ease;
 }
 
-.power-option:first-child {
-  border-radius: 8px 8px 0 0;
+.power-option:last-child {
+  border-bottom: none;
+  border-radius: 0 0 6px 6px;
 }
 
 .power-option:hover,
