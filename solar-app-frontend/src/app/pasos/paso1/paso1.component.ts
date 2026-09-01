@@ -350,9 +350,15 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
   private async initializeAutocomplete() {
     const input = document.getElementById('pac-input') as HTMLInputElement;
     
-    // Crear el autocompletado restringido a Argentina y solicitando solo los campos requeridos
+    const sanJuanBounds = new google.maps.LatLngBounds(
+      new google.maps.LatLng(-32.70, -70.70), // Suroeste
+      new google.maps.LatLng(-28.20, -66.60)  // Noreste
+    );
+
+    // Crear el autocompletado restringido a Argentina, con prioridad territorial en San Juan
     const autocomplete = new google.maps.places.Autocomplete(input, {
       componentRestrictions: { country: 'ar' },
+      bounds: sanJuanBounds,
       fields: ['geometry', 'formatted_address']
     });
 

@@ -119,6 +119,15 @@ export class MapService {
       rotateControl: false,
       gestureHandling: 'greedy',
       mapId: 'b822b45cb79aba09',
+      restriction: {
+        latLngBounds: {
+          north: -28.20,
+          south: -32.70,
+          west: -70.70,
+          east: -66.60,
+        },
+        strictBounds: false,
+      },
     };
     console.log('Opciones del mapa:', mapOptions);
 
