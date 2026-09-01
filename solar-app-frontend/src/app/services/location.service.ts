@@ -371,9 +371,13 @@ export class LocationService {
     }
   }
 
-  private isWithinSanJuan(lat: number, lng: number): boolean {
-    // Verifica si la ubicación está dentro de las coordenadas de la provincia de San Juan
-    return lat >= -31.878 && lat <= -30.175 && lng >= -69.192 && lng <= -66.879;
+  public isWithinSanJuan(lat: number, lng: number): boolean {
+    // Coordenadas geográficas que abarcan la totalidad del territorio de la Provincia de San Juan:
+    // Norte: ~-28.30° (Límite La Rioja/Catamarca, norte de Iglesia y Jáchal)
+    // Sur: ~-32.65° (Límite Mendoza, Sarmiento, 25 de Mayo, Media Agua)
+    // Oeste: ~-70.65° (Límite internacional con Chile, cordillera, Las Flores, Barreal, Calingasta)
+    // Este: ~-66.70° (Límite La Rioja/San Luis, Valle Fértil, Bermejo)
+    return lat >= -32.65 && lat <= -28.30 && lng >= -70.65 && lng <= -66.70;
   }
 
   validatePolygonLocation(polygon: google.maps.Polygon, map: google.maps.Map, autoPan: boolean = false) {
