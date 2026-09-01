@@ -264,7 +264,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
 
     // 3. Ahorro Recupero
     try {
-      result.ahorroRecupero = await this.exportChartOffscreen(this.getOptionsAhorroRecupero(true), 800, 300);
+      result.ahorroRecupero = await this.exportChartOffscreen(this.getOptionsAhorroRecupero(true), 850, 320);
       if (!result.ahorroRecupero && this.chartAhorroRecupero) {
         const data = await this.chartAhorroRecupero.dataURI();
         if (data && 'imgURI' in data && data.imgURI) {
@@ -277,21 +277,21 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
 
     // 4. Emisiones Anual
     try {
-      result.emisionesAnual = await this.exportChartOffscreen(this.getOptionsEmisionesVista('anual', true), 550, 270);
+      result.emisionesAnual = await this.exportChartOffscreen(this.getOptionsEmisionesVista('anual', true), 750, 300);
     } catch (e) {
       console.warn('Error al exportar emisionesAnual:', e);
     }
 
     // 5. Emisiones Comparativa
     try {
-      result.emisionesComparativa = await this.exportChartOffscreen(this.getOptionsEmisionesVista('comparativa', true), 550, 270);
+      result.emisionesComparativa = await this.exportChartOffscreen(this.getOptionsEmisionesVista('comparativa', true), 750, 300);
     } catch (e) {
       console.warn('Error al exportar emisionesComparativa:', e);
     }
 
     // 6. Emisiones Acumulada
     try {
-      result.emisionesAcumulada = await this.exportChartOffscreen(this.getOptionsEmisionesVista('acumulada', true), 550, 270);
+      result.emisionesAcumulada = await this.exportChartOffscreen(this.getOptionsEmisionesVista('acumulada', true), 750, 300);
       result.emisiones = result.emisionesAcumulada || result.emisionesAnual;
     } catch (e) {
       console.warn('Error al exportar emisionesAcumulada:', e);
@@ -299,7 +299,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
 
     // 7. Emisiones Gauge
     try {
-      result.emisionesGauge = await this.exportChartOffscreen(this.getOptionsEmisionesVista('gauge', true), 450, 270);
+      result.emisionesGauge = await this.exportChartOffscreen(this.getOptionsEmisionesVista('gauge', true), 450, 280);
     } catch (e) {
       console.warn('Error al exportar emisionesGauge:', e);
     }
@@ -608,8 +608,8 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         },
       ],
       chart: {
-        height: forExport ? 300 : 350,
-        width: forExport ? 800 : '100%',
+        height: forExport ? 300 : 360,
+        width: forExport ? 850 : '100%',
         type: 'bar',
         stacked: false,
         background: forExport ? '#ffffff' : 'transparent',
@@ -624,27 +624,38 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       },
       plotOptions: {
         bar: {
-          columnWidth: '50%',
+          columnWidth: '55%',
           borderRadius: 3,
         },
       },
       xaxis: {
         categories: categories,
-        title: {
-          text: 'Año',
-          style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
-          offsetY: -25,
+        tickAmount: forExport ? 20 : 10,
+        tickPlacement: 'between',
+        labels: {
+          rotate: -35,
+          rotateAlways: false,
+          hideOverlappingLabels: true,
+          trim: true,
+          style: {
+            fontSize: '11px',
+            fontFamily: 'sodo sans, sans-serif',
+            colors: '#475569',
+          },
         },
+        axisBorder: { show: true, color: '#e2e8f0' },
+        axisTicks: { show: true, color: '#cbd5e1' },
       },
       yaxis: [
         {
           seriesName: 'Ahorro por autoconsumo',
           title: {
             text: 'USD/año',
-            style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
+            style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif', color: '#475569' },
           },
           labels: {
             formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE', { maximumFractionDigits: 0 }) : '0',
+            style: { fontSize: '11px', fontFamily: 'sodo sans, sans-serif' },
           },
         },
         {
@@ -656,10 +667,11 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
           seriesName: 'Flujo de caja acumulado',
           title: {
             text: 'Flujo acumulado (USD)',
-            style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
+            style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif', color: '#008ae3' },
           },
           labels: {
             formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE', { maximumFractionDigits: 0 }) : '0',
+            style: { fontSize: '11px', fontFamily: 'sodo sans, sans-serif' },
           },
         },
       ],
@@ -682,8 +694,8 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         yaxis: [
           {
             y: 0,
-            borderColor: '#999',
-            borderWidth: 1,
+            borderColor: '#94a3b8',
+            borderWidth: 1.5,
             strokeDashArray: 4,
           },
         ],
@@ -695,11 +707,14 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
             borderWidth: 2,
             label: {
               text: `Recupero (~${recuperoInversionAnios} años)`,
+              orientation: 'vertical',
               style: {
-                fontSize: '10px',
+                fontSize: '10.5px',
                 fontFamily: 'sodo sans, sans-serif',
-                background: '#e8f4ff',
-                color: '#008ae3',
+                background: '#e0f2fe',
+                color: '#0369a1',
+                fontWeight: 600,
+                padding: { left: 6, right: 6, top: 4, bottom: 4 },
               },
             },
           },
@@ -708,11 +723,52 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       colors: ['#5aaa8a', '#e4c58d', '#008ae3'],
       legend: {
         position: 'bottom',
-        fontSize: '11px',
+        fontSize: '12px',
         fontFamily: 'sodo sans, sans-serif',
+        markers: {
+          radius: 3,
+        },
       },
       dataLabels: { enabled: false },
       fill: { opacity: [0.85, 0.85, 1] },
+      responsive: [
+        {
+          breakpoint: 768,
+          options: {
+            chart: { height: 320 },
+            xaxis: {
+              tickAmount: 6,
+              labels: {
+                rotate: -45,
+                rotateAlways: true,
+                style: { fontSize: '10px' },
+              },
+            },
+            yaxis: [
+              {
+                title: { text: 'USD/año', style: { fontSize: '10px' } },
+                labels: {
+                  style: { fontSize: '10px' },
+                  formatter: (val: number) => (val != null && !isNaN(val)) ? (val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val.toString()) : '0',
+                },
+              },
+              { show: false },
+              {
+                opposite: true,
+                title: { text: 'Flujo (USD)', style: { fontSize: '10px' } },
+                labels: {
+                  style: { fontSize: '10px' },
+                  formatter: (val: number) => (val != null && !isNaN(val)) ? (Math.abs(val) >= 1000 ? `${(val / 1000).toFixed(0)}k` : val.toString()) : '0',
+                },
+              },
+            ],
+            legend: {
+              position: 'bottom',
+              fontSize: '10px',
+            },
+          },
+        },
+      ],
     };
   }
 
@@ -763,8 +819,11 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         { name: 'Ingreso por inyección', data: ingresoData },
         { name: 'Flujo de caja acumulado', data: flujoCajaAcumulado },
       ],
+      xaxis: {
+        categories: categories,
+      },
       annotations: {
-        yaxis: [{ y: 0, borderColor: '#999', borderWidth: 1, strokeDashArray: 4 }],
+        yaxis: [{ y: 0, borderColor: '#94a3b8', borderWidth: 1.5, strokeDashArray: 4 }],
         xaxis: showAnnotation ? [
           {
             x: anoStr,
@@ -773,11 +832,14 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
             borderWidth: 2,
             label: {
               text: `Recupero (~${recuperoInversionAnios} años)`,
+              orientation: 'vertical',
               style: {
-                fontSize: '10px',
+                fontSize: '10.5px',
                 fontFamily: 'sodo sans, sans-serif',
-                background: '#e8f4ff',
-                color: '#008ae3',
+                background: '#e0f2fe',
+                color: '#0369a1',
+                fontWeight: 600,
+                padding: { left: 6, right: 6, top: 4, bottom: 4 },
               },
             },
           },
@@ -826,8 +888,8 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
           },
         ],
         chart: {
-          height: forExport ? 260 : 320,
-          width: forExport ? 500 : '100%',
+          height: forExport ? 260 : 330,
+          width: forExport ? 750 : '100%',
           type: 'area',
           background: forExport ? '#ffffff' : 'transparent',
           toolbar: { show: false },
@@ -859,27 +921,49 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         },
         xaxis: {
           categories: categories,
+          tickAmount: forExport ? 10 : 8,
           labels: {
-            rotate: -45,
-            style: { fontSize: '10px' },
+            rotate: -35,
+            rotateAlways: false,
+            hideOverlappingLabels: true,
+            style: { fontSize: '11px', fontFamily: 'sodo sans, sans-serif', colors: '#475569' },
           },
+          axisBorder: { show: true, color: '#e2e8f0' },
+          axisTicks: { show: true, color: '#cbd5e1' },
         },
         yaxis: {
           title: {
             text: 'Ton CO₂/año',
-            style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
+            style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif', color: '#475569' },
           },
           labels: {
             formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '0',
+            style: { fontSize: '11px', fontFamily: 'sodo sans, sans-serif' },
           },
         },
         tooltip: {
           enabled: !forExport,
           theme: 'light',
           y: {
-            formatter: (value: number) => (value != null && !isNaN(value)) ? `${value.toLocaleString('de-DE')} tCO₂ evitado` : '0 tCO₂ evitado',
+            formatter: (value: number) => (value != null && !isNaN(value)) ? `${value.toLocaleString('de-DE', { maximumFractionDigits: 2 })} tCO₂ evitado` : '0 tCO₂ evitado',
           },
         },
+        responsive: [
+          {
+            breakpoint: 768,
+            options: {
+              chart: { height: 300 },
+              xaxis: {
+                tickAmount: 5,
+                labels: { rotate: -45, rotateAlways: true, style: { fontSize: '10px' } },
+              },
+              yaxis: {
+                title: { text: 't CO₂/año', style: { fontSize: '10px' } },
+                labels: { style: { fontSize: '10px' } },
+              },
+            },
+          },
+        ],
       };
     } else if (vista === 'comparativa') {
       const baseSeries = Array(categories.length).fill(baseCO2);
@@ -897,8 +981,8 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
           },
         ],
         chart: {
-          height: forExport ? 260 : 320,
-          width: forExport ? 500 : '100%',
+          height: forExport ? 260 : 330,
+          width: forExport ? 750 : '100%',
           type: 'area',
           background: forExport ? '#ffffff' : 'transparent',
           toolbar: { show: false },
@@ -922,33 +1006,57 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         dataLabels: { enabled: false },
         xaxis: {
           categories: categories,
+          tickAmount: forExport ? 10 : 8,
           labels: {
-            rotate: -45,
-            style: { fontSize: '10px' },
+            rotate: -35,
+            rotateAlways: false,
+            hideOverlappingLabels: true,
+            style: { fontSize: '11px', fontFamily: 'sodo sans, sans-serif', colors: '#475569' },
           },
+          axisBorder: { show: true, color: '#e2e8f0' },
+          axisTicks: { show: true, color: '#cbd5e1' },
         },
         yaxis: {
           title: {
             text: 'Ton CO₂/año',
-            style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
+            style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif', color: '#475569' },
           },
           labels: {
             formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '0',
+            style: { fontSize: '11px', fontFamily: 'sodo sans, sans-serif' },
           },
         },
         legend: {
           position: 'bottom',
-          fontSize: '11px',
+          fontSize: '12px',
           fontFamily: 'sodo sans, sans-serif',
+          markers: { radius: 3 },
         },
         tooltip: {
           enabled: !forExport,
           theme: 'light',
           shared: true,
           y: {
-            formatter: (value: number) => (value != null && !isNaN(value)) ? `${value.toLocaleString('de-DE')} tCO₂/año` : '0 tCO₂/año',
+            formatter: (value: number) => (value != null && !isNaN(value)) ? `${value.toLocaleString('de-DE', { maximumFractionDigits: 2 })} tCO₂/año` : '0 tCO₂/año',
           },
         },
+        responsive: [
+          {
+            breakpoint: 768,
+            options: {
+              chart: { height: 300 },
+              xaxis: {
+                tickAmount: 5,
+                labels: { rotate: -45, rotateAlways: true, style: { fontSize: '10px' } },
+              },
+              yaxis: {
+                title: { text: 't CO₂/año', style: { fontSize: '10px' } },
+                labels: { style: { fontSize: '10px' } },
+              },
+              legend: { fontSize: '10px' },
+            },
+          },
+        ],
       };
     } else if (vista === 'acumulada') {
       return {
@@ -959,8 +1067,8 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
           },
         ],
         chart: {
-          height: forExport ? 260 : 320,
-          width: forExport ? 500 : '100%',
+          height: forExport ? 260 : 330,
+          width: forExport ? 750 : '100%',
           type: 'area',
           background: forExport ? '#ffffff' : 'transparent',
           toolbar: { show: false },
@@ -992,27 +1100,49 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         },
         xaxis: {
           categories: categories,
+          tickAmount: forExport ? 10 : 8,
           labels: {
-            rotate: -45,
-            style: { fontSize: '10px' },
+            rotate: -35,
+            rotateAlways: false,
+            hideOverlappingLabels: true,
+            style: { fontSize: '11px', fontFamily: 'sodo sans, sans-serif', colors: '#475569' },
           },
+          axisBorder: { show: true, color: '#e2e8f0' },
+          axisTicks: { show: true, color: '#cbd5e1' },
         },
         yaxis: {
           title: {
             text: 'Ton CO₂ acumuladas',
-            style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif' },
+            style: { fontSize: '12px', fontFamily: 'sodo sans, sans-serif', color: '#475569' },
           },
           labels: {
             formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '0',
+            style: { fontSize: '11px', fontFamily: 'sodo sans, sans-serif' },
           },
         },
         tooltip: {
           enabled: !forExport,
           theme: 'light',
           y: {
-            formatter: (value: number) => (value != null && !isNaN(value)) ? `${value.toLocaleString('de-DE')} tCO₂ acumulado` : '0 tCO₂ acumulado',
+            formatter: (value: number) => (value != null && !isNaN(value)) ? `${value.toLocaleString('de-DE', { maximumFractionDigits: 2 })} tCO₂ acumulado` : '0 tCO₂ acumulado',
           },
         },
+        responsive: [
+          {
+            breakpoint: 768,
+            options: {
+              chart: { height: 300 },
+              xaxis: {
+                tickAmount: 5,
+                labels: { rotate: -45, rotateAlways: true, style: { fontSize: '10px' } },
+              },
+              yaxis: {
+                title: { text: 't CO₂ acum.', style: { fontSize: '10px' } },
+                labels: { style: { fontSize: '10px' } },
+              },
+            },
+          },
+        ],
       };
     } else if (vista === 'gauge') {
       const totalBaseCO2_20Years = baseCO2 * (this.periodoVeinteanalEmisionesGEIEvitadasOriginal?.length || 1);
@@ -1022,7 +1152,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         series: [percent],
         chart: {
           type: 'radialBar',
-          height: forExport ? 260 : 320,
+          height: forExport ? 260 : 330,
           width: forExport ? 450 : '100%',
           background: forExport ? '#ffffff' : 'transparent',
           offsetY: -10,
@@ -1082,9 +1212,9 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
           text: `Evitas el ${percent}% de tus emisiones eléctricas totales`,
           align: 'center',
           style: {
-            fontSize: '11px',
+            fontSize: '12px',
             fontFamily: 'sodo sans, sans-serif',
-            color: '#555',
+            color: '#475569',
           },
         },
       };

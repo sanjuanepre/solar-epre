@@ -729,18 +729,16 @@ input[type=number] {
 
 
 /*******************************************************************/
-/* Aplica el estilo solo al gráfico con el ID #chartAhorroRecuperoRef */
-#chartAhorroRecuperoRef .apexcharts-legend-series:nth-child(3) .apexcharts-legend-marker {
- display: none !important;
+/* Estilos para leyendas de gráficos */
+.apexcharts-legend {
+  padding: 4px 8px !important;
+  gap: 12px;
 }
-
-#chartAhorroRecuperoRef .apexcharts-legend-series:nth-child(2) .apexcharts-legend-marker {
-  display: none !important;
- }
-
- #chartAhorroRecuperoRef .apexcharts-legend-series:nth-child(1) .apexcharts-legend-marker {
-  display: none !important;
- }
+.apexcharts-legend-text {
+  font-family: "Sodo Sans", sans-serif !important;
+  font-size: 11.5px !important;
+  color: #475569 !important;
+}
 
  
 /*****************************************************************************/
