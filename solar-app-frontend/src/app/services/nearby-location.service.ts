@@ -11,7 +11,7 @@ import { SolarApiService } from './solar-api.service';
 })
 export class NearbyLocationService {
   private location!: NearbyLocation;
-  private readonly carbonOffsetFactorKgPerMWh: number = 0.397;
+  private readonly carbonOffsetFactorKgPerMWh: number = 397;
   private resultadosFrontNearbyLocation!: ResultadosFrontDTO;
   private panelWidthMeters = 1.045;
   private panelHeightMeters = 1.879;

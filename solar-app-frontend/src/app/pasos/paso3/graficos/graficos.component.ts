@@ -447,9 +447,11 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
     if (!this.chartEnergiaConsumo) return;
     const propAutoconsumo = this.proporcionAutoconsumo ?? 0.8;
     const propInyectada = this.proporcionInyectada ?? 0.2;
-    const autoconsumidaKwh = this.yearlyEnergy * propAutoconsumo;
-    const inyectadaKwh = this.yearlyEnergy * propInyectada;
-    const compradadRedKwh = Math.max(0, this.consumoTotalAnual - autoconsumidaKwh);
+    const yearlyEnergy = this.yearlyEnergy || 0;
+    const consumoAnual = this.consumoTotalAnual || 0;
+    const autoconsumidaKwh = yearlyEnergy * propAutoconsumo;
+    const inyectadaKwh = yearlyEnergy * propInyectada;
+    const compradadRedKwh = Math.max(0, consumoAnual - autoconsumidaKwh);
 
     this.chartEnergiaConsumo.updateOptions({
       series: [
@@ -468,9 +470,11 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
     const propAutoconsumo = this.proporcionAutoconsumo ?? 0.8;
     const propInyectada = this.proporcionInyectada ?? 0.2;
 
-    const autoconsumidaKwh = this.yearlyEnergy * propAutoconsumo;
-    const inyectadaKwh = this.yearlyEnergy * propInyectada;
-    const compradadRedKwh = Math.max(0, this.consumoTotalAnual - autoconsumidaKwh);
+    const yearlyEnergy = this.yearlyEnergy || 0;
+    const consumoAnual = this.consumoTotalAnual || 0;
+    const autoconsumidaKwh = yearlyEnergy * propAutoconsumo;
+    const inyectadaKwh = yearlyEnergy * propInyectada;
+    const compradadRedKwh = Math.max(0, consumoAnual - autoconsumidaKwh);
     const total = autoconsumidaKwh + inyectadaKwh + compradadRedKwh;
 
     const pctAutoconsumo = total > 0 ? Math.round((autoconsumidaKwh / total) * 100) : 0;
@@ -545,9 +549,11 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
     if (!this.chartDonutEnergia) return;
     const propAutoconsumo = this.proporcionAutoconsumo ?? 0.8;
     const propInyectada = this.proporcionInyectada ?? 0.2;
-    const autoconsumidaKwh = this.yearlyEnergy * propAutoconsumo;
-    const inyectadaKwh = this.yearlyEnergy * propInyectada;
-    const compradadRedKwh = Math.max(0, this.consumoTotalAnual - autoconsumidaKwh);
+    const yearlyEnergy = this.yearlyEnergy || 0;
+    const consumoAnual = this.consumoTotalAnual || 0;
+    const autoconsumidaKwh = yearlyEnergy * propAutoconsumo;
+    const inyectadaKwh = yearlyEnergy * propInyectada;
+    const compradadRedKwh = Math.max(0, consumoAnual - autoconsumidaKwh);
     const total = autoconsumidaKwh + inyectadaKwh + compradadRedKwh;
     const pctAutoconsumo = total > 0 ? Math.round((autoconsumidaKwh / total) * 100) : 0;
     const pctInyectada = total > 0 ? Math.round((inyectadaKwh / total) * 100) : 0;
