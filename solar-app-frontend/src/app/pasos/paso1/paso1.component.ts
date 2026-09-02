@@ -554,17 +554,19 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
       console.log(`[Paso1Component] Consultando dataLayers para centroide: (${lat}, ${lng}) con radio ${radiusMeters}m`);
       const response = await this.solarApiService.getDataLayers(lat, lng, radiusMeters);
       
-      this.zone.run(() => {
-        if (response && response.annualFluxUrl) {
+      if (response && response.annualFluxUrl) {
+        this.zone.run(() => {
           this.annualFluxUrl = response.annualFluxUrl;
           this.heatmapAvailable = true;
           this.showHeatmap = true;
           console.log('[Paso1Component] Capas térmicas obtenidas y activadas.');
-          const polygons = this.mapService.getPolygons();
-          if (polygons.length > 0) {
-            this.mapService.fetchAndRenderSolarHeatmap(this.annualFluxUrl, polygons[0]);
-          }
-        } else {
+        });
+        const polygons = this.mapService.getPolygons();
+        if (polygons.length > 0) {
+          await this.mapService.fetchAndRenderSolarHeatmap(this.annualFluxUrl, polygons[0]);
+        }
+      } else {
+        this.zone.run(() => {
           console.log('[Paso1Component] Sin datos GeoTIFF de radiación detallada para esta zona.');
           this.annualFluxUrl = '';
           this.heatmapAvailable = false;
@@ -575,8 +577,8 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
             'Entendido',
             { duration: 5000 }
           );
-        }
-      });
+        });
+      }
     } catch (error) {
       console.error('[Paso1Component] Error al obtener capas solares:', error);
       this.zone.run(() => {
@@ -607,7 +609,7 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
       } else {
         const polygons = this.mapService.getPolygons();
         if (polygons.length > 0) {
-          this.mapService.fetchAndRenderSolarHeatmap(this.annualFluxUrl, polygons[0]);
+          await this.mapService.fetchAndRenderSolarHeatmap(this.annualFluxUrl, polygons[0]);
         }
       }
     } else {

@@ -1341,9 +1341,18 @@ export class MapService {
       overlayBounds,
       {
         opacity: this.heatmapOpacity,
-        map: this.map,
+        clickable: false,
       }
     );
+    this.heatMapOverlay.setMap(this.map);
+    this.heatMapOverlay.setOpacity(this.heatmapOpacity);
+
+    // Asegurar el ciclo de repintado en Google Maps API para dataURLs asíncronos
+    setTimeout(() => {
+      if (this.heatMapOverlay) {
+        this.heatMapOverlay.setOpacity(this.heatmapOpacity);
+      }
+    }, 50);
 
     this.isHeatmapActiveState = true;
     this.isHeatmapActiveSubject.next(true);
