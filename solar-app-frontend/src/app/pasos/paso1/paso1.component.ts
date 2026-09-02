@@ -518,7 +518,8 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
       const dist = Math.sqrt(dLat * dLat + dLng * dLng);
       if (dist > maxDist) maxDist = dist;
     });
-    const radiusMeters = Math.min(100, Math.max(30, Math.round(maxDist * 1.25)));
+    // Expandir el radio para cubrir holgadamente el polígono y su entorno (mínimo 50m, hasta 150m)
+    const radiusMeters = Math.min(150, Math.max(50, Math.round(maxDist * 1.8)));
 
     this.zone.run(() => {
       this.isHeatmapLoading = true;

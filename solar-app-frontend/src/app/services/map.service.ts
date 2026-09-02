@@ -1184,28 +1184,31 @@ export class MapService {
         throw new Error('No se pudo obtener el contexto 2D del canvas');
       }
 
-      // 4. Aplicar clipping con la geometría del polígono del usuario
-      ctx.beginPath();
-      const path = polygon.getPath();
-      path.forEach((latLng, idx) => {
-        const lat = latLng.lat();
-        const lng = latLng.lng();
-        
-        // Convertir coordenadas del polígono (grados Lat/Lng) a UTM (metros)
-        const utmPoint = this.latLngToUtm(lat, lng);
-        
-        // Transformar coordenadas UTM a coordenadas de píxeles del canvas
-        const x = ((utmPoint.easting - minX) / (maxX - minX)) * width;
-        const y = ((maxY - utmPoint.northing) / (maxY - minY)) * height;
-        
-        if (idx === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-        }
+      // 4. Aplicar máscara circular ampliada sobre el GeoTIFF (supera el polígono para evaluar áreas circundantes)
+      const utmCenter = this.latLngToUtm(centerLat, centerLng);
+      const centerX = ((utmCenter.easting - minX) / (maxX - minX)) * width;
+      const centerY = ((maxY - utmCenter.northing) / (maxY - minY)) * height;
+
+      // Calcular la distancia máxima desde el centroide a los vértices del polígono en píxeles del canvas
+      let maxPolyRadiusPx = 0;
+      polygon.getPath().forEach((latLng) => {
+        const utmPoint = this.latLngToUtm(latLng.lat(), latLng.lng());
+        const px = ((utmPoint.easting - minX) / (maxX - minX)) * width;
+        const py = ((maxY - utmPoint.northing) / (maxY - minY)) * height;
+        const dist = Math.sqrt((px - centerX) ** 2 + (py - centerY) ** 2);
+        if (dist > maxPolyRadiusPx) maxPolyRadiusPx = dist;
       });
+
+      // El radio del círculo supera el polígono del usuario (factor 1.6) hasta los límites disponibles del GeoTIFF
+      const circleRadiusPx = Math.min(
+        Math.min(width, height) * 0.48,
+        Math.max(maxPolyRadiusPx * 1.6, Math.min(width, height) * 0.35)
+      );
+
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, circleRadiusPx, 0, Math.PI * 2);
       ctx.closePath();
-      ctx.clip(); // Limitar todo el dibujo subsiguiente al contorno del techo
+      ctx.clip(); // Limitar el dibujo al círculo ampliado de análisis térmico
 
       // 5. Analizar si el GeoTIFF contiene datos de radiación válidos (distintos de -9999)
       let validPixels = 0;
