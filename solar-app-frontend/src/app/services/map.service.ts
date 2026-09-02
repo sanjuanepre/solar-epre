@@ -5,6 +5,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { SharedService } from './shared.service';
 import { EnvironmentService } from './environment.service';
 import { fromArrayBuffer } from 'geotiff';
+import { environment } from '../../environments/environments';
 import {
   TerraDraw,
   TerraDrawPolygonMode,
@@ -34,6 +35,46 @@ export class MapService {
   heatMapLoading$ = this.heatMapLoadingSubject.asObservable();
   private lastAnnualFluxUrl: string | null = null;
   private isHeatmapActiveState: boolean = false;
+  private isHeatmapActiveSubject = new BehaviorSubject<boolean>(false);
+  isHeatmapActive$ = this.isHeatmapActiveSubject.asObservable();
+
+  private cachedSolarRaster: {
+    url: string;
+    values: Float32Array;
+    width: number;
+    height: number;
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
+    zone: number;
+    northernHemisphere: boolean;
+    sw: { lat: number; lng: number };
+    ne: { lat: number; lng: number };
+  } | null = null;
+
+  private showPanelsOnHeatmap: boolean = true;
+  private heatmapOpacity: number = 0.65;
+
+  setShowPanelsOnHeatmap(show: boolean) {
+    this.showPanelsOnHeatmap = show;
+    this.updatePanelsStyle();
+  }
+
+  getShowPanelsOnHeatmap(): boolean {
+    return this.showPanelsOnHeatmap;
+  }
+
+  setHeatmapOpacity(opacity: number) {
+    this.heatmapOpacity = Math.max(0, Math.min(1, opacity));
+    if (this.heatMapOverlay) {
+      this.heatMapOverlay.setOpacity(this.heatmapOpacity);
+    }
+  }
+
+  getHeatmapOpacity(): number {
+    return this.heatmapOpacity;
+  }
 
   // --- TerraDraw State ---
   private terraDraw: TerraDraw | null = null;
@@ -149,7 +190,6 @@ export class MapService {
   clearPolygons() {
     this.polygons.forEach((polygon) => polygon.setMap(null));
     this.polygons = [];
-    this.invalidateHeatmapCache();
   }
 
   invalidateHeatmapCache() {
@@ -309,6 +349,12 @@ export class MapService {
                 },
               },
             },
+            styles: {
+              selectedPolygonColor: styles.fillColor,
+              selectedPolygonFillOpacity: () => (this.isHeatmapActive() ? 0.0 : 0.25),
+              selectedPolygonOutlineColor: styles.outlineColor,
+              selectedPolygonOutlineWidth: 3.5,
+            },
           }),
         ],
       });
@@ -351,7 +397,7 @@ export class MapService {
 
     return {
       fillColor: fillColor,
-      fillOpacity: fillOpacity,
+      fillOpacity: () => (this.isHeatmapActive() ? 0.0 : fillOpacity),
       outlineColor: mainColor,
       outlineWidth: 3.5,
     };
@@ -434,9 +480,6 @@ export class MapService {
     feature.geometry.coordinates[0] = rotatedCoords;
 
     this.terraDraw.updateFeatureGeometry(feature.id as string, feature.geometry as any);
-    if (this.isHeatmapActive()) {
-      this.invalidateHeatmapCache();
-    }
     this.handleTerraDrawChange(true);
   }
 
@@ -727,16 +770,19 @@ export class MapService {
         );
 
         if (allCornersInside) {
+          const isHeatmap = this.isHeatmapActive();
           const panelRectangle = new google.maps.Rectangle({
             bounds: new google.maps.LatLngBounds(
               southWestCorner,
               northEastCorner
             ),
             fillColor: '#000000',
-            fillOpacity: 0.7,
+            fillOpacity: isHeatmap ? 0.18 : 0.7,
             strokeColor: '#FFFFFF',
-            strokeWeight: 0.5,
-            map: this.map,
+            strokeWeight: isHeatmap ? 1.2 : 0.5,
+            strokeOpacity: isHeatmap ? 0.95 : 1,
+            zIndex: isHeatmap ? 20 : 5,
+            map: (isHeatmap && !this.showPanelsOnHeatmap) ? null : this.map,
           });
 
           this.panels.push(panelRectangle);
@@ -750,9 +796,11 @@ export class MapService {
     this.sharedService.calculateAreaPanelsSelected(totalPanels);
 
     if (this.isHeatmapActive()) {
-      this.setPanelsVisibility(false);
+      this.updatePanelsStyle();
       this.setPolygonFillOpacity(0);
-      if (this.lastAnnualFluxUrl && this.polygons.length > 0 && !this.heatMapOverlay) {
+      if (this.cachedSolarRaster && this.polygons.length > 0) {
+        this.renderHeatmapOverlayFromRaster(this.polygons[0]);
+      } else if (this.lastAnnualFluxUrl && this.polygons.length > 0 && !this.heatMapOverlay) {
         this.fetchAndRenderSolarHeatmap(this.lastAnnualFluxUrl, this.polygons[0]);
       }
     }
@@ -837,16 +885,19 @@ export class MapService {
           maxGridPanels++;
 
           if (totalPanels < max) {
+            const isHeatmap = this.isHeatmapActive();
             const panelRectangle = new google.maps.Rectangle({
               bounds: new google.maps.LatLngBounds(
                 southWestCorner,
                 northEastCorner
               ),
               fillColor: '#000000',
-              fillOpacity: 0.7,
+              fillOpacity: isHeatmap ? 0.18 : 0.7,
               strokeColor: '#FFFFFF',
-              strokeWeight: 0.5,
-              map: this.map,
+              strokeWeight: isHeatmap ? 1.2 : 0.5,
+              strokeOpacity: isHeatmap ? 0.95 : 1,
+              zIndex: isHeatmap ? 20 : 5,
+              map: (isHeatmap && !this.showPanelsOnHeatmap) ? null : this.map,
             });
 
             this.panels.push(panelRectangle);
@@ -860,9 +911,11 @@ export class MapService {
     this.sharedService.calculateAreaPanelsSelected(totalPanels);
 
     if (this.isHeatmapActive()) {
-      this.setPanelsVisibility(false);
+      this.updatePanelsStyle();
       this.setPolygonFillOpacity(0);
-      if (this.lastAnnualFluxUrl && this.polygons.length > 0 && !this.heatMapOverlay) {
+      if (this.cachedSolarRaster && this.polygons.length > 0) {
+        this.renderHeatmapOverlayFromRaster(this.polygons[0]);
+      } else if (this.lastAnnualFluxUrl && this.polygons.length > 0 && !this.heatMapOverlay) {
         this.fetchAndRenderSolarHeatmap(this.lastAnnualFluxUrl, this.polygons[0]);
       }
     }
@@ -944,26 +997,56 @@ export class MapService {
   }
 
   /**
+   * Actualiza el estilo y visibilidad de los paneles según si el mapa de calor está activo o no.
+   */
+  updatePanelsStyle() {
+    if (!this.panels || this.panels.length === 0) return;
+    const isHeatmap = this.isHeatmapActive();
+
+    this.panels.forEach((panel) => {
+      if (isHeatmap) {
+        if (this.showPanelsOnHeatmap) {
+          panel.setOptions({
+            fillColor: '#000000',
+            fillOpacity: 0.18,
+            strokeColor: '#FFFFFF',
+            strokeWeight: 1.2,
+            strokeOpacity: 0.95,
+            zIndex: 20,
+          });
+          panel.setMap(this.map);
+        } else {
+          panel.setMap(null);
+        }
+      } else {
+        panel.setOptions({
+          fillColor: '#000000',
+          fillOpacity: 0.7,
+          strokeColor: '#FFFFFF',
+          strokeWeight: 0.5,
+          strokeOpacity: 1,
+          zIndex: 5,
+        });
+        panel.setMap(this.map);
+      }
+    });
+  }
+
+  /**
    * Modifica la visibilidad de los paneles vectoriales dibujados en el mapa.
    */
   setPanelsVisibility(visible: boolean) {
     if (this.panels && this.panels.length > 0) {
-      const isHeatmap = this.isHeatmapActive();
-      this.panels.forEach((panel) => {
-        if (visible) {
-          panel.setOptions({
-            fillOpacity: isHeatmap ? 0.3 : 0.7,
-            strokeColor: '#FFFFFF',
-            strokeWeight: 0.6,
-          });
-        }
-        panel.setMap(visible ? this.map : null);
-      });
+      if (!visible) {
+        this.panels.forEach((panel) => panel.setMap(null));
+      } else {
+        this.updatePanelsStyle();
+      }
     }
   }
 
   /**
-   * Modifica la opacidad del relleno de los polígonos dibujados en el mapa.
+   * Modifica la opacidad del relleno de los polígonos dibujados en el mapa (tanto de referencia como de TerraDraw).
    */
   setPolygonFillOpacity(opacity: number) {
     if (this.polygons && this.polygons.length > 0) {
@@ -971,6 +1054,38 @@ export class MapService {
         poly.setOptions({ fillOpacity: opacity });
       });
     }
+    this.applyTerraDrawDataLayerFillOpacity(opacity);
+  }
+
+  /**
+   * Aplica directamente la opacidad de relleno a las geometrías poligonales de TerraDraw
+   * en la capa de datos vectorial (google.maps.Data) de Google Maps.
+   */
+  private applyTerraDrawDataLayerFillOpacity(opacity: number) {
+    if (!this.map || !this.map.data) return;
+
+    const apply = () => {
+      if (!this.map || !this.map.data) return;
+      this.map.data.forEach((feature) => {
+        const geom = feature.getGeometry();
+        if (geom) {
+          const type = geom.getType();
+          if (type === 'Polygon' || type === 'MultiPolygon') {
+            if (opacity <= 0) {
+              this.map.data.overrideStyle(feature, {
+                fillOpacity: 0,
+              });
+            } else {
+              this.map.data.revertStyle(feature);
+            }
+          }
+        }
+      });
+    };
+
+    apply();
+    // Re-aplicar en el siguiente frame para sincronizar tras posibles flushes asíncronos de TerraDraw
+    requestAnimationFrame(() => apply());
   }
 
   /**
@@ -1061,7 +1176,6 @@ export class MapService {
     if (!northernHemisphere) {
       northing += 10000000; // Ajuste para el Hemisferio Sur
     }
-
     return {
       easting,
       northing,
@@ -1071,39 +1185,176 @@ export class MapService {
   }
 
   isHeatmapActive(): boolean {
-    return this.isHeatmapActiveState || !!(this.heatMapOverlay && this.heatMapOverlay.getMap());
+    return this.isHeatmapActiveSubject.value || this.isHeatmapActiveState || !!(this.heatMapOverlay && this.heatMapOverlay.getMap());
   }
 
   /**
-   * Oculta el GroundOverlay del mapa de calor solar (manteniendo el cache), restaurando paneles y opacidad.
+   * Oculta el GroundOverlay del mapa de calor solar (manteniendo el cache ráster en memoria), restaurando paneles y opacidad.
    */
   hideHeatmap() {
     this.isHeatmapActiveState = false;
+    this.isHeatmapActiveSubject.next(false);
     if (this.heatMapOverlay) {
       this.heatMapOverlay.setMap(null);
     }
     // Restaurar el estado visual original de los paneles y el polígono
     this.setPanelsVisibility(true);
-    this.setPolygonFillOpacity(0.5);
+    const themeOpacity = this.activeThemeSubject.value === 'neon' ? 0.45 : 0.35;
+    this.setPolygonFillOpacity(themeOpacity);
   }
 
   /**
-   * Limpia y remueve el GroundOverlay del mapa de calor solar por completo (al cambiar la geometría).
+   * Limpia y remueve el GroundOverlay del mapa de calor solar y el cache ráster por completo.
    */
   clearHeatmap() {
     this.isHeatmapActiveState = false;
+    this.isHeatmapActiveSubject.next(false);
     this.lastAnnualFluxUrl = null;
+    this.cachedSolarRaster = null;
     if (this.heatMapOverlay) {
       this.heatMapOverlay.setMap(null);
       this.heatMapOverlay = null;
     }
     // Restaurar el estado visual original de los paneles y el polígono
     this.setPanelsVisibility(true);
-    this.setPolygonFillOpacity(0.5);
+    const themeOpacity = this.activeThemeSubject.value === 'neon' ? 0.45 : 0.35;
+    this.setPolygonFillOpacity(themeOpacity);
   }
 
   /**
-   * Descarga la capa de flujo solar anual (GeoTIFF), la parsea en el navegador con geotiff.js,
+   * Dibuja el GroundOverlay térmico a partir del ráster en memoria y lo ajusta a la geometría actual del polígono.
+   */
+  private renderHeatmapOverlayFromRaster(polygon: google.maps.Polygon) {
+    if (!this.cachedSolarRaster) return;
+
+    const {
+      values,
+      width,
+      height,
+      minX,
+      minY,
+      maxX,
+      maxY,
+      sw,
+      ne,
+    } = this.cachedSolarRaster;
+
+    // Calcular el centroide del polígono actual
+    const bounds = new google.maps.LatLngBounds();
+    polygon.getPath().forEach(p => bounds.extend(p));
+    const center = bounds.getCenter();
+    const centerLat = center.lat();
+    const centerLng = center.lng();
+
+    // Crear canvas para dibujar los píxeles
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      throw new Error('No se pudo obtener el contexto 2D del canvas');
+    }
+
+    // Aplicar máscara circular ampliada sobre el GeoTIFF centrada en el polígono
+    const utmCenter = this.latLngToUtm(centerLat, centerLng);
+    const centerX = ((utmCenter.easting - minX) / (maxX - minX)) * width;
+    const centerY = ((maxY - utmCenter.northing) / (maxY - minY)) * height;
+
+    let maxPolyRadiusPx = 0;
+    polygon.getPath().forEach((latLng) => {
+      const utmPoint = this.latLngToUtm(latLng.lat(), latLng.lng());
+      const px = ((utmPoint.easting - minX) / (maxX - minX)) * width;
+      const py = ((maxY - utmPoint.northing) / (maxY - minY)) * height;
+      const dist = Math.sqrt((px - centerX) ** 2 + (py - centerY) ** 2);
+      if (dist > maxPolyRadiusPx) maxPolyRadiusPx = dist;
+    });
+
+    const circleRadiusPx = Math.min(
+      Math.min(width, height) * 0.48,
+      Math.max(maxPolyRadiusPx * 1.6, Math.min(width, height) * 0.35)
+    );
+
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, circleRadiusPx, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+
+    // Dibujar los píxeles de irradiancia
+    const imageData = ctx.createImageData(width, height);
+    const data = imageData.data;
+    const minFlux = 1000;
+    const maxFlux = 2100;
+
+    for (let i = 0; i < values.length; i++) {
+      const flux = values[i];
+      const pixelIndex = i * 4;
+
+      if (flux === -9999 || isNaN(flux) || flux <= 0) {
+        data[pixelIndex + 3] = 0; // Transparente
+        continue;
+      }
+
+      const t = Math.max(0, Math.min(1, (flux - minFlux) / (maxFlux - minFlux)));
+      let r = 0, g = 0, b = 0;
+      if (t < 0.5) {
+        const factor = t * 2;
+        r = Math.round(48 + (230 - 48) * factor);
+        g = Math.round(0 + (57 - 0) * factor);
+        b = Math.round(102 + (0 - 102) * factor);
+      } else {
+        const factor = (t - 0.5) * 2;
+        r = 230 + Math.round((255 - 230) * factor);
+        g = 57 + Math.round((229 - 57) * factor);
+        b = 0;
+      }
+
+      data[pixelIndex] = r;
+      data[pixelIndex + 1] = g;
+      data[pixelIndex + 2] = b;
+      data[pixelIndex + 3] = 255;
+    }
+
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = width;
+    tempCanvas.height = height;
+    const tempCtx = tempCanvas.getContext('2d');
+    if (tempCtx) {
+      tempCtx.putImageData(imageData, 0, 0);
+      ctx.drawImage(tempCanvas, 0, 0);
+    } else {
+      ctx.putImageData(imageData, 0, 0);
+    }
+
+    // Remover overlay previo si existía
+    if (this.heatMapOverlay) {
+      this.heatMapOverlay.setMap(null);
+      this.heatMapOverlay = null;
+    }
+
+    const overlayBounds = new google.maps.LatLngBounds(
+      new google.maps.LatLng(sw.lat, sw.lng),
+      new google.maps.LatLng(ne.lat, ne.lng)
+    );
+
+    this.heatMapOverlay = new google.maps.GroundOverlay(
+      canvas.toDataURL(),
+      overlayBounds,
+      {
+        opacity: this.heatmapOpacity,
+        map: this.map,
+      }
+    );
+
+    this.isHeatmapActiveState = true;
+    this.isHeatmapActiveSubject.next(true);
+
+    // Actualizar estilo de paneles según configuración (traslúcidos o invisibles) y polígono transparente
+    this.updatePanelsStyle();
+    this.setPolygonFillOpacity(0);
+  }
+
+  /**
+   * Descarga la capa de flujo solar anual (GeoTIFF) o reutiliza el ráster cacheado en memoria,
    * recorta los límites según el polígono del usuario y dibuja un GroundOverlay térmico.
    */
   async fetchAndRenderSolarHeatmap(annualFluxUrl: string, polygon: google.maps.Polygon) {
@@ -1114,15 +1365,16 @@ export class MapService {
 
     this.lastAnnualFluxUrl = annualFluxUrl;
     this.isHeatmapActiveState = true;
+    this.isHeatmapActiveSubject.next(true);
 
-    // Ocultar temporalmente los paneles y hacer transparente el polígono para que no tapen el mapa de calor
-    this.setPanelsVisibility(false);
+    // Ajustar paneles a modo comparativo (o según preferencia) y hacer transparente el polígono
+    this.updatePanelsStyle();
     this.setPolygonFillOpacity(0);
 
-    // Si ya tenemos el overlay renderizado, simplemente lo volvemos a mostrar en el mapa
-    if (this.heatMapOverlay) {
-      console.log('[MapService] Reutilizando mapa de calor solar cacheado.');
-      this.heatMapOverlay.setMap(this.map);
+    // Si ya tenemos el ráster cacheado para esta URL, renderizamos directamente sin fetch de red
+    if (this.cachedSolarRaster && this.cachedSolarRaster.url === annualFluxUrl) {
+      console.log('[MapService] Reutilizando ráster GeoTIFF cacheado en memoria.');
+      this.renderHeatmapOverlayFromRaster(polygon);
       this.heatMapLoadingSubject.next(false);
       return;
     }
@@ -1130,16 +1382,18 @@ export class MapService {
     this.heatMapLoadingSubject.next(true);
 
     try {
-      // 1. Descargar el archivo GeoTIFF
-      // Las URLs de la API de Solar para geoTiff:get requieren la API Key de Google
-      const apiKey = this.environmentService.getGoogleMapsApiKey();
-      const urlWithKey = annualFluxUrl.includes('?') 
-        ? `${annualFluxUrl}&key=${apiKey}` 
-        : `${annualFluxUrl}?key=${apiKey}`;
+      // 1. Descargar el archivo GeoTIFF a través del proxy seguro del backend (sin exponer la Google API Key)
+      let targetDownloadUrl = annualFluxUrl;
+      if (targetDownloadUrl.includes('solar.googleapis.com')) {
+        // En caso de recibir URL directa de Google, enrutar por el proxy del backend
+        targetDownloadUrl = `${environment.apiUrl}/solar/geotiff?url=${encodeURIComponent(targetDownloadUrl)}`;
+      } else if (targetDownloadUrl.startsWith('/')) {
+        targetDownloadUrl = `${environment.apiUrl}${targetDownloadUrl}`;
+      }
 
-      const response = await fetch(urlWithKey);
+      const response = await fetch(targetDownloadUrl);
       if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status}`);
+        throw new Error(`Error HTTP descargando GeoTIFF: ${response.status}`);
       }
       const arrayBuffer = await response.arrayBuffer();
 
@@ -1151,7 +1405,7 @@ export class MapService {
       const width = image.getWidth();
       const height = image.getHeight();
 
-      // Obtener el Bounding Box (límites geográficos del GeoTIFF en metros de proyección UTM)
+      // Obtener el Bounding Box
       const bbox = image.getBoundingBox(); // [minX, minY, maxX, maxY]
       const minX = bbox[0];
       const minY = bbox[1];
@@ -1175,42 +1429,7 @@ export class MapService {
       console.log(`[MapService] GeoTIFF Bounds (UTM): minX=${minX}, minY=${minY}, maxX=${maxX}, maxY=${maxY}, zone=${zone}, N=${northernHemisphere}`);
       console.log(`[MapService] GeoTIFF Bounds (LatLng): SW=(${sw.lat}, ${sw.lng}), NE=(${ne.lat}, ${ne.lng})`);
 
-      // 3. Crear canvas para dibujar los píxeles
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        throw new Error('No se pudo obtener el contexto 2D del canvas');
-      }
-
-      // 4. Aplicar máscara circular ampliada sobre el GeoTIFF (supera el polígono para evaluar áreas circundantes)
-      const utmCenter = this.latLngToUtm(centerLat, centerLng);
-      const centerX = ((utmCenter.easting - minX) / (maxX - minX)) * width;
-      const centerY = ((maxY - utmCenter.northing) / (maxY - minY)) * height;
-
-      // Calcular la distancia máxima desde el centroide a los vértices del polígono en píxeles del canvas
-      let maxPolyRadiusPx = 0;
-      polygon.getPath().forEach((latLng) => {
-        const utmPoint = this.latLngToUtm(latLng.lat(), latLng.lng());
-        const px = ((utmPoint.easting - minX) / (maxX - minX)) * width;
-        const py = ((maxY - utmPoint.northing) / (maxY - minY)) * height;
-        const dist = Math.sqrt((px - centerX) ** 2 + (py - centerY) ** 2);
-        if (dist > maxPolyRadiusPx) maxPolyRadiusPx = dist;
-      });
-
-      // El radio del círculo supera el polígono del usuario (factor 1.6) hasta los límites disponibles del GeoTIFF
-      const circleRadiusPx = Math.min(
-        Math.min(width, height) * 0.48,
-        Math.max(maxPolyRadiusPx * 1.6, Math.min(width, height) * 0.35)
-      );
-
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, circleRadiusPx, 0, Math.PI * 2);
-      ctx.closePath();
-      ctx.clip(); // Limitar el dibujo al círculo ampliado de análisis térmico
-
-      // 5. Analizar si el GeoTIFF contiene datos de radiación válidos (distintos de -9999)
+      // Analizar si el GeoTIFF contiene datos de radiación válidos (distintos de -9999)
       let validPixels = 0;
       let minVal = Infinity;
       let maxVal = -Infinity;
@@ -1225,55 +1444,7 @@ export class MapService {
 
       console.log(`[MapService] GeoTIFF decodificado: total=${values.length}, validos=${validPixels}, min=${minVal}, max=${maxVal}`);
 
-      if (validPixels > 0) {
-        // A. Dibujar el mapa de calor real con los datos de Google
-        const imageData = ctx.createImageData(width, height);
-        const data = imageData.data;
-        const minFlux = 1000;
-        const maxFlux = 2100;
-
-        for (let i = 0; i < values.length; i++) {
-          const flux = values[i];
-          const pixelIndex = i * 4;
-
-          if (flux === -9999 || isNaN(flux) || flux <= 0) {
-            data[pixelIndex + 3] = 0; // Transparente
-            continue;
-          }
-
-          const t = Math.max(0, Math.min(1, (flux - minFlux) / (maxFlux - minFlux)));
-          let r = 0, g = 0, b = 0;
-          if (t < 0.5) {
-            const factor = t * 2;
-            r = Math.round(48 + (230 - 48) * factor);
-            g = Math.round(0 + (57 - 0) * factor);
-            b = Math.round(102 + (0 - 102) * factor);
-          } else {
-            const factor = (t - 0.5) * 2;
-            r = 230 + Math.round((255 - 230) * factor);
-            g = 57 + Math.round((229 - 57) * factor);
-            b = 0;
-          }
-
-          data[pixelIndex] = r;
-          data[pixelIndex + 1] = g;
-          data[pixelIndex + 2] = b;
-          data[pixelIndex + 3] = 255;
-        }
-        
-        // Para que se aplique el clipping path del canvas principal (ya que putImageData copia en bruto e ignora el clip),
-        // volcamos los datos en un canvas temporal y luego dibujamos ese lienzo sobre el principal usando drawImage().
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = width;
-        tempCanvas.height = height;
-        const tempCtx = tempCanvas.getContext('2d');
-        if (tempCtx) {
-          tempCtx.putImageData(imageData, 0, 0);
-          ctx.drawImage(tempCanvas, 0, 0);
-        } else {
-          ctx.putImageData(imageData, 0, 0);
-        }
-      } else {
+      if (validPixels === 0) {
         console.log('[MapService] Sin píxeles de radiación válidos en el GeoTIFF.');
         this.snackBar.open(
           'No hay datos de radiación solar detallados disponibles para esta zona específica.',
@@ -1284,21 +1455,24 @@ export class MapService {
         return;
       }
 
-      // 6. Configurar y añadir el GroundOverlay al mapa
-      const overlayBounds = new google.maps.LatLngBounds(
-        new google.maps.LatLng(sw.lat, sw.lng),
-        new google.maps.LatLng(ne.lat, ne.lng)
-      );
+      // Guardar en cache de memoria
+      this.cachedSolarRaster = {
+        url: annualFluxUrl,
+        values,
+        width,
+        height,
+        minX,
+        minY,
+        maxX,
+        maxY,
+        zone,
+        northernHemisphere,
+        sw,
+        ne,
+      };
 
-      this.heatMapOverlay = new google.maps.GroundOverlay(
-        canvas.toDataURL(),
-        overlayBounds,
-        {
-          opacity: 0.65, // Suficiente opacidad para visualizar el calor pero traslúcido para ver el satélite
-          map: this.map,
-        }
-      );
-
+      // Renderizar overlay
+      this.renderHeatmapOverlayFromRaster(polygon);
       console.log('[MapService] Mapa de calor solar renderizado correctamente.');
     } catch (error) {
       console.error('[MapService] Error al renderizar el mapa de calor solar:', error);
@@ -1307,6 +1481,7 @@ export class MapService {
         'Entendido',
         { duration: 5000 }
       );
+      this.hideHeatmap();
     } finally {
       this.heatMapLoadingSubject.next(false);
     }

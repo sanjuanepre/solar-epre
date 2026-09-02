@@ -30,8 +30,10 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
   // Variables del mapa de calor y banner dinámico
   heatmapAvailable: boolean = false;
   showHeatmap: boolean = false;
+  showPanelsOnHeatmap: boolean = true;
   isHeatmapLoading: boolean = false;
   annualFluxUrl: string = '';
+  heatmapOpacity: number = 65;
   drawingState: 'INACTIVE' | 'START' | 'DRAWING' | 'CLOSED' = 'INACTIVE';
   instructionText: string = 'Busque la ubicación prevista y luego elija una herramienta de selección (Polígono o Rectángulo) para delimitar el área de la instalación.';
   tipoEstructura: 'coplanar' | 'optimo' = 'coplanar';
@@ -70,14 +72,33 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
           if (value) {
             this.updateInstalledPower();
             this.updateAreaAndPanelCount();
-            this.annualFluxUrl = '';
             this.heatmapAvailable = true;
-            this.mapService.clearHeatmap();
+            // Si el mapa de calor estaba activo, refrescarlo para la nueva geometría
+            if (this.showHeatmap) {
+              const polygons = this.mapService.getPolygons();
+              if (polygons.length > 0) {
+                if (this.annualFluxUrl) {
+                  this.mapService.fetchAndRenderSolarHeatmap(this.annualFluxUrl, polygons[0]);
+                } else {
+                  this.loadSolarHeatmap();
+                }
+              }
+            }
           } else {
             this.heatmapAvailable = false;
             this.showHeatmap = false;
             this.annualFluxUrl = '';
             this.mapService.clearHeatmap();
+          }
+        });
+      });
+
+    this.mapService.isHeatmapActive$
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((active) => {
+        this.zone.run(() => {
+          if (!this.isHeatmapLoading) {
+            this.showHeatmap = active;
           }
         });
       });
@@ -387,6 +408,9 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
         );
         if (location) {
           this.map.setCenter(location);
+          if (this.areaMarked) {
+            this.clearDrawing();
+          }
         } else {
           if (this.marker) {
             this.marker.map = null; // Elimina el marcador del mapa
@@ -523,8 +547,7 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
 
     this.zone.run(() => {
       this.isHeatmapLoading = true;
-      this.heatmapAvailable = false;
-      this.showHeatmap = false;
+      this.showHeatmap = true;
     });
 
     try {
@@ -590,6 +613,22 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
     } else {
       this.mapService.hideHeatmap();
     }
+  }
+
+  /**
+   * Alterna la visualización de los paneles en modo traslúcido sobre el mapa de calor.
+   */
+  togglePanelsOnHeatmap() {
+    this.mapService.setShowPanelsOnHeatmap(this.showPanelsOnHeatmap);
+  }
+
+  /**
+   * Actualiza la opacidad del mapa de calor solar en tiempo real.
+   */
+  onHeatmapOpacityChange(event: any) {
+    const value = typeof event === 'number' ? event : Number(event.target?.value ?? this.heatmapOpacity);
+    this.heatmapOpacity = value;
+    this.mapService.setHeatmapOpacity(value / 100);
   }
 
   // --- Métodos de Control TerraDraw ---

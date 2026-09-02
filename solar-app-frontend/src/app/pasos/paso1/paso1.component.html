@@ -321,6 +321,35 @@
                 <span class="label-max">Más radiación (Óptimo)</span>
               </div>
             </div>
+
+            <!-- Toggle para superponer paneles solares sobre el calor -->
+            <div class="heatmap-panels-toggle">
+              <label class="heatmap-checkbox-label">
+                <input 
+                  type="checkbox" 
+                  [(ngModel)]="showPanelsOnHeatmap" 
+                  (change)="togglePanelsOnHeatmap()"
+                />
+                <span class="heatmap-checkbox-text">Superponer paneles solares sobre el calor</span>
+              </label>
+            </div>
+
+            <!-- Control deslizante de opacidad del mapa térmico -->
+            <div class="heatmap-opacity-container">
+              <div class="opacity-header">
+                <span class="opacity-title">Opacidad del mapa</span>
+                <span class="opacity-value">{{ heatmapOpacity }}%</span>
+              </div>
+              <input 
+                type="range" 
+                class="heatmap-opacity-slider"
+                min="10" 
+                max="100" 
+                step="5"
+                [(ngModel)]="heatmapOpacity"
+                (input)="onHeatmapOpacityChange($event)"
+              />
+            </div>
           </div>
         </div>
 

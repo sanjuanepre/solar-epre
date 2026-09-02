@@ -127,6 +127,18 @@ export class SolarController {
     );
   }
 
+  @Get('geotiff')
+  @ApiOperation({
+    summary: 'Proxy seguro para descargar archivos ráster GeoTIFF de Google Solar API sin exponer la API Key.',
+  })
+  async getGeoTiff(
+    @Query('id') id: string,
+    @Query('url') url: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    await this.solarService.proxyGeoTiff({ id, url }, res);
+  }
+
   @Options('calcular')
   handleOptions() {
     // Respuesta vacía para la solicitud OPTIONS

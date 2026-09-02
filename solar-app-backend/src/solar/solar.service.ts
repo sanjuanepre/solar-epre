@@ -6,6 +6,7 @@ import { SolarData } from '../interfaces/solar-data/solar-data.interface';
 import { PanelConfig } from '../interfaces/panel-config/panel-config.interface';
 import { ResultadosDto } from '../interfaces/resultados-dto/resultados-dto.interface';
 import { SolarDataLayersResponse } from './dto/solar-data-layers.interface';
+import { Response } from 'express';
 
 @Injectable()
 export class SolarService {
@@ -416,11 +417,137 @@ export class SolarService {
       }
 
       const data: SolarDataLayersResponse = await response.json();
-      return data;
+      return {
+        ...data,
+        annualFluxUrl: this.transformToProxyUrl(data.annualFluxUrl),
+        monthlyFluxUrl: this.transformToProxyUrl(data.monthlyFluxUrl),
+        maskUrl: this.transformToProxyUrl(data.maskUrl),
+        dsmUrl: this.transformToProxyUrl(data.dsmUrl),
+        rgbUrl: this.transformToProxyUrl(data.rgbUrl),
+        hourlyShadeUrls: Array.isArray(data.hourlyShadeUrls)
+          ? (data.hourlyShadeUrls.map((u) => this.transformToProxyUrl(u)).filter(Boolean) as string[])
+          : [],
+      };
     } catch (error) {
       clearTimeout(timeoutId);
       console.warn(`[SolarService] Error en dataLayers:get (${error.message}). Retornando mock.`);
       return this.getMockDataLayers(latitude, longitude);
+    }
+  }
+
+  /**
+   * Transforma una URL directa de Google Solar GeoTIFF a una ruta relativa de proxy seguro
+   * sin exponer la Google API Key al cliente.
+   */
+  private transformToProxyUrl(googleGeoTiffUrl: string | null): string | null {
+    if (!googleGeoTiffUrl) return null;
+    try {
+      const parsedUrl = new URL(googleGeoTiffUrl);
+      const id = parsedUrl.searchParams.get('id');
+      if (id) {
+        return `/solar/geotiff?id=${encodeURIComponent(id)}`;
+      }
+      return `/solar/geotiff?url=${encodeURIComponent(googleGeoTiffUrl)}`;
+    } catch {
+      return `/solar/geotiff?url=${encodeURIComponent(googleGeoTiffUrl)}`;
+    }
+  }
+
+  /**
+   * Proxy de descarga seguro para archivos ráster GeoTIFF de Google Solar API.
+   * Valida estrictamente la procedencia para prevenir SSRF e inyecta la API Key del servidor.
+   */
+  async proxyGeoTiff(
+    params: { id?: string; url?: string },
+    res: Response,
+  ): Promise<void> {
+    const apiKey = process.env.GOOGLE_API_KEY;
+    if (!apiKey) {
+      throw new HttpException(
+        'GOOGLE_API_KEY no configurada en las variables de entorno del servidor',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    let targetUrl: string;
+
+    if (params.id) {
+      const safeId = params.id.trim();
+      if (!/^[a-zA-Z0-9_\-\.\:\/+=]+$/.test(safeId)) {
+        throw new HttpException(
+          'El parámetro "id" de GeoTIFF contiene caracteres inválidos',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      targetUrl = `https://solar.googleapis.com/v1/geoTiff:get?id=${encodeURIComponent(safeId)}&key=${apiKey}`;
+    } else if (params.url) {
+      try {
+        const parsedUrl = new URL(params.url);
+        // Reglas estrictas de validación Anti-SSRF: solo HTTPS y dominio oficial solar.googleapis.com
+        if (
+          parsedUrl.protocol !== 'https:' ||
+          parsedUrl.hostname !== 'solar.googleapis.com' ||
+          !parsedUrl.pathname.startsWith('/v1/geoTiff:get')
+        ) {
+          throw new HttpException(
+            'La URL especificada no pertenece al servicio autorizado de Google Solar',
+            HttpStatus.FORBIDDEN,
+          );
+        }
+        parsedUrl.searchParams.set('key', apiKey);
+        targetUrl = parsedUrl.toString();
+      } catch (err: any) {
+        if (err instanceof HttpException) throw err;
+        throw new HttpException(
+          'URL de GeoTIFF malformada',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    } else {
+      throw new HttpException(
+        'Debe proveer el parámetro "id" o "url"',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+    try {
+      const response = await fetch(targetUrl, {
+        method: 'GET',
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        let errDetails = `HTTP ${response.status}`;
+        try {
+          const errJson = await response.json();
+          errDetails = errJson.error?.message || JSON.stringify(errJson);
+        } catch {}
+        console.warn(`[SolarService] Error en Google Solar geoTiff:get (${errDetails})`);
+        res.status(response.status).json({
+          mensaje: 'Error retornado por Google Solar API al consultar el GeoTIFF',
+          detalle: errDetails,
+        });
+        return;
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      res.setHeader('Content-Type', 'image/tiff');
+      res.setHeader('Content-Length', buffer.length.toString());
+      res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
+      res.status(HttpStatus.OK).send(buffer);
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      console.error('[SolarService] Error de conexión al descargar GeoTIFF:', err);
+      res.status(HttpStatus.BAD_GATEWAY).json({
+        mensaje: 'Error de conexión al obtener el archivo ráster GeoTIFF desde Google Solar',
+        error: err?.message || String(err),
+      });
     }
   }
 

@@ -251,11 +251,43 @@ export class SolarApiService implements OnDestroy {
       if (!response.ok) {
         throw new Error(`Error en la llamada a dataLayers: ${response.status}`);
       }
-      return await response.json();
+      const data = await response.json();
+      if (data) {
+        if (data.annualFluxUrl && data.annualFluxUrl.startsWith('/')) {
+          data.annualFluxUrl = `${this.apiUrl}${data.annualFluxUrl}`;
+        }
+        if (data.monthlyFluxUrl && data.monthlyFluxUrl.startsWith('/')) {
+          data.monthlyFluxUrl = `${this.apiUrl}${data.monthlyFluxUrl}`;
+        }
+        if (data.maskUrl && data.maskUrl.startsWith('/')) {
+          data.maskUrl = `${this.apiUrl}${data.maskUrl}`;
+        }
+        if (data.dsmUrl && data.dsmUrl.startsWith('/')) {
+          data.dsmUrl = `${this.apiUrl}${data.dsmUrl}`;
+        }
+        if (data.rgbUrl && data.rgbUrl.startsWith('/')) {
+          data.rgbUrl = `${this.apiUrl}${data.rgbUrl}`;
+        }
+      }
+      return data;
     } catch (error) {
       console.error('Error al obtener dataLayers:', error);
       throw error;
     }
+  }
+
+  /**
+   * Genera la URL absoluta de descarga segura a través del proxy backend.
+   */
+  getGeoTiffProxyUrl(urlOrId: string): string {
+    if (!urlOrId) return '';
+    if (urlOrId.startsWith('http') && !urlOrId.includes('solar.googleapis.com')) {
+      return urlOrId;
+    }
+    if (urlOrId.startsWith('/')) {
+      return `${this.apiUrl}${urlOrId}`;
+    }
+    return `${this.apiUrl}/solar/geotiff?url=${encodeURIComponent(urlOrId)}`;
   }
 }
 
