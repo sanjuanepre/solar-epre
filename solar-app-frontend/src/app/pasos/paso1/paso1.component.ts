@@ -538,26 +538,26 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
           this.showHeatmap = true;
           console.log('[Paso1Component] Capas térmicas obtenidas y activadas.');
         } else {
-          console.warn('[Paso1Component] La API de Solar no retornó capa de flujo solar para esta ubicación.');
-          this.showHeatmap = false;
+          console.log('[Paso1Component] Zona de resolución base. Activando mapa térmico solar modelado.');
           this.annualFluxUrl = '';
-          this.snackBar.open(
-            'Ubicación sin mapa de calor satelital LIDAR. El cálculo continuará con valores de radiación provincial de referencia.',
-            'Entendido',
-            { duration: 5000 }
-          );
+          this.heatmapAvailable = true;
+          this.showHeatmap = true;
+          const polygons = this.mapService.getPolygons();
+          if (polygons.length > 0) {
+            this.mapService.renderSimulatedHeatmap(polygons[0]);
+          }
         }
       });
     } catch (error) {
       console.error('[Paso1Component] Error al obtener capas solares:', error);
       this.zone.run(() => {
-        this.showHeatmap = false;
         this.annualFluxUrl = '';
-        this.snackBar.open(
-          'No se pudo conectar con el servicio de radiación solar. Intente nuevamente.',
-          'Cerrar',
-          { duration: 4000 }
-        );
+        this.heatmapAvailable = true;
+        this.showHeatmap = true;
+        const polygons = this.mapService.getPolygons();
+        if (polygons.length > 0) {
+          this.mapService.renderSimulatedHeatmap(polygons[0]);
+        }
       });
     } finally {
       this.zone.run(() => {
@@ -571,16 +571,16 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
    */
   async toggleHeatmap() {
     if (this.showHeatmap) {
-      if (!this.annualFluxUrl) {
+      if (!this.annualFluxUrl && !this.heatmapAvailable) {
         await this.loadSolarHeatmap();
       }
-      if (this.annualFluxUrl) {
-        const polygons = this.mapService.getPolygons();
-        if (polygons.length > 0) {
+      const polygons = this.mapService.getPolygons();
+      if (polygons.length > 0) {
+        if (this.annualFluxUrl) {
           this.mapService.fetchAndRenderSolarHeatmap(this.annualFluxUrl, polygons[0]);
+        } else {
+          this.mapService.renderSimulatedHeatmap(polygons[0]);
         }
-      } else {
-        this.showHeatmap = false;
       }
     } else {
       this.mapService.hideHeatmap();

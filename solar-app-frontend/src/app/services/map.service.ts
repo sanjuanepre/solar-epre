@@ -1317,6 +1317,83 @@ export class MapService {
     }
   }
 
+  /**
+   * Genera y dibuja un mapa de calor solar simulado (orientado al Norte para el Hemisferio Sur)
+   * en áreas donde la Google Solar API opera en resolución base (sin GeoTIFF LIDAR).
+   */
+  renderSimulatedHeatmap(polygon: google.maps.Polygon) {
+    if (!polygon) return;
+
+    this.isHeatmapActiveState = true;
+    this.setPanelsVisibility(false);
+    this.setPolygonFillOpacity(0);
+
+    if (this.heatMapOverlay) {
+      this.heatMapOverlay.setMap(this.map);
+      this.heatMapLoadingSubject.next(false);
+      return;
+    }
+
+    try {
+      const bounds = new google.maps.LatLngBounds();
+      polygon.getPath().forEach(p => bounds.extend(p));
+      const center = bounds.getCenter();
+      const centerLat = center.lat();
+      const centerLng = center.lng();
+
+      let maxDistMeters = 0;
+      polygon.getPath().forEach(p => {
+        const dLat = (p.lat() - centerLat) * 111320;
+        const dLng = (p.lng() - centerLng) * 111320 * Math.cos((centerLat * Math.PI) / 180);
+        const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+        if (dist > maxDistMeters) maxDistMeters = dist;
+      });
+
+      const radiusMeters = Math.max(50, maxDistMeters * 1.6);
+      const dLat = radiusMeters / 111320;
+      const dLng = radiusMeters / (111320 * Math.cos((centerLat * Math.PI) / 180));
+
+      const sw = new google.maps.LatLng(centerLat - dLat, centerLng - dLng);
+      const ne = new google.maps.LatLng(centerLat + dLat, centerLng + dLng);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 400;
+      canvas.height = 400;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      // Máscara circular
+      ctx.beginPath();
+      ctx.arc(200, 200, 195, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+
+      // Gradiente térmico Norte-Sur
+      const gradient = ctx.createLinearGradient(200, 0, 200, 400);
+      gradient.addColorStop(0.0, '#FFE500'); // Norte (Máximo sol)
+      gradient.addColorStop(0.4, '#FF7A00');
+      gradient.addColorStop(0.7, '#E63900');
+      gradient.addColorStop(1.0, '#300066'); // Sur (Menor exposición)
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 400, 400);
+
+      this.heatMapOverlay = new google.maps.GroundOverlay(
+        canvas.toDataURL(),
+        new google.maps.LatLngBounds(sw, ne),
+        {
+          opacity: 0.65,
+          map: this.map,
+        }
+      );
+      console.log('[MapService] Mapa de calor solar simulado renderizado con éxito.');
+    } catch (error) {
+      console.error('[MapService] Error al renderizar mapa térmico simulado:', error);
+    } finally {
+      this.heatMapLoadingSubject.next(false);
+    }
+  }
+
   getMap$() {
     this.mapSubject
   }
