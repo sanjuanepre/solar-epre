@@ -537,27 +537,35 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
           this.heatmapAvailable = true;
           this.showHeatmap = true;
           console.log('[Paso1Component] Capas térmicas obtenidas y activadas.');
-        } else {
-          console.log('[Paso1Component] Zona de resolución base. Activando mapa térmico solar modelado.');
-          this.annualFluxUrl = '';
-          this.heatmapAvailable = true;
-          this.showHeatmap = true;
           const polygons = this.mapService.getPolygons();
           if (polygons.length > 0) {
-            this.mapService.renderSimulatedHeatmap(polygons[0]);
+            this.mapService.fetchAndRenderSolarHeatmap(this.annualFluxUrl, polygons[0]);
           }
+        } else {
+          console.log('[Paso1Component] Sin datos GeoTIFF de radiación detallada para esta zona.');
+          this.annualFluxUrl = '';
+          this.heatmapAvailable = false;
+          this.showHeatmap = false;
+          this.mapService.hideHeatmap();
+          this.snackBar.open(
+            'No hay datos de radiación solar detallados disponibles para esta zona específica.',
+            'Entendido',
+            { duration: 5000 }
+          );
         }
       });
     } catch (error) {
       console.error('[Paso1Component] Error al obtener capas solares:', error);
       this.zone.run(() => {
         this.annualFluxUrl = '';
-        this.heatmapAvailable = true;
-        this.showHeatmap = true;
-        const polygons = this.mapService.getPolygons();
-        if (polygons.length > 0) {
-          this.mapService.renderSimulatedHeatmap(polygons[0]);
-        }
+        this.heatmapAvailable = false;
+        this.showHeatmap = false;
+        this.mapService.hideHeatmap();
+        this.snackBar.open(
+          'No hay datos de radiación solar detallados disponibles para esta zona específica.',
+          'Entendido',
+          { duration: 5000 }
+        );
       });
     } finally {
       this.zone.run(() => {
@@ -571,15 +579,12 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
    */
   async toggleHeatmap() {
     if (this.showHeatmap) {
-      if (!this.annualFluxUrl && !this.heatmapAvailable) {
+      if (!this.annualFluxUrl) {
         await this.loadSolarHeatmap();
-      }
-      const polygons = this.mapService.getPolygons();
-      if (polygons.length > 0) {
-        if (this.annualFluxUrl) {
+      } else {
+        const polygons = this.mapService.getPolygons();
+        if (polygons.length > 0) {
           this.mapService.fetchAndRenderSolarHeatmap(this.annualFluxUrl, polygons[0]);
-        } else {
-          this.mapService.renderSimulatedHeatmap(polygons[0]);
         }
       }
     } else {
