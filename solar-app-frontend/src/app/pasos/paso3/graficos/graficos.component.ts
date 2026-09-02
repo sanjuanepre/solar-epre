@@ -1163,6 +1163,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
 
       return {
         series: [percent],
+        labels: ['CO₂ Evitado'],
         chart: {
           type: 'radialBar',
           height: forExport ? 260 : 330,
@@ -1186,8 +1187,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
             dataLabels: {
               name: {
                 show: true,
-                label: 'Descarbonización',
-                color: '#555',
+                color: '#475569',
                 fontSize: '14px',
                 fontFamily: 'sodo sans, sans-serif',
                 offsetY: 20
@@ -1222,10 +1222,10 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
           lineCap: 'round'
         },
         subtitle: {
-          text: `Con la instalación de Generación Distribuida dimensionada, reduces el ${percent}% de las emisiones de CO₂ respecto a un Suministro convencional`,
+          text: `Tu instalación solar evita el ${percent}% de las emisiones de CO₂ que generaría tu consumo desde la red eléctrica`,
           align: 'center',
           style: {
-            fontSize: '11.5px',
+            fontSize: '12px',
             fontFamily: 'sodo sans, sans-serif',
             color: '#475569',
           },
