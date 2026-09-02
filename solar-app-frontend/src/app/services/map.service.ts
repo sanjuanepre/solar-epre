@@ -1382,13 +1382,15 @@ export class MapService {
     this.heatMapLoadingSubject.next(true);
 
     try {
-      // 1. Descargar el archivo GeoTIFF a través del proxy seguro del backend (sin exponer la Google API Key)
+      // 1. Descargar el archivo GeoTIFF directamente de Google Solar API sin intermediación de timeout serverless
+      const apiKey = this.environmentService.getGoogleMapsApiKey() || environment.googleMapsApiKey;
       let targetDownloadUrl = annualFluxUrl;
-      if (targetDownloadUrl.includes('solar.googleapis.com')) {
-        // En caso de recibir URL directa de Google, enrutar por el proxy del backend
-        targetDownloadUrl = `${environment.apiUrl}/solar/geotiff?url=${encodeURIComponent(targetDownloadUrl)}`;
-      } else if (targetDownloadUrl.startsWith('/')) {
+      if (targetDownloadUrl.startsWith('/')) {
         targetDownloadUrl = `${environment.apiUrl}${targetDownloadUrl}`;
+      } else if (targetDownloadUrl.includes('solar.googleapis.com') && !targetDownloadUrl.includes('key=') && apiKey) {
+        targetDownloadUrl = targetDownloadUrl.includes('?') 
+          ? `${targetDownloadUrl}&key=${apiKey}` 
+          : `${targetDownloadUrl}?key=${apiKey}`;
       }
 
       const response = await fetch(targetDownloadUrl);

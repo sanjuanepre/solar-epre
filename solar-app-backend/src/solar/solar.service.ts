@@ -417,17 +417,7 @@ export class SolarService {
       }
 
       const data: SolarDataLayersResponse = await response.json();
-      return {
-        ...data,
-        annualFluxUrl: this.transformToProxyUrl(data.annualFluxUrl),
-        monthlyFluxUrl: this.transformToProxyUrl(data.monthlyFluxUrl),
-        maskUrl: this.transformToProxyUrl(data.maskUrl),
-        dsmUrl: this.transformToProxyUrl(data.dsmUrl),
-        rgbUrl: this.transformToProxyUrl(data.rgbUrl),
-        hourlyShadeUrls: Array.isArray(data.hourlyShadeUrls)
-          ? (data.hourlyShadeUrls.map((u) => this.transformToProxyUrl(u)).filter(Boolean) as string[])
-          : [],
-      };
+      return data;
     } catch (error) {
       clearTimeout(timeoutId);
       console.warn(`[SolarService] Error en dataLayers:get (${error.message}). Retornando mock.`);
