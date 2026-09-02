@@ -518,7 +518,15 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
                 fontSize: '13px',
                 fontFamily: 'sodo sans, sans-serif',
                 color: '#555',
-                formatter: () => `${pctAutoconsumo + pctInyectada} %`,
+                formatter: (w: any) => {
+                  const series = w?.globals?.seriesTotals ?? w?.globals?.series;
+                  if (Array.isArray(series) && series.length >= 2) {
+                    const auto = Number(series[0] ?? 0);
+                    const iny = Number(series[1] ?? 0);
+                    return `${Math.round(auto + iny)} %`;
+                  }
+                  return `${pctAutoconsumo + pctInyectada} %`;
+                },
               },
             },
           },
@@ -547,18 +555,8 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
 
   private updateChartDonutEnergia() {
     if (!this.chartDonutEnergia) return;
-    const propAutoconsumo = this.proporcionAutoconsumo ?? 0.8;
-    const propInyectada = this.proporcionInyectada ?? 0.2;
-    const yearlyEnergy = this.yearlyEnergy || 0;
-    const consumoAnual = this.consumoTotalAnual || 0;
-    const autoconsumidaKwh = yearlyEnergy * propAutoconsumo;
-    const inyectadaKwh = yearlyEnergy * propInyectada;
-    const compradadRedKwh = Math.max(0, consumoAnual - autoconsumidaKwh);
-    const total = autoconsumidaKwh + inyectadaKwh + compradadRedKwh;
-    const pctAutoconsumo = total > 0 ? Math.round((autoconsumidaKwh / total) * 100) : 0;
-    const pctInyectada = total > 0 ? Math.round((inyectadaKwh / total) * 100) : 0;
-    const pctRed = Math.max(0, 100 - pctAutoconsumo - pctInyectada);
-    this.chartDonutEnergia.updateSeries([pctAutoconsumo, pctInyectada, pctRed]);
+    const options = this.getOptionsDonutEnergia(false);
+    this.chartDonutEnergia.updateOptions(options, false, false);
     this.cdr.detectChanges();
   }
 
