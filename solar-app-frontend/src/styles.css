@@ -266,7 +266,9 @@ button[disabled] {
   transform: none !important;
 }
 
-#boton-volver {
+#boton-volver,
+#boton-volver-paso2,
+#boton-volver-paso3 {
   background-color: #ffffff;
   color: var(--medium-green);
   font-weight: 700;
@@ -280,21 +282,27 @@ button[disabled] {
   transition: var(--transition-fast);
 }
 
-#boton-volver:hover {
+#boton-volver:hover,
+#boton-volver-paso2:hover,
+#boton-volver-paso3:hover {
   background-color: var(--light-background);
   border-color: var(--dark-green);
   transform: translateY(-1px);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
 }
 
-#boton-volver .material-icons {
+#boton-volver .material-icons,
+#boton-volver-paso2 .material-icons,
+#boton-volver-paso3 .material-icons {
   margin-right: 6px;
   color: var(--medium-green);
   font-size: 20px;
   transition: var(--transition-fast);
 }
 
-#boton-volver:hover .material-icons {
+#boton-volver:hover .material-icons,
+#boton-volver-paso2:hover .material-icons,
+#boton-volver-paso3:hover .material-icons {
   transform: translateX(-3px);
 }
 

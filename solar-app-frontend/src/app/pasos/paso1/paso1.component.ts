@@ -481,30 +481,34 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
    */
   updateInstructionText(state: 'INACTIVE' | 'START' | 'DRAWING' | 'CLOSED') {
     if (this.isHeatmapLoading && this.showHeatmap) {
-      this.instructionText = 'Analizando radiación solar sobre el techo... Por favor, espere.';
+      this.instructionText = 'Analizando radiación solar sobre la superficie de instalación... Por favor, espere.';
       return;
     }
 
-    if (state === 'CLOSED') {
-      this.instructionText = '¡Techo delimitado con éxito! Puede mover/rotar el área, activar el mapa de calor solar o presionar Siguiente.';
+    if (state === 'CLOSED' && this.areaMarked) {
+      this.instructionText = '¡Superficie de instalación delimitada con éxito! Puede mover/rotar el área, activar el mapa de calor solar o presionar Siguiente.';
       return;
     }
 
     switch (this.activeMode) {
       case 'polygon':
         if (state === 'START') {
-          this.instructionText = 'Haga clic en las esquinas del techo en el mapa para ir trazando el contorno del área.';
+          this.instructionText = 'Haga clic en las esquinas de la superficie de instalación en el mapa para ir trazando el contorno del área.';
         } else {
-          this.instructionText = 'Continúe marcando los vértices del techo. Haga doble clic o clic en el punto inicial para cerrar.';
+          this.instructionText = 'Continúe marcando los vértices de la superficie. Haga doble clic en el punto inicial para cerrar.';
         }
         break;
 
       case 'rectangle':
-        this.instructionText = 'Haga clic y arrastre sobre el mapa para trazar una superficie rectangular sobre el techo.';
+        this.instructionText = 'Haga clic y arrastre sobre el mapa para trazar una superficie rectangular';
         break;
 
       case 'select':
-        this.instructionText = 'Arrastre la figura para moverla o use los botones de rotación (-15°, +15°, 90°) para orientarla.';
+        if (this.areaMarked) {
+          this.instructionText = 'Arrastre la figura para moverla o use los botones de rotación (-15°, +15°, 90°) para orientarla.';
+        } else {
+          this.instructionText = 'Elija una herramienta de selección (Polígono o Rectángulo) para delimitar primero la superficie de instalación.';
+        }
         break;
 
       case 'static':

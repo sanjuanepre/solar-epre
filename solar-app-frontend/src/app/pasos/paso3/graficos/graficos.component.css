@@ -251,5 +251,14 @@
   }
 }
 
+.grafico-leyenda-nota {
+  text-align: center;
+  font-size: 12px;
+  color: #64748b;
+  font-style: italic;
+  margin-top: -4px;
+  margin-bottom: 12px;
+}
+
 
 

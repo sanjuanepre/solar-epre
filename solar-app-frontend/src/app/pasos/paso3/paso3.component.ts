@@ -463,9 +463,15 @@ export class Paso3Component implements OnInit, OnDestroy {
       resultados?.periodoVeinteanalFlujoIngresosMonetarios?.[0]?.ahorroEnElectricidadTotalUsd ||
       resultados?.resultadosFinancieros?.casoConCapitalPropio?.[0]?.ahorrosEnPesos || 0;
     
+    const rawProp = this.proporcionAutoconsumo;
+    const propRatio = (rawProp != null && rawProp > 0)
+      ? (rawProp > 1 ? rawProp / 100 : rawProp)
+      : 0.8;
+    const propPct = Math.round(propRatio * 100);
+
     let ahorroPorcentaje = resultados?.resultadosFinancieros?.casoConCapitalPropio?.[0]?.porcentajeAhorro || 0;
     if (!ahorroPorcentaje && this.consumoTotalAnual && this.yearlyEnergyAckWhDefault) {
-      ahorroPorcentaje = Math.min(100, Math.round(((this.yearlyEnergyAckWhDefault * ((this.proporcionAutoconsumo || 100) / 100)) / this.consumoTotalAnual) * 100));
+      ahorroPorcentaje = Math.min(100, Math.round(((this.yearlyEnergyAckWhDefault * propRatio) / this.consumoTotalAnual) * 100));
     }
 
     const paybackMeses = resultados?.resultadosFinancieros?.indicadoresFinancieros?.payBackMonths || (this.sharedService.getPlazoInversionValue() || 0);
@@ -486,17 +492,17 @@ export class Paso3Component implements OnInit, OnDestroy {
       roofFactor: this.roofFactor,
       potenciaContratada: this.potenciaContratadaHip || 0,
       panelesCantidad: this.panelesCantidad || 0,
-      panelCapacityW: this.panelCapacityW || 400,
+      panelCapacityW: this.panelCapacityW || 600,
       costoInstalacion: this.costoInstalacion || 0,
       ahorroEstimadoPesosAnual: ahorroUsd,
       ahorroPorcentajeAnual: ahorroPorcentaje,
       periodoRecuperoAnios: paybackMeses > 0 ? parseFloat((paybackMeses / 12).toFixed(1)) : 0,
-      potenciaPicoKw: (this.panelesCantidad * this.panelCapacityW) / 1000,
+      potenciaPicoKw: (this.panelesCantidad * (this.panelCapacityW || 600)) / 1000,
       generacionAnualKwh: this.yearlyEnergyAckWhDefault || 0,
       superficieTechoM2: this.sharedService.getAreaPanelsSelected() || 0,
       emisionesGEIEvitadasTnAnual: (this.yearlyEnergyAckWhDefault * this.carbonOffsetFactorTnPerMWh) / 1000,
-      proporcionAutoconsumo: this.proporcionAutoconsumo || 0,
-      proporcionInyectada: (100 - (this.proporcionAutoconsumo || 0)),
+      proporcionAutoconsumo: propPct,
+      proporcionInyectada: (100 - propPct),
       textoArboles: this.graficosComponent?.textoArboles,
       chartImages,
     };

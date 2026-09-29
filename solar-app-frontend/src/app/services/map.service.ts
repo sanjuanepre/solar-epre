@@ -415,7 +415,8 @@ export class MapService {
       if (mode === 'polygon' || mode === 'rectangle') {
         this.drawingStateSubject.next(mode === 'polygon' ? 'START' : 'DRAWING');
       } else if (mode === 'select') {
-        this.drawingStateSubject.next('CLOSED');
+        const hasDrawn = this.polygons.length > 0 || (this.terraDraw && (this.terraDraw.getSnapshot()?.length ?? 0) > 0);
+        this.drawingStateSubject.next(hasDrawn ? 'CLOSED' : 'INACTIVE');
       } else {
         this.drawingStateSubject.next('INACTIVE');
       }

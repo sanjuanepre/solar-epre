@@ -12,7 +12,7 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
   const estructuraTexto =
     data.tipoEstructura === 'optimo'
       ? 'Estructura inclinada al Norte (30°)'
-      : 'Coplanar a la superficie (inclinación natural)';
+      : 'Coplanar a la superficie de instalación (inclinación natural)';
 
   const formatMoneda = (val: number) =>
     new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(val || 0);
@@ -22,7 +22,7 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
 
   const hasFinancialPage = Boolean(
     data.chartImages &&
-    (data.chartImages.energiaConsumo || data.chartImages.donutDistribucion || data.chartImages.ahorroRecupero)
+    (data.chartImages.energiaConsumo || data.chartImages.ahorroRecupero)
   );
 
   const hasEnvironmentalPage = Boolean(
@@ -414,7 +414,7 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
           <span class="card-label">Sistema Fotovoltaico</span>
           <svg class="card-icon" fill="none" stroke="#d97706" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
         </div>
-        <div class="card-value">${data.panelesCantidad} Paneles (${formatNumero(data.potenciaPicoKw, 2)} kWp)</div>
+        <div class="card-value">${data.panelesCantidad} Paneles (${formatNumero(data.potenciaPicoKw, 2)} kW)</div>
         <div class="card-subtext">Potencia individual: ${data.panelCapacityW} W | ${estructuraTexto}</div>
       </div>
 
@@ -523,40 +523,22 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
       </div>
     </div>
 
-    <!-- Fila 1: 2 Gráficas lado a lado (Energía y Donut) -->
-    <div class="charts-grid-2col">
-      ${
-        data.chartImages?.energiaConsumo
-          ? `
-      <div class="chart-card-half">
-        <div class="chart-card-header">
-          <span class="badge">1</span>
-          <span>Energía consumida y generada</span>
-        </div>
-        <div class="chart-img-wrapper">
-          <img src="${data.chartImages.energiaConsumo}" alt="Gráfica Energía Consumida y Generada" />
-        </div>
+    <!-- Fila 1: Gráfica Full Width Energía Consumida y Generada -->
+    ${
+      data.chartImages?.energiaConsumo
+        ? `
+    <div class="chart-card-full" style="margin-bottom: 14px;">
+      <div class="chart-card-header">
+        <span class="badge">1</span>
+        <span>Energía consumida y generada (balance neto)</span>
       </div>
-      `
-          : ''
-      }
-
-      ${
-        data.chartImages?.donutDistribucion
-          ? `
-      <div class="chart-card-half">
-        <div class="chart-card-header">
-          <span class="badge">2</span>
-          <span>Distribución de energía anual</span>
-        </div>
-        <div class="chart-img-wrapper">
-          <img src="${data.chartImages.donutDistribucion}" alt="Gráfica Distribución de Energía Anual" />
-        </div>
+      <div class="chart-img-wrapper">
+        <img src="${data.chartImages.energiaConsumo}" alt="Gráfica Energía Consumida y Generada" />
       </div>
-      `
-          : ''
-      }
     </div>
+    `
+        : ''
+    }
 
     <!-- Fila 2: Gráfica Full Width Ahorros y Flujo 20 años -->
     ${
@@ -564,7 +546,7 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
         ? `
     <div class="chart-card-full">
       <div class="chart-card-header">
-        <span class="badge">3</span>
+        <span class="badge">2</span>
         <span>Ahorros anuales y flujo de caja acumulado (20 años)</span>
       </div>
       <div class="chart-img-wrapper">

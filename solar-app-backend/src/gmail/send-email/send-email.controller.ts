@@ -96,8 +96,8 @@ export class SendEmailController {
 </head>
 <body>
   <div class="container">
-    <h1>Gracias por utilizar la app Generación Solar Distribuida San Juan</h1>
-    <p>Hola, muchas gracias por utilizar la app Generación Solar Distribuida San Juan.</p>
+    <h1>Gracias por utilizar la web Generación Solar Distribuida San Juan</h1>
+    <p>Hola, muchas gracias por utilizar la web Generación Solar Distribuida San Juan.</p>
     <p>Podrás visualizar los <span class="highlight">RESULTADOS DE TU SIMULACIÓN</span> en el documento adjunto al presente, en formato PDF.</p>
     <p>En caso de recibir este correo por error, por favor desestimar el mismo.</p>
     <p>Si tienes alguna duda y/o consulta no dudes en comunicarte con el E.P.R.E. a través de nuestros canales de atención, detallados en el sitio web: <a href="https://epresanjuan.gob.ar/contacto-2/">https://epresanjuan.gob.ar/contacto-2/</a>.</p>
@@ -105,7 +105,7 @@ export class SendEmailController {
     <a href="https://solar.epresanjuan.gob.ar" class="button">Visita nuestro sitio</a>
 
     <div class="footer">
-      <p>&copy; 2024 GSDSJ - E.P.R.E. San Juan</p>
+      <p>&copy; ${new Date().getFullYear()} GSDSJ - E.P.R.E. San Juan</p>
     </div>
   </div>
 </body>

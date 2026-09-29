@@ -58,7 +58,6 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
   private destroy$ = new Subject<void>();
   ahorrosAnualesIniciales!: number;
   chartEnergiaConsumo!: ApexCharts;
-  chartDonutEnergia!: ApexCharts;
   vistaCO2: 'anual' | 'comparativa' | 'acumulada' | 'gauge' = 'anual';
   textoArboles: string = '';
 
@@ -249,19 +248,6 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       console.warn('Error al exportar chartEnergiaConsumo:', e);
     }
 
-    // 2. Donut Distribución
-    try {
-      result.donutDistribucion = await this.exportChartOffscreen(this.getOptionsDonutEnergia(true), 450, 300);
-      if (!result.donutDistribucion && this.chartDonutEnergia) {
-        const data = await this.chartDonutEnergia.dataURI();
-        if (data && 'imgURI' in data && data.imgURI) {
-          result.donutDistribucion = data.imgURI;
-        }
-      }
-    } catch (e) {
-      console.warn('Error al exportar chartDonutEnergia:', e);
-    }
-
     // 3. Ahorro Recupero
     try {
       result.ahorroRecupero = await this.exportChartOffscreen(this.getOptionsAhorroRecupero(true), 850, 320);
@@ -314,12 +300,6 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       this.initializeChartEnergiaConsumo();
     }
 
-    if (this.chartDonutEnergia) {
-      this.updateChartDonutEnergia();
-    } else {
-      this.initializeChartDonutEnergia();
-    }
-
     if (this.chartAhorroRecupero) {
       this.updateChartAhorroRecupero();
     } else {
@@ -344,40 +324,63 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
   // GRÁFICA 1: Energía consumida vs. generada (barras apiladas)
   // ─────────────────────────────────────────────────
   private getOptionsEnergiaConsumo(forExport: boolean = false) {
-    const propAutoconsumo = this.proporcionAutoconsumo ?? 0.8;
-    const propInyectada = this.proporcionInyectada ?? 0.2;
+    const yearlyEnergy = Math.round(this.yearlyEnergy || 0);
+    const consumoAnual = Math.round(this.consumoTotalAnual || 0);
 
-    const autoconsumidaKwh = this.yearlyEnergy * propAutoconsumo;
-    const inyectadaKwh = this.yearlyEnergy * propInyectada;
-    const compradadRedKwh = Math.max(0, this.consumoTotalAnual - autoconsumidaKwh);
+    let series: any[];
+    let colors: string[];
+
+    if (yearlyEnergy > consumoAnual) {
+      // Caso 1: Cuando la Energía Generada supera el Consumo Total.
+      // - Consumo Total Anual: dejar como está (barra única con valor consumoTotalAnual, verde)
+      // - Generación anual FV: Autoconsumo solar (igual a Consumo Total anual) + Inyectada a la red (Energía Generada - Consumo Total Anual)
+      const inyectadaKwh = Math.max(0, yearlyEnergy - consumoAnual);
+      series = [
+        {
+          name: 'Autoconsumo solar',
+          data: [consumoAnual, consumoAnual],
+        },
+        {
+          name: 'Inyectada a la red',
+          data: [0, inyectadaKwh],
+        },
+      ];
+      colors = ['#5aaa8a', '#e4c58d'];
+    } else {
+      // Caso 2: Cuando la Energía Generada es igual o menor al Consumo Total.
+      // - Consumo Total Anual: mostrar barra única, usar otro color (#334155)
+      // - Generación anual FV: Autoconsumo solar (80 % de Energía Generada) + Inyectada a la red (20 % de Energía Generada)
+      const autoconsumoKwh = Math.round(yearlyEnergy * 0.8);
+      const inyectadaKwh = Math.round(yearlyEnergy * 0.2);
+      series = [
+        {
+          name: 'Consumo total anual',
+          data: [consumoAnual, 0],
+        },
+        {
+          name: 'Autoconsumo solar',
+          data: [0, autoconsumoKwh],
+        },
+        {
+          name: 'Inyectada a la red',
+          data: [0, inyectadaKwh],
+        },
+      ];
+      colors = ['#334155', '#5aaa8a', '#e4c58d'];
+    }
 
     return {
       chart: {
         type: 'bar',
         height: forExport ? 300 : 340,
-        width: forExport ? 550 : '100%',
+        width: forExport ? 800 : '100%',
         stacked: true,
         background: forExport ? '#ffffff' : 'transparent',
         toolbar: { show: false },
         animations: { enabled: !forExport },
       },
-      series: [
-        {
-          name: 'Autoconsumo solar',
-          data: [autoconsumidaKwh, autoconsumidaKwh],
-          color: '#5aaa8a',
-        },
-        {
-          name: 'Comprada a la red',
-          data: [compradadRedKwh, 0],
-          color: '#c8c8c8',
-        },
-        {
-          name: 'Inyectada a la red',
-          data: [0, inyectadaKwh],
-          color: '#e4c58d',
-        },
-      ],
+      colors: colors,
+      series: series,
       xaxis: {
         categories: ['Consumo total anual', 'Generación anual FV'],
         labels: {
@@ -400,7 +403,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       },
       plotOptions: {
         bar: {
-          columnWidth: forExport ? '40%' : '50%',
+          columnWidth: forExport ? '35%' : '40%',
           borderRadius: 4,
         },
       },
@@ -445,118 +448,8 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
 
   private updateChartEnergiaConsumo() {
     if (!this.chartEnergiaConsumo) return;
-    const propAutoconsumo = this.proporcionAutoconsumo ?? 0.8;
-    const propInyectada = this.proporcionInyectada ?? 0.2;
-    const yearlyEnergy = this.yearlyEnergy || 0;
-    const consumoAnual = this.consumoTotalAnual || 0;
-    const autoconsumidaKwh = yearlyEnergy * propAutoconsumo;
-    const inyectadaKwh = yearlyEnergy * propInyectada;
-    const compradadRedKwh = Math.max(0, consumoAnual - autoconsumidaKwh);
-
-    this.chartEnergiaConsumo.updateOptions({
-      series: [
-        { name: 'Autoconsumo solar', data: [autoconsumidaKwh, autoconsumidaKwh] },
-        { name: 'Comprada a la red', data: [compradadRedKwh, 0] },
-        { name: 'Inyectada a la red', data: [0, inyectadaKwh] },
-      ],
-    }, false, false);
-    this.cdr.detectChanges();
-  }
-
-  // ─────────────────────────────────────────────────
-  // GRÁFICA 2 (NUEVA): Donut de distribución energética
-  // ─────────────────────────────────────────────────
-  private getOptionsDonutEnergia(forExport: boolean = false) {
-    const propAutoconsumo = this.proporcionAutoconsumo ?? 0.8;
-    const propInyectada = this.proporcionInyectada ?? 0.2;
-
-    const yearlyEnergy = this.yearlyEnergy || 0;
-    const consumoAnual = this.consumoTotalAnual || 0;
-    const autoconsumidaKwh = yearlyEnergy * propAutoconsumo;
-    const inyectadaKwh = yearlyEnergy * propInyectada;
-    const compradadRedKwh = Math.max(0, consumoAnual - autoconsumidaKwh);
-    const total = autoconsumidaKwh + inyectadaKwh + compradadRedKwh;
-
-    const pctAutoconsumo = total > 0 ? Math.round((autoconsumidaKwh / total) * 100) : 0;
-    const pctInyectada = total > 0 ? Math.round((inyectadaKwh / total) * 100) : 0;
-    const pctRed = Math.max(0, 100 - pctAutoconsumo - pctInyectada);
-
-    return {
-      series: [pctAutoconsumo, pctInyectada, pctRed],
-      chart: {
-        type: 'donut',
-        height: forExport ? 300 : 340,
-        width: forExport ? 450 : '100%',
-        background: forExport ? '#ffffff' : 'transparent',
-        toolbar: { show: false },
-        animations: { enabled: !forExport },
-      },
-      labels: ['Autoconsumo solar', 'Inyección a la red', 'Comprada a la red'],
-      colors: ['#5aaa8a', '#e4c58d', '#c8c8c8'],
-      legend: {
-        position: 'bottom',
-        fontSize: '11px',
-        fontFamily: 'sodo sans, sans-serif',
-      },
-      dataLabels: {
-        enabled: true,
-        style: {
-          fontSize: '12px',
-          fontFamily: 'sodo sans, sans-serif',
-        },
-        formatter: (val: number) => `${Math.round(val)} %`,
-      },
-      plotOptions: {
-        pie: {
-          donut: {
-            size: '60%',
-            labels: {
-              show: true,
-              total: {
-                show: true,
-                label: 'Cobertura solar',
-                fontSize: '13px',
-                fontFamily: 'sodo sans, sans-serif',
-                color: '#555',
-                formatter: (w: any) => {
-                  const series = w?.globals?.seriesTotals ?? w?.globals?.series;
-                  if (Array.isArray(series) && series.length >= 2) {
-                    const auto = Number(series[0] ?? 0);
-                    const iny = Number(series[1] ?? 0);
-                    return `${Math.round(auto + iny)} %`;
-                  }
-                  return `${pctAutoconsumo + pctInyectada} %`;
-                },
-              },
-            },
-          },
-        },
-      },
-      tooltip: {
-        enabled: !forExport,
-        theme: 'light',
-        y: {
-          formatter: (val: number) => `${val} %`,
-        },
-      },
-    };
-  }
-
-  private initializeChartDonutEnergia() {
-    const options = this.getOptionsDonutEnergia(false);
-
-    this.chartDonutEnergia = new ApexCharts(
-      document.querySelector('#chartDonutEnergiaRef') as HTMLElement,
-      options
-    );
-    this.chartDonutEnergia.render();
-    this.cdr.detectChanges();
-  }
-
-  private updateChartDonutEnergia() {
-    if (!this.chartDonutEnergia) return;
-    const options = this.getOptionsDonutEnergia(false);
-    this.chartDonutEnergia.updateOptions(options, false, false);
+    const options = this.getOptionsEnergiaConsumo(false);
+    this.chartEnergiaConsumo.updateOptions(options, false, false);
     this.cdr.detectChanges();
   }
 
