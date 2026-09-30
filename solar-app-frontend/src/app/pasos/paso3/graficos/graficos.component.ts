@@ -384,10 +384,14 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       xaxis: {
         categories: ['Consumo total anual', 'Generación anual FV'],
         labels: {
+          rotate: 0,
+          rotateAlways: false,
+          hideOverlappingLabels: false,
+          trim: false,
           style: {
-            fontSize: forExport ? '12px' : '11px',
+            fontSize: forExport ? '12px' : '11.5px',
             fontFamily: 'sodo sans, sans-serif',
-            colors: ['#555', '#555'],
+            colors: ['#475569', '#475569'],
           },
         },
       },
@@ -403,7 +407,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       },
       plotOptions: {
         bar: {
-          columnWidth: forExport ? '35%' : '40%',
+          columnWidth: forExport ? '35%' : '42%',
           borderRadius: 4,
         },
       },
@@ -429,10 +433,63 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       },
       legend: {
         position: 'bottom',
+        horizontalAlign: 'center',
         fontSize: '12px',
         fontFamily: 'sodo sans, sans-serif',
+        itemMargin: {
+          horizontal: 10,
+          vertical: 4,
+        },
       },
       fill: { opacity: 1 },
+      responsive: forExport ? [] : [
+        {
+          breakpoint: 768,
+          options: {
+            chart: {
+              height: 290,
+            },
+            plotOptions: {
+              bar: {
+                columnWidth: '50%',
+                borderRadius: 4,
+              },
+            },
+            xaxis: {
+              labels: {
+                rotate: 0,
+                rotateAlways: false,
+                style: {
+                  fontSize: '10.5px',
+                },
+              },
+            },
+            yaxis: {
+              title: {
+                text: 'kWh',
+                style: { fontSize: '10.5px' },
+              },
+              labels: {
+                style: { fontSize: '10px' },
+              },
+            },
+            dataLabels: {
+              style: {
+                fontSize: '10px',
+              },
+            },
+            legend: {
+              position: 'bottom',
+              horizontalAlign: 'center',
+              fontSize: '11px',
+              itemMargin: {
+                horizontal: 8,
+                vertical: 3,
+              },
+            },
+          },
+        },
+      ],
     };
   }
 
