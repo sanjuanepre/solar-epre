@@ -70,10 +70,6 @@
         <button id="ver-terminos" (click)="showTerms()">
           Ver Términos y Condiciones
         </button>
-        <app-terminos
-          [isVisible]="showModal"
-          (accepted)="handleAccepted($event)"
-        ></app-terminos>
       </div>
 
       <div class="button-container">
@@ -81,7 +77,6 @@
           <button id="boton-volver" (click)="goBack()">
             <span class="material-icons">chevron_left</span> Volver
           </button>
-          <br />
           <button
             id="boton-siguiente"
             (mouseenter)="showTooltip()"
@@ -95,7 +90,11 @@
     </div>
   </div>
 
- 
+  <app-terminos
+    [isVisible]="showModal"
+    (accepted)="handleAccepted($event)"
+  ></app-terminos>
+
   <app-instrucciones
     [isVisible]="showInstructionsModal"
     (closed)="handleInstructionsClosed()"

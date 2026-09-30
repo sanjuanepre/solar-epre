@@ -771,6 +771,7 @@ input[type=number] {
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 9999;
 }
 
 @media (max-width: 768px) {
