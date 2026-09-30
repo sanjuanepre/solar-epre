@@ -469,12 +469,20 @@ export class Paso3Component implements OnInit, OnDestroy {
       : 0.8;
     const propPct = Math.round(propRatio * 100);
 
+    const generacionAnual = this.sharedService.getYearlyEnergyAckWh() || this.yearlyEnergyAckWhDefault || 0;
+    const panelesCant = this.sharedService.getPanelsSelected() || this.panelesCantidad || 0;
+    const panelCapW = this.sharedService.getPanelCapacityW() || this.panelCapacityW || 600;
+    const costoInst = this.sharedService.getCostoInstalacion() || this.costoInstalacion || 0;
+    const emisionesTn = this.sharedService.getCarbonOffSetTnAnual() ||
+      ((generacionAnual * this.carbonOffsetFactorTnPerMWh) / 1000);
+
     let ahorroPorcentaje = resultados?.resultadosFinancieros?.casoConCapitalPropio?.[0]?.porcentajeAhorro || 0;
-    if (!ahorroPorcentaje && this.consumoTotalAnual && this.yearlyEnergyAckWhDefault) {
-      ahorroPorcentaje = Math.min(100, Math.round(((this.yearlyEnergyAckWhDefault * propRatio) / this.consumoTotalAnual) * 100));
+    if (!ahorroPorcentaje && this.consumoTotalAnual && generacionAnual) {
+      ahorroPorcentaje = Math.min(100, Math.round(((generacionAnual * propRatio) / this.consumoTotalAnual) * 100));
     }
 
-    const paybackMeses = resultados?.resultadosFinancieros?.indicadoresFinancieros?.payBackMonths || (this.sharedService.getPlazoInversionValue() || 0);
+    const paybackMeses = this.sharedService.getPlazoInversionValue() ||
+      resultados?.resultadosFinancieros?.indicadoresFinancieros?.payBackMonths || 0;
 
     let chartImages = undefined;
     if (this.graficosComponent) {
@@ -491,16 +499,16 @@ export class Paso3Component implements OnInit, OnDestroy {
       tipoEstructura: this.tipoEstructura,
       roofFactor: this.roofFactor,
       potenciaContratada: this.potenciaContratadaHip || 0,
-      panelesCantidad: this.panelesCantidad || 0,
-      panelCapacityW: this.panelCapacityW || 600,
-      costoInstalacion: this.costoInstalacion || 0,
+      panelesCantidad: panelesCant,
+      panelCapacityW: panelCapW,
+      costoInstalacion: costoInst,
       ahorroEstimadoPesosAnual: ahorroUsd,
       ahorroPorcentajeAnual: ahorroPorcentaje,
       periodoRecuperoAnios: paybackMeses > 0 ? parseFloat((paybackMeses / 12).toFixed(1)) : 0,
-      potenciaPicoKw: (this.panelesCantidad * (this.panelCapacityW || 600)) / 1000,
-      generacionAnualKwh: this.yearlyEnergyAckWhDefault || 0,
+      potenciaPicoKw: (panelesCant * panelCapW) / 1000,
+      generacionAnualKwh: generacionAnual,
       superficieTechoM2: this.sharedService.getAreaPanelsSelected() || 0,
-      emisionesGEIEvitadasTnAnual: (this.yearlyEnergyAckWhDefault * this.carbonOffsetFactorTnPerMWh) / 1000,
+      emisionesGEIEvitadasTnAnual: emisionesTn,
       proporcionAutoconsumo: propPct,
       proporcionInyectada: (100 - propPct),
       textoArboles: this.graficosComponent?.textoArboles,

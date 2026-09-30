@@ -492,11 +492,7 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
 
     switch (this.activeMode) {
       case 'polygon':
-        if (state === 'START') {
-          this.instructionText = 'Haga clic en las esquinas de la superficie de instalación en el mapa para ir trazando el contorno del área.';
-        } else {
-          this.instructionText = 'Continúe marcando los vértices de la superficie. Haga doble clic en el punto inicial para cerrar.';
-        }
+        this.instructionText = 'Continúe marcando los vértices de la superficie. Haga doble clic en el punto inicial para cerrar.';
         break;
 
       case 'rectangle':

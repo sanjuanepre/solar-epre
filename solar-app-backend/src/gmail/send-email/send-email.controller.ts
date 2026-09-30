@@ -97,7 +97,6 @@ export class SendEmailController {
 <body>
   <div class="container">
     <h1>Gracias por utilizar la web Generación Solar Distribuida San Juan</h1>
-    <p>Hola, muchas gracias por utilizar la web Generación Solar Distribuida San Juan.</p>
     <p>Podrás visualizar los <span class="highlight">RESULTADOS DE TU SIMULACIÓN</span> en el documento adjunto al presente, en formato PDF.</p>
     <p>En caso de recibir este correo por error, por favor desestimar el mismo.</p>
     <p>Si tienes alguna duda y/o consulta no dudes en comunicarte con el E.P.R.E. a través de nuestros canales de atención, detallados en el sitio web: <a href="https://epresanjuan.gob.ar/contacto-2/">https://epresanjuan.gob.ar/contacto-2/</a>.</p>

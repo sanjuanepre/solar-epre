@@ -237,7 +237,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
 
     // 1. Energía Consumo
     try {
-      result.energiaConsumo = await this.exportChartOffscreen(this.getOptionsEnergiaConsumo(true), 550, 300);
+      result.energiaConsumo = await this.exportChartOffscreen(this.getOptionsEnergiaConsumo(true), 850, 300);
       if (!result.energiaConsumo && this.chartEnergiaConsumo) {
         const data = await this.chartEnergiaConsumo.dataURI();
         if (data && 'imgURI' in data && data.imgURI) {
@@ -449,7 +449,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
   private updateChartEnergiaConsumo() {
     if (!this.chartEnergiaConsumo) return;
     const options = this.getOptionsEnergiaConsumo(false);
-    this.chartEnergiaConsumo.updateOptions(options, false, false);
+    this.chartEnergiaConsumo.updateOptions(options, true, false);
     this.cdr.detectChanges();
   }
 

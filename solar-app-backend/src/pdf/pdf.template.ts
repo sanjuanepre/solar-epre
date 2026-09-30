@@ -434,7 +434,7 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
           <span class="card-label">Costo Estimado de Instalación</span>
           <svg class="card-icon" fill="none" stroke="#0284c7" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
         </div>
-        <div class="card-value">${formatMoneda(data.costoInstalacion)}</div>
+        <div class="card-value">${formatNumero(data.costoInstalacion, 0)} USD</div>
         <div class="card-subtext">Llave en mano aproximado para ${formatNumero(data.superficieTechoM2, 1)} m² de superficie</div>
       </div>
 
@@ -472,7 +472,7 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
     <div class="section-header">Hipótesis Adoptadas</div>
     <div class="hipotesis-box">
       <p class="hipotesis-intro">
-        Los resultados de la evaluación a partir de la aplicación "Generación Solar Distribuida San Juan" deben considerarse aproximados y no representan opinión ni dictamen técnico formal del E.P.R.E. Se reproducen a modo de referencia adoptando las siguientes hipótesis:
+        Los resultados de la evaluación a partir de la web "Generación Solar Distribuida San Juan" deben considerarse aproximados y no representan opinión ni dictamen técnico formal del E.P.R.E. Se reproducen a modo de referencia adoptando las siguientes hipótesis:
       </p>
       <ul class="hipotesis-list">
         <li><strong>Categoría tarifaria seleccionada:</strong> &nbsp;${data.categoriaTarifa}</li>
@@ -534,6 +534,9 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
       </div>
       <div class="chart-img-wrapper">
         <img src="${data.chartImages.energiaConsumo}" alt="Gráfica Energía Consumida y Generada" />
+      </div>
+      <div style="font-size: 9.5px; color: #475569; text-align: center; margin-top: 4px; font-style: italic;">
+        Los datos indicados corresponden a balances neto de energías.
       </div>
     </div>
     `
