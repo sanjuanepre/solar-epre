@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { PdfService, GeneratePdfPayload } from './pdf.service';
 import { firstValueFrom } from 'rxjs';
+import { retry } from 'rxjs/operators';
 import { environment } from 'src/environments/environments';
 
 @Injectable({
@@ -14,7 +15,7 @@ export class GmailService {
 
   async sendEmailWithResults(email: string, payload: GeneratePdfPayload): Promise<void> {
     try {
-      // 1. Obtener el PDF vectorial generado por el backend Puppeteer
+      // 1. Obtener el PDF vectorial generado por el backend Puppeteer (cuenta con auto-retry ante cold starts)
       const pdfBlob = await firstValueFrom(this.pdfService.downloadPdfBlob(payload));
       const uniqueID = payload.uniqueID || this.pdfService.uniqueID;
 
@@ -23,7 +24,14 @@ export class GmailService {
       formData.append('email', email);
       formData.append('file', pdfBlob, `resultado-id-${uniqueID}.pdf`);
 
-      await firstValueFrom(this.http.post(`${this.apiUrl}/gmail/send-email`, formData));
+      await firstValueFrom(
+        this.http.post(`${this.apiUrl}/gmail/send-email`, formData).pipe(
+          retry({
+            count: 1,
+            delay: 1500,
+          })
+        )
+      );
       console.log('[GmailService] Email con PDF adjunto enviado exitosamente.');
     } catch (error) {
       console.error('[GmailService] Error al enviar el email:', error);

@@ -3,14 +3,20 @@ import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class MailService {
-  private transporter: nodemailer.Transporter;
-
-  constructor() {
-    this.transporter = nodemailer.createTransport({
+  private getTransporter(): nodemailer.Transporter {
+    const user = process.env.USER_GMAIL || 'spereyra.jus@gmail.com';
+    const rawPass = process.env.PASS_GMAIL;
+    if (!rawPass) {
+      throw new Error(
+        'La variable PASS_GMAIL no está configurada en las variables de entorno de Vercel. Por favor configure la contraseña de aplicación de 16 caracteres de Google en Vercel Dashboard.'
+      );
+    }
+    const pass = rawPass.replace(/\s+/g, '');
+    return nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: process.env.USER_GMAIL || 'epresjsolar@gmail.com',
-        pass: process.env.PASS_GMAIL ? process.env.PASS_GMAIL.replace(/\s+/g, '') : undefined,
+        user,
+        pass,
       },
     });
   }
@@ -21,10 +27,11 @@ export class MailService {
     htmlContent: string,
     file?: Express.Multer.File,
   ) {
-    const transporter = this.transporter;
+    const user = process.env.USER_GMAIL || 'spereyra.jus@gmail.com';
+    const transporter = this.getTransporter();
 
     const mailOptions: nodemailer.Options = {
-      from: process.env.USER_GMAIL || 'epresjsolar@gmail.com',
+      from: `"Generación Solar Distribuida San Juan" <${user}>`,
       to,
       subject,
       html: htmlContent,

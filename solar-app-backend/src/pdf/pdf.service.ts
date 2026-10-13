@@ -36,8 +36,11 @@ export class PdfService {
     // En Vercel / Serverless o si no hay navegador instalado localmente
     process.env.AWS_LAMBDA_JS_RUNTIME = 'nodejs20.x';
     try {
-      return await chromium.executablePath();
-    } catch {
+      const execPath = await chromium.executablePath();
+      this.logger.log(`Chromium local resuelto exitosamente en: ${execPath}`);
+      return execPath;
+    } catch (err: any) {
+      this.logger.warn(`Chromium local no encontrado (${err?.message}). Descargando pack desde GitHub...`);
       const CHROMIUM_PACK_URL = 'https://github.com/Sparticuz/chromium/releases/download/v131.0.0/chromium-v131.0.0-pack.tar';
       return await chromium.executablePath(CHROMIUM_PACK_URL);
     }
