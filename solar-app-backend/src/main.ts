@@ -33,6 +33,17 @@ export default async (req: any, res: any) => {
     return res.status(200).end();
   }
 
+  // Endpoint de salud: confirma versión desplegada y configuración de entorno
+  if (req.url === '/health' || req.url === '/health/') {
+    return res.status(200).json({
+      status: 'ok',
+      version: '6ae7b00',
+      userGmail: process.env.USER_GMAIL ? `${process.env.USER_GMAIL.substring(0, 3)}***` : 'NOT_SET (fallback activo)',
+      passGmail: process.env.PASS_GMAIL ? `SET (${process.env.PASS_GMAIL.length} chars)` : 'NOT_SET',
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   try {
     const server = await bootstrap();
     return server(req, res);
