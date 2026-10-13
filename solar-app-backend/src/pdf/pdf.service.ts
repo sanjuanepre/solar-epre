@@ -54,13 +54,28 @@ export class PdfService {
         (chromium as any).setGraphicsMode = false;
       }
       const executablePath = await this.getExecutablePath();
-      if (isVercel && executablePath) {
+      if (isVercel) {
         const path = await import('path');
-        const dir = path.dirname(executablePath);
-        process.env.LD_LIBRARY_PATH = process.env.LD_LIBRARY_PATH ? `${dir}:${process.env.LD_LIBRARY_PATH}` : dir;
+        try {
+          const lambdafs = (await import('@sparticuz/chromium/build/lambdafs')).default;
+          const binDir = path.join(path.dirname(require.resolve('@sparticuz/chromium')), '..', 'bin');
+          const al2023Tar = path.join(binDir, 'al2023.tar.br');
+          if (fs.existsSync(al2023Tar) && !fs.existsSync('/tmp/al2023/lib')) {
+            await lambdafs.inflate(al2023Tar);
+            this.logger.log('Librerías compartidas al2023 infladas exitosamente en /tmp/al2023/lib');
+          }
+        } catch (inflateErr) {
+          this.logger.warn('No se pudo inflar al2023.tar.br:', inflateErr);
+        }
+
+        const libDirs = ['/tmp/al2023/lib', '/tmp/al2/lib', '/tmp'];
+        process.env.LD_LIBRARY_PATH = [
+          ...libDirs,
+          process.env.LD_LIBRARY_PATH || '',
+        ].filter(Boolean).join(':');
       }
 
-      this.logger.log(`Lanzando Puppeteer (Vercel: ${isVercel}, Executable: ${executablePath})`);
+      this.logger.log(`Lanzando Puppeteer (Vercel: ${isVercel}, Executable: ${executablePath}, LD_LIBRARY_PATH: ${process.env.LD_LIBRARY_PATH})`);
 
       browser = await puppeteer.launch({
         args: isVercel ? chromium.args : ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
