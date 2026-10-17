@@ -1,5 +1,10 @@
 import { GeneratePdfDto } from './pdf.dto';
-import { HEADER_LOGO_BASE64 } from './header-logo.base64';
+import {
+  LOGO_EPRE_BASE64,
+  LOGO_SOLAR_BASE64,
+  LOGO_CONICET_BASE64,
+  LOGO_SANJUAN_BASE64,
+} from './logos.base64';
 
 export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
   const uniqueId = data.uniqueID || Math.random().toString(36).substring(2, 10).toUpperCase();
@@ -79,12 +84,35 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
     .top-logo-bar {
       width: 100%;
       margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 4px;
     }
-    .top-logo-bar img {
-      width: 100%;
-      max-width: 100%;
-      height: auto;
-      display: block;
+    .top-logo-left, .top-logo-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .top-logo-bar img.logo-epre {
+      height: 32px;
+      width: auto;
+      object-fit: contain;
+    }
+    .top-logo-bar img.logo-solar {
+      height: 35px;
+      width: auto;
+      object-fit: contain;
+    }
+    .top-logo-bar img.logo-conicet {
+      height: 27px;
+      width: auto;
+      object-fit: contain;
+    }
+    .top-logo-bar img.logo-sanjuan {
+      height: 31px;
+      width: auto;
+      object-fit: contain;
     }
 
     /* NAVY BANNER - EXECUTIVE MODERN STYLE */
@@ -220,12 +248,14 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
       padding: 12px 14px;
       font-size: 8.5pt;
       margin-bottom: 12px;
+      text-align: justify;
     }
     .hipotesis-intro {
       color: #475569;
       margin-bottom: 8px;
       font-size: 8pt;
       line-height: 1.35;
+      text-align: justify;
     }
     .hipotesis-list {
       list-style: none;
@@ -235,6 +265,7 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
       color: #334155;
       display: flex;
       align-items: flex-start;
+      text-align: justify;
     }
     .hipotesis-list li::before {
       content: "•";
@@ -393,7 +424,14 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
   <!-- PÁGINA 1: RESUMEN Y RESULTADOS ESTIMADOS -->
   <div class="page">
     <div class="top-logo-bar">
-      <img src="${HEADER_LOGO_BASE64}" alt="EPRE - Generacion Solar Distribuida San Juan" />
+      <div class="top-logo-left">
+        <img class="logo-epre" src="${LOGO_EPRE_BASE64}" alt="EPRE San Juan" />
+        <img class="logo-solar" src="${LOGO_SOLAR_BASE64}" alt="Generación Solar Distribuida" />
+      </div>
+      <div class="top-logo-right">
+        <img class="logo-conicet" src="${LOGO_CONICET_BASE64}" alt="CONICET - IEE - UNSJ" />
+        <img class="logo-sanjuan" src="${LOGO_SANJUAN_BASE64}" alt="San Juan Gobierno" />
+      </div>
     </div>
 
     <div class="banner-header">
@@ -418,14 +456,13 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
         <div class="card-subtext">Potencia individual: ${data.panelCapacityW} W | ${estructuraTexto}</div>
       </div>
 
-      <!-- Card 2: Ahorro Anual Estimado -->
+      <!-- Card 2: Ahorro en cargos por energía -->
       <div class="card card-accent-green">
         <div class="card-header-flex">
-          <span class="card-label">Ahorro Anual Estimado</span>
+          <span class="card-label">Ahorro en cargos por energía</span>
           <svg class="card-icon" fill="none" stroke="#059669" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
         </div>
         <div class="card-value">${formatNumero(data.ahorroEstimadoPesosAnual, 0)} USD/año</div>
-        <div class="card-subtext">${data.ahorroPorcentajeAnual > 0 ? 'Equivalente al ' + formatNumero(data.ahorroPorcentajeAnual, 0) + '% de reducción anual en la factura eléctrica' : 'Ahorro económico anual estimado derivado de la instalación solar'}</div>
       </div>
 
       <!-- Card 3: Costo Estimado de Instalación -->
@@ -509,7 +546,14 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
   <!-- PÁGINA 2: ANÁLISIS ENERGÉTICO Y FINANCIERO -->
   <div class="page page-break">
     <div class="top-logo-bar">
-      <img src="${HEADER_LOGO_BASE64}" alt="EPRE - Generacion Solar Distribuida San Juan" />
+      <div class="top-logo-left">
+        <img class="logo-epre" src="${LOGO_EPRE_BASE64}" alt="EPRE San Juan" />
+        <img class="logo-solar" src="${LOGO_SOLAR_BASE64}" alt="Generación Solar Distribuida" />
+      </div>
+      <div class="top-logo-right">
+        <img class="logo-conicet" src="${LOGO_CONICET_BASE64}" alt="CONICET - IEE - UNSJ" />
+        <img class="logo-sanjuan" src="${LOGO_SANJUAN_BASE64}" alt="San Juan Gobierno" />
+      </div>
     </div>
 
     <div class="banner-header">
@@ -577,7 +621,14 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
   <!-- PÁGINA 3: IMPACTO AMBIENTAL Y REDUCCIÓN DE EMISIONES CO2 -->
   <div class="page page-break">
     <div class="top-logo-bar">
-      <img src="${HEADER_LOGO_BASE64}" alt="EPRE - Generacion Solar Distribuida San Juan" />
+      <div class="top-logo-left">
+        <img class="logo-epre" src="${LOGO_EPRE_BASE64}" alt="EPRE San Juan" />
+        <img class="logo-solar" src="${LOGO_SOLAR_BASE64}" alt="Generación Solar Distribuida" />
+      </div>
+      <div class="top-logo-right">
+        <img class="logo-conicet" src="${LOGO_CONICET_BASE64}" alt="CONICET - IEE - UNSJ" />
+        <img class="logo-sanjuan" src="${LOGO_SANJUAN_BASE64}" alt="San Juan Gobierno" />
+      </div>
     </div>
 
     <div class="banner-header">
@@ -626,7 +677,7 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
       <div class="chart-card-half">
         <div class="chart-card-header">
           <span class="badge">2</span>
-          <span>Comparativa: Sin solar vs Con solar</span>
+          <span>Comparativa</span>
         </div>
         <div class="chart-img-wrapper">
           <img src="${data.chartImages.emisionesComparativa}" alt="Gráfica Comparativa Emisiones" />

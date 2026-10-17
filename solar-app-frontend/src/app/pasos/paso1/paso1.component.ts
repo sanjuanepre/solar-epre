@@ -657,4 +657,11 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
     }
     this.mapService.rotatePolygon(angleDegrees);
   }
+
+  ingresarAlMapa(): void {
+    this.sharedService.setSidebarCollapsed(true);
+    setTimeout(() => {
+      this.mapService.recenterMapToVisibleArea();
+    }, 300);
+  }
 }

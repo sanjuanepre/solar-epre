@@ -10,15 +10,15 @@
     </div>
     <div class="custom-loader" *ngIf="isLoading"></div>
 
-    <!-- Botón flotante móvil para alternar entre Mapa y Panel en Paso 1 -->
+    <!-- Botón flotante móvil para volver al panel desde el Mapa en Paso 1 -->
     <button 
       type="button"
       class="mobile-view-toggle-btn" 
-      *ngIf="currentStep === 1"
-      (click)="toggleCollapse()"
-      [title]="isCollapsed ? 'Abrir panel de configuración' : 'Ver mapa a pantalla completa'">
-      <mat-icon>{{ isCollapsed ? 'tune' : 'map' }}</mat-icon>
-      <span>{{ isCollapsed ? 'Opciones y Datos' : 'Ver Mapa' }}</span>
+      *ngIf="currentStep === 1 && isCollapsed"
+      (click)="expandComponent()"
+      title="Volver a los datos y opciones">
+      <mat-icon>arrow_back</mat-icon>
+      <span>Volver</span>
     </button>
 
     <div class="paso" [class.collapsed]="isCollapsed" [ngClass]="{'expanded': isPaso3 && !isCollapsed, 'step-fullscreen': isMobile && (currentStep === 0 || currentStep === 2 || currentStep === 3)}">

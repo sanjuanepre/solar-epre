@@ -124,15 +124,66 @@ export class SharedService {
   };
 
 
-  constructor(private router: Router,) {
+  constructor(private router: Router) {
     console.log("Se instancia el shared service...");
-
+    this.restoreStateFromSession();
   }
 
+  private saveStateToSession(): void {
+    try {
+      const state = {
+        tarifaContratada: this.tarifaContratadaSubject.getValue(),
+        yearlyEnergyAckWh: this.yearlyEnergyAckWhSubject.getValue(),
+        panelsCountSelected: this.panelsCountSelectedSubject.getValue(),
+        panelCapacityW: this.panelCapacityWSubject.getValue(),
+        eficienciaInstalacion: this.eficienciaInstalacionSubject.getValue(),
+        costoInstalacion: this.costoInstalacionSubject.getValue(),
+        plazoInversion: this.plazoInversionSubject.getValue(),
+        tarifaIntercambioUsdkWh: this.tarifaIntercambioUsdkWhSubject.getValue(),
+        potenciaMaxAsignadaW: this.potenciaMaxAsignadaSubject.getValue(),
+        potenciaInstalacionW: this.potenciaInstalacionWSubject.getValue(),
+        tipoEstructura: this.tipoEstructuraSubject.getValue(),
+        consumosMensuales: this.consumosMensualesSubject.getValue(),
+        carbonOffSetTnAnual: this.carbonOffSetTnAnualSubject.getValue(),
+        resultadosFront: this.resultadosFrontSubject.getValue(),
+        yearlysAnualConfigurations: this.yearlysAnualConfigurationSubject.getValue(),
+      };
+      sessionStorage.setItem('solar_calc_state', JSON.stringify(state));
+    } catch (_) {}
+  }
+
+  private restoreStateFromSession(): void {
+    try {
+      const saved = sessionStorage.getItem('solar_calc_state');
+      if (saved) {
+        const state = JSON.parse(saved);
+        if (state.tarifaContratada) this.tarifaContratadaSubject.next(state.tarifaContratada);
+        if (state.yearlyEnergyAckWh) this.yearlyEnergyAckWhSubject.next(state.yearlyEnergyAckWh);
+        if (state.panelsCountSelected) this.panelsCountSelectedSubject.next(state.panelsCountSelected);
+        if (state.panelCapacityW) this.panelCapacityWSubject.next(state.panelCapacityW);
+        if (state.eficienciaInstalacion) this.eficienciaInstalacionSubject.next(state.eficienciaInstalacion);
+        if (state.costoInstalacion) this.costoInstalacionSubject.next(state.costoInstalacion);
+        if (state.plazoInversion) this.plazoInversionSubject.next(state.plazoInversion);
+        if (state.tarifaIntercambioUsdkWh) this.tarifaIntercambioUsdkWhSubject.next(state.tarifaIntercambioUsdkWh);
+        if (state.potenciaMaxAsignadaW) this.potenciaMaxAsignadaSubject.next(state.potenciaMaxAsignadaW);
+        if (state.potenciaInstalacionW) this.potenciaInstalacionWSubject.next(state.potenciaInstalacionW);
+        if (state.tipoEstructura) this.tipoEstructuraSubject.next(state.tipoEstructura);
+        if (state.consumosMensuales && Array.isArray(state.consumosMensuales)) this.consumosMensualesSubject.next(state.consumosMensuales);
+        if (state.carbonOffSetTnAnual) this.carbonOffSetTnAnualSubject.next(state.carbonOffSetTnAnual);
+        if (state.resultadosFront && Object.keys(state.resultadosFront).length > 0) {
+          this.resultadosFrontSubject.next(state.resultadosFront);
+        }
+        if (state.yearlysAnualConfigurations && Array.isArray(state.yearlysAnualConfigurations) && state.yearlysAnualConfigurations.length > 0) {
+          this.yearlysAnualConfigurationSubject.next(state.yearlysAnualConfigurations);
+        }
+      }
+    } catch (_) {}
+  }
 
   setTarifaContratada(tarifaContratada: string) {
     console.log('Seteando tarifa contratada: ', tarifaContratada);
     this.tarifaContratadaSubject.next(tarifaContratada);
+    this.saveStateToSession();
   }
 
   getTarifaContratada(): string {
@@ -288,6 +339,7 @@ export class SharedService {
   setResultadosFront(resultadosFront: ResultadosFrontDTO) {
     console.log('Estableciendo resultados front:', resultadosFront);
     this.resultadosFrontSubject.next(resultadosFront);
+    this.saveStateToSession();
   }
 
   getResultadosFront(): Partial<ResultadosFrontDTO> {
@@ -332,6 +384,7 @@ export class SharedService {
   setConsumosMensuales(consumos: any) {
     console.log('Estableciendo consumos mensuales:', consumos);
     this.consumosMensualesSubject.next(consumos);
+    this.saveStateToSession();
   }
 
   getConsumosMensuales() {
@@ -486,6 +539,10 @@ export class SharedService {
 
   resetAll() {
     console.log('Reseteando todos los valores...');
+    try {
+      sessionStorage.removeItem('solar_calc_state');
+      sessionStorage.removeItem('solar_map_feature');
+    } catch (_) {}
     Object.keys(this.initialState).forEach(key => {
       (this as any)[`set${key.charAt(0).toUpperCase() + key.slice(1)}`](
         this.initialState[key as keyof typeof this.initialState]

@@ -60,6 +60,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
   chartEnergiaConsumo!: ApexCharts;
   vistaCO2: 'anual' | 'comparativa' | 'acumulada' | 'gauge' = 'anual';
   textoArboles: string = '';
+  gaugePercent: number = 0;
 
   constructor(
     private sharedService: SharedService,
@@ -181,6 +182,8 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       tempDiv.style.width = `${width}px`;
       tempDiv.style.height = `${height}px`;
       tempDiv.style.zIndex = '-1000';
+      tempDiv.style.colorScheme = 'light';
+      tempDiv.style.backgroundColor = '#ffffff';
       document.body.appendChild(tempDiv);
 
       const exportOpts = {
@@ -190,13 +193,17 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
           width: width,
           height: height,
           background: '#ffffff',
+          foreColor: '#373d3f',
           animations: { enabled: false },
+        },
+        theme: {
+          mode: 'light',
         },
       };
 
       tempChart = new (ApexCharts as any)(tempDiv, exportOpts);
       await tempChart.render();
-      await new Promise((resolve) => setTimeout(resolve, 80));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       const data = await tempChart.dataURI();
       if (data && 'imgURI' in data && data.imgURI) {
         return data.imgURI;
@@ -235,9 +242,9 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       emisionesGauge?: string;
     } = {};
 
-    // 1. Energía Consumo
+    // 1. Energía Consumo (alta resolución)
     try {
-      result.energiaConsumo = await this.exportChartOffscreen(this.getOptionsEnergiaConsumo(true), 850, 300);
+      result.energiaConsumo = await this.exportChartOffscreen(this.getOptionsEnergiaConsumo(true), 1700, 600);
       if (!result.energiaConsumo && this.chartEnergiaConsumo) {
         const data = await this.chartEnergiaConsumo.dataURI();
         if (data && 'imgURI' in data && data.imgURI) {
@@ -248,9 +255,9 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       console.warn('Error al exportar chartEnergiaConsumo:', e);
     }
 
-    // 3. Ahorro Recupero
+    // 3. Ahorro Recupero (alta resolución)
     try {
-      result.ahorroRecupero = await this.exportChartOffscreen(this.getOptionsAhorroRecupero(true), 850, 320);
+      result.ahorroRecupero = await this.exportChartOffscreen(this.getOptionsAhorroRecupero(true), 1700, 640);
       if (!result.ahorroRecupero && this.chartAhorroRecupero) {
         const data = await this.chartAhorroRecupero.dataURI();
         if (data && 'imgURI' in data && data.imgURI) {
@@ -263,21 +270,21 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
 
     // 4. Emisiones Anual
     try {
-      result.emisionesAnual = await this.exportChartOffscreen(this.getOptionsEmisionesVista('anual', true), 750, 300);
+      result.emisionesAnual = await this.exportChartOffscreen(this.getOptionsEmisionesVista('anual', true), 1500, 600);
     } catch (e) {
       console.warn('Error al exportar emisionesAnual:', e);
     }
 
     // 5. Emisiones Comparativa
     try {
-      result.emisionesComparativa = await this.exportChartOffscreen(this.getOptionsEmisionesVista('comparativa', true), 750, 300);
+      result.emisionesComparativa = await this.exportChartOffscreen(this.getOptionsEmisionesVista('comparativa', true), 1500, 600);
     } catch (e) {
       console.warn('Error al exportar emisionesComparativa:', e);
     }
 
     // 6. Emisiones Acumulada
     try {
-      result.emisionesAcumulada = await this.exportChartOffscreen(this.getOptionsEmisionesVista('acumulada', true), 750, 300);
+      result.emisionesAcumulada = await this.exportChartOffscreen(this.getOptionsEmisionesVista('acumulada', true), 1500, 600);
       result.emisiones = result.emisionesAcumulada || result.emisionesAnual;
     } catch (e) {
       console.warn('Error al exportar emisionesAcumulada:', e);
@@ -285,7 +292,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
 
     // 7. Emisiones Gauge
     try {
-      result.emisionesGauge = await this.exportChartOffscreen(this.getOptionsEmisionesVista('gauge', true), 450, 280);
+      result.emisionesGauge = await this.exportChartOffscreen(this.getOptionsEmisionesVista('gauge', true), 900, 560);
     } catch (e) {
       console.warn('Error al exportar emisionesGauge:', e);
     }
@@ -382,7 +389,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       colors: colors,
       series: series,
       xaxis: {
-        categories: ['Consumo total anual', 'Generación anual FV'],
+        categories: [['Consumo total', 'anual'], ['Generación', 'anual FV']],
         labels: {
           rotate: 0,
           rotateAlways: false,
@@ -584,13 +591,13 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       },
       xaxis: {
         categories: categories,
-        tickAmount: forExport ? 20 : 10,
+        tickAmount: forExport ? categories.length : 10,
         tickPlacement: 'between',
         labels: {
-          rotate: -35,
-          rotateAlways: false,
-          hideOverlappingLabels: true,
-          trim: true,
+          rotate: -45,
+          rotateAlways: true,
+          hideOverlappingLabels: false,
+          trim: false,
           style: {
             fontSize: '11px',
             fontFamily: 'sodo sans, sans-serif',
@@ -933,11 +940,11 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       return {
         series: [
           {
-            name: 'Emisiones sin solar',
+            name: 'Emisiones sin instalación de Generación Solar',
             data: baseSeries,
           },
           {
-            name: 'Emisiones con solar',
+            name: 'Emisiones con instalación de Generación Solar',
             data: realSeries,
           },
         ],
@@ -1108,6 +1115,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
     } else if (vista === 'gauge') {
       const totalBaseCO2_20Years = baseCO2 * (this.periodoVeinteanalEmisionesGEIEvitadasOriginal?.length || 1);
       const percent = Math.min(100, Math.round((totalCO2Acumulado / (totalBaseCO2_20Years || 1)) * 100));
+      this.gaugePercent = percent;
 
       return {
         series: [percent],
@@ -1168,15 +1176,6 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         colors: ['#e4c58d'],
         stroke: {
           lineCap: 'round'
-        },
-        subtitle: {
-          text: `Tu instalación solar evita el ${percent}% de las emisiones de CO₂ que generaría tu consumo desde la red eléctrica`,
-          align: 'center',
-          style: {
-            fontSize: '12px',
-            fontFamily: 'sodo sans, sans-serif',
-            color: '#475569',
-          },
         },
       };
     }

@@ -374,6 +374,21 @@ export class MapService {
         this.handleTerraDrawChange(false);
       });
 
+      // Restaurar polígono previo si existe en sessionStorage
+      const savedFeature = sessionStorage.getItem('solar_map_feature');
+      if (savedFeature) {
+        try {
+          const parsed = JSON.parse(savedFeature);
+          if (parsed && parsed.geometry) {
+            this.terraDraw.addFeatures([parsed]);
+            this.handleTerraDrawChange(true);
+            this.setTerraDrawMode('select');
+          }
+        } catch (e) {
+          console.warn('No se pudo restaurar feature guardado:', e);
+        }
+      }
+
       console.log('TerraDraw iniciado con éxito');
     } catch (error) {
       console.error('Error iniciando TerraDraw:', error);
@@ -584,6 +599,11 @@ export class MapService {
           this.drawPanels(polygon);
           this.overlayCompleteSubject.next(true);
           this.drawingStateSubject.next('CLOSED');
+          if (isFinished && feature) {
+            try {
+              sessionStorage.setItem('solar_map_feature', JSON.stringify(feature));
+            } catch (_) {}
+          }
         } else {
           this.clearPanels();
           this.overlayCompleteSubject.next(false);
@@ -982,6 +1002,9 @@ export class MapService {
   clearDrawing() {
     this.clearPolygons();
     this.clearPanels();
+    try {
+      sessionStorage.removeItem('solar_map_feature');
+    } catch (_) {}
     if (this.terraDraw) {
       try {
         this.terraDraw.clear();

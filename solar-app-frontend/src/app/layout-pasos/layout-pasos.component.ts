@@ -50,6 +50,12 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit {
         this.isLoading = value;
       },
     });
+    this.sharedService.sidebarCollapsed$.subscribe({
+      next: (collapsed) => {
+        this.isCollapsed = collapsed;
+        this.cdr.detectChanges();
+      },
+    });
     this.sharedService.setTutorialShown(false);
   }
 
@@ -58,6 +64,18 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit {
     window.addEventListener('resize', () => {
       this.checkIsMobile();
       this.cdr.detectChanges();
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        const map = this.mapService.getMap();
+        if (map && (window as any).google?.maps?.event) {
+          (window as any).google.maps.event.trigger(map, 'resize');
+          setTimeout(() => {
+            this.mapService.recenterMapToVisibleArea();
+          }, 200);
+        }
+      }
     });
   }
 

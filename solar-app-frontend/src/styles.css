@@ -61,6 +61,7 @@ h5 {
 
 /*COLORES & TOKENS DE DISEÑO MODERNOS*/
 :root {
+  color-scheme: light only;
   --dark-green: #1e3932;
   --medium-green: #006241;
   --light-green: #00754a;

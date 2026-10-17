@@ -276,6 +276,51 @@
 
 }
 
+/* Botón Destacado Ingresar al Mapa */
+.ingresar-mapa-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+  margin-bottom: 6px;
+  width: 100%;
+}
+
+.btn-ingresar-mapa {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 18px;
+  background: var(--gradient-eco);
+  color: #ffffff;
+  border: 1px solid var(--golden);
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Sodo Sans', sans-serif;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 98, 65, 0.22);
+  transition: var(--transition-fast);
+}
+
+.btn-ingresar-mapa:hover {
+  background: var(--dark-green);
+  box-shadow: 0 6px 18px rgba(0, 98, 65, 0.32);
+  transform: translateY(-1px);
+}
+
+.btn-ingresar-mapa:active {
+  transform: translateY(0);
+}
+
+.btn-ingresar-mapa mat-icon {
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+  color: var(--golden-light);
+}
+
 /* ==========================================
    ESTILOS PREMIUM: BANNER DINÁMICO & HEATMAP
    ========================================== */
@@ -1040,6 +1085,11 @@ input:checked + .slider:before {
 
 @media (max-width: 768px) {
   .hud-map-toolbar {
+    display: none;
+  }
+
+  .hud-map-toolbar.sidebar-collapsed {
+    display: flex;
     top: 60px;
     left: 8px;
     right: 8px;
@@ -1049,10 +1099,6 @@ input:checked + .slider:before {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     border-radius: 10px;
-  }
-
-  .hud-map-toolbar.sidebar-collapsed {
-    max-width: calc(100vw - 16px) !important;
     opacity: 0.95;
     transform: translateY(0);
   }
