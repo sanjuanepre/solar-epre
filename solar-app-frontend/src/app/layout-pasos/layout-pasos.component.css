@@ -26,6 +26,7 @@
   width: 100%;
   height: 100%;
   position: relative;
+  z-index: 1;
 }
 
 .paso {
@@ -113,7 +114,7 @@
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 99;
+  z-index: 100;
   background: var(--gradient-dark);
   color: #ffffff;
   border: 1.5px solid var(--golden);
@@ -246,7 +247,7 @@
   top: 16px;
   left: 20px;
   max-width: calc(100vw - 620px);
-  z-index: 9;
+  z-index: 100;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -411,6 +412,7 @@
     right: 8px;
     max-width: calc(100vw - 16px);
     gap: 6px;
+    z-index: 100;
   }
 
   .hud-map-toolbar {

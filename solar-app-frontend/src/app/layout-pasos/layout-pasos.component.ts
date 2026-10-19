@@ -71,6 +71,9 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     this.checkIsMobile();
+    this.updateCurrentStepFromUrl();
+    this.isCollapsed = this.sharedService.getSidebarCollapsed();
+
     window.addEventListener('resize', () => {
       this.checkIsMobile();
       this.cdr.detectChanges();
@@ -141,20 +144,30 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isMobile = window.innerWidth < 768;
   }
 
-  ngAfterViewInit(): void {
-    this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe(() => {
-        const url = this.router.url;
-        const lastSegment = url.split('/').pop();
-        this.currentStep = Number.parseInt(lastSegment ?? '0', 10);
-        this.isPaso3 = this.currentStep === 3;
+  private updateCurrentStepFromUrl(resetCollapsed: boolean = false): void {
+    const url = this.router.url;
+    const lastSegment = url.split('?')[0].split('/').pop();
+    this.currentStep = Number.parseInt(lastSegment ?? '0', 10);
+    this.isPaso3 = this.currentStep === 3;
 
-        this.isCollapsed = false;
-        if (this.isPaso3) {
-          this.isCollapsed = true;
-        }
-        this.sharedService.setSidebarCollapsed(this.isCollapsed);
+    if (resetCollapsed) {
+      this.isCollapsed = false;
+      if (this.isPaso3) {
+        this.isCollapsed = true;
+      }
+      this.sharedService.setSidebarCollapsed(this.isCollapsed);
+    }
+  }
+
+  ngAfterViewInit(): void {
+    this.updateCurrentStepFromUrl(false);
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        this.updateCurrentStepFromUrl(true);
         this.cdr.detectChanges();
       });
   }
