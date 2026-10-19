@@ -237,8 +237,8 @@ export class MapService {
         this.map.panTo(currentCenter);
       } else {
         // En caso contrario, forzar recentrado en la zona urbana de San Juan por defecto
-        this.map.panTo(this.center);
-        this.map.setZoom(this.zoomInicial);
+        this.map.setCenter(this.defaultCenter);
+        this.map.setZoom(this.defaultZoom);
       }
       return;
     }

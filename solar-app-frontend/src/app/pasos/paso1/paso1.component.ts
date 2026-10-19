@@ -206,8 +206,8 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
     if (!this.map) {
       throw new Error('El mapa no está inicializado.');
     }
-    // Si no hay polígonos dibujados ni marcador con posición previa, asegurar centrado en zona urbana de San Juan
-    if (this.mapService.getPolygons().length === 0 && !this.marker?.position) {
+    const currentCenter = this.map.getCenter();
+    if (!currentCenter || !this.locationService.isWithinSanJuan(currentCenter.lat(), currentCenter.lng())) {
       this.map.setCenter(this.mapService.defaultCenter);
       this.map.setZoom(this.mapService.defaultZoom);
     }
@@ -422,7 +422,9 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
           console.error('La ubicación no es válida.');
         }
       }
-      input.value = '';
+      if (place && place.formatted_address) {
+        input.value = place.formatted_address;
+      }
     });
 
     // Asegurarse de eliminar el listener cuando el componente se destruya
@@ -666,10 +668,6 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
     }
     this.sharedService.setSidebarCollapsed(true);
     setTimeout(() => {
-      if (this.mapService.getPolygons().length === 0 && !this.marker?.position) {
-        this.map?.setCenter(this.mapService.defaultCenter);
-        this.map?.setZoom(this.mapService.defaultZoom);
-      }
       this.mapService.recenterMapToVisibleArea();
     }, 300);
   }
