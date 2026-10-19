@@ -201,15 +201,16 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
   }
 
   async initializeMap(): Promise<void> {
-    const { AdvancedMarkerElement } = (await google.maps.importLibrary(
-      'marker'
-    )) as google.maps.MarkerLibrary;
+    await google.maps.importLibrary('marker');
     this.map = this.mapService.getMap();
     if (!this.map) {
       throw new Error('El mapa no está inicializado.');
     }
-    this.map.setZoom(22);
-    this.marker = new AdvancedMarkerElement({ map: this.map });
+    // Si no hay polígonos dibujados ni marcador con posición previa, asegurar centrado en zona urbana de San Juan
+    if (this.mapService.getPolygons().length === 0 && !this.marker?.position) {
+      this.map.setCenter(this.mapService.defaultCenter);
+      this.map.setZoom(this.mapService.defaultZoom);
+    }
   }
 
   showTutorial() {
@@ -658,9 +659,17 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
     this.mapService.rotatePolygon(angleDegrees);
   }
 
-  ingresarAlMapa(): void {
+  async ingresarAlMapa(): Promise<void> {
+    const inputVal = this.pacInput?.nativeElement?.value?.trim();
+    if (inputVal && !this.marker?.position && this.mapService.getPolygons().length === 0) {
+      await this.buscarUbicacion(inputVal);
+    }
     this.sharedService.setSidebarCollapsed(true);
     setTimeout(() => {
+      if (this.mapService.getPolygons().length === 0 && !this.marker?.position) {
+        this.map?.setCenter(this.mapService.defaultCenter);
+        this.map?.setZoom(this.mapService.defaultZoom);
+      }
       this.mapService.recenterMapToVisibleArea();
     }, 300);
   }

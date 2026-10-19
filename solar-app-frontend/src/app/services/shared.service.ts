@@ -66,6 +66,10 @@ export class SharedService {
   setSidebarCollapsed(collapsed: boolean) {
     this.sidebarCollapsedSubject.next(collapsed);
   }
+
+  getSidebarCollapsed(): boolean {
+    return this.sidebarCollapsedSubject.getValue();
+  }
   private panelsCountSelectedSubject = new BehaviorSubject<number>(0);
   panelsCountSelected$ = this.panelsCountSelectedSubject.asObservable();
   private plazoInversionSubject = new BehaviorSubject<number>(0);

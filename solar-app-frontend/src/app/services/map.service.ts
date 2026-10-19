@@ -23,8 +23,10 @@ export type TerraDrawActiveMode = 'polygon' | 'rectangle' | 'select' | 'static';
 })
 export class MapService {
   private map!: google.maps.Map;
-  private center: google.maps.LatLngLiteral = { lat: -31.5364, lng: -68.50639 };
-  private zoomInicial = 13;
+  public readonly defaultCenter: google.maps.LatLngLiteral = { lat: -31.5364, lng: -68.50639 };
+  public readonly defaultZoom = 13;
+  private center: google.maps.LatLngLiteral = { ...this.defaultCenter };
+  private zoomInicial = this.defaultZoom;
   zoom: number = this.zoomInicial;
   private mapSubject = new Subject<google.maps.Map>();
   
@@ -217,20 +219,55 @@ export class MapService {
   }
 
   recenterMapToVisibleArea() {
+    if (!this.map) return;
+
+    // Notificar cambio de dimensiones del contenedor
+    google.maps.event.trigger(this.map, 'resize');
+
+    const polygons = this.getPolygons();
+
+    // Caso 1: NO hay polígonos dibujados
+    if (polygons.length === 0) {
+      const currentCenter = this.map.getCenter();
+      // Si el centro actual es válido y está dentro de la provincia de San Juan, conservarlo
+      if (
+        currentCenter &&
+        this.locationService.isWithinSanJuan(currentCenter.lat(), currentCenter.lng())
+      ) {
+        this.map.panTo(currentCenter);
+      } else {
+        // En caso contrario, forzar recentrado en la zona urbana de San Juan por defecto
+        this.map.panTo(this.center);
+        this.map.setZoom(this.zoomInicial);
+      }
+      return;
+    }
+
+    // Caso 2: SÍ hay polígonos dibujados
     const bounds = new google.maps.LatLngBounds();
-    this.getPolygons().forEach((polygon) => {
+    polygons.forEach((polygon) => {
       polygon.getPath().forEach((latLng) => bounds.extend(latLng));
     });
 
     const mapCenter = bounds.getCenter();
 
-    // Calcular el nuevo centro considerando el ancho de pantalla y si está en móvil
+    // Calcular el nuevo centro considerando si el panel lateral está colapsado o expandido
     const screenWidth = window.innerWidth;
     const isMobile = screenWidth < 768;
     const isTablet = screenWidth >= 768 && screenWidth <= 1024;
-    const offsetX = isMobile ? 0 : (isTablet ? screenWidth / 6 : screenWidth / 4);
+    const isSidebarCollapsed = this.sharedService.getSidebarCollapsed();
 
-    const zoom = this.map.getZoom() ?? 1;
+    // En móvil o con sidebar colapsado, el mapa ocupa el 100% visible: offset es 0
+    const offsetX = (isMobile || isSidebarCollapsed)
+      ? 0
+      : (isTablet ? screenWidth / 6 : screenWidth / 4);
+
+    if (offsetX === 0) {
+      this.map.panTo(mapCenter);
+      return;
+    }
+
+    const zoom = this.map.getZoom() ?? this.zoomInicial;
     const scale = Math.pow(2, zoom);
     const worldCoordinateCenter = this.map
       .getProjection()
@@ -250,8 +287,10 @@ export class MapService {
       if (newCenter) {
         this.map.panTo(newCenter);
       } else {
-        console.error('No se pudo calcular el nuevo centro del mapa.');
+        this.map.panTo(mapCenter);
       }
+    } else {
+      this.map.panTo(mapCenter);
     }
   }
 
