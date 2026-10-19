@@ -10,6 +10,147 @@
     </div>
     <div class="custom-loader" *ngIf="isLoading"></div>
 
+    <!-- Floating HUD Bar sobre el Mapa Satelital (Paso 1) -->
+    <div class="hud-container" [class.sidebar-collapsed]="isCollapsed" *ngIf="currentStep === 1 && (!isMobile || isCollapsed)">
+      <div class="hud-map-toolbar">
+        <div class="hud-group mode-selector">
+          <button 
+            type="button"
+            class="hud-btn" 
+            [class.active]="activeMode === 'polygon'" 
+            (click)="setTerraDrawMode('polygon')"
+            title="Trazar polígono punto por punto"
+          >
+            <span class="material-icons">polyline</span>
+            <span class="hud-label">Polígono</span>
+          </button>
+          
+          <button 
+            type="button"
+            class="hud-btn" 
+            [class.active]="activeMode === 'rectangle'" 
+            (click)="setTerraDrawMode('rectangle')"
+            title="Trazar rectángulo rápido"
+          >
+            <span class="material-icons">crop_square</span>
+            <span class="hud-label">Rectángulo</span>
+          </button>
+
+          <button 
+            type="button"
+            class="hud-btn" 
+            [class.active]="activeMode === 'select'" 
+            (click)="setTerraDrawMode('select')"
+            title="Mover, rotar o editar vértices"
+          >
+            <span class="material-icons">pan_tool</span>
+            <span class="hud-label">Editar / Mover</span>
+          </button>
+        </div>
+
+        <div class="hud-divider" *ngIf="realtimeAreaM2 > 0"></div>
+
+        <!-- Botones de Rotación de Techo -->
+        <div class="hud-group rotate-actions" *ngIf="realtimeAreaM2 > 0">
+          <button 
+            type="button"
+            class="hud-btn hud-icon-only hud-btn-fine-rotate" 
+            [disabled]="isHeatmapLoading"
+            (click)="rotatePolygon(-1)" 
+            [title]="isHeatmapLoading ? 'Generando mapa de calor solar...' : 'Girar 1° a la izquierda'"
+          >
+            <span class="material-icons">rotate_left</span>
+            <span class="hud-label-small">-1°</span>
+          </button>
+
+          <button 
+            type="button"
+            class="hud-btn hud-icon-only hud-btn-fine-rotate" 
+            [disabled]="isHeatmapLoading"
+            (click)="rotatePolygon(1)" 
+            [title]="isHeatmapLoading ? 'Generando mapa de calor solar...' : 'Girar 1° a la derecha'"
+          >
+            <span class="material-icons">rotate_right</span>
+            <span class="hud-label-small">+1°</span>
+          </button>
+
+          <button 
+            type="button"
+            class="hud-btn hud-icon-only" 
+            [disabled]="isHeatmapLoading"
+            (click)="rotatePolygon(-15)" 
+            [title]="isHeatmapLoading ? 'Generando mapa de calor solar...' : 'Girar 15° a la izquierda'"
+          >
+            <span class="material-icons">rotate_left</span>
+            <span class="hud-label-small">-15°</span>
+          </button>
+
+          <button 
+            type="button"
+            class="hud-btn hud-icon-only" 
+            [disabled]="isHeatmapLoading"
+            (click)="rotatePolygon(15)" 
+            [title]="isHeatmapLoading ? 'Generando mapa de calor solar...' : 'Girar 15° a la derecha'"
+          >
+            <span class="material-icons">rotate_right</span>
+            <span class="hud-label-small">+15°</span>
+          </button>
+
+          <button 
+            type="button"
+            class="hud-btn hud-icon-only" 
+            [disabled]="isHeatmapLoading"
+            (click)="rotatePolygon(90)" 
+            [title]="isHeatmapLoading ? 'Generando mapa de calor solar...' : 'Girar 90°'"
+          >
+            <span class="material-icons">screen_rotation</span>
+            <span class="hud-label-small">90°</span>
+          </button>
+        </div>
+
+        <div class="hud-divider"></div>
+
+        <div class="hud-group history-actions">
+          <button 
+            type="button"
+            class="hud-btn hud-icon-only" 
+            [disabled]="!canUndo" 
+            (click)="undoTerraDraw()"
+            title="Deshacer"
+          >
+            <span class="material-icons">undo</span>
+          </button>
+
+          <button 
+            type="button"
+            class="hud-btn hud-icon-only" 
+            [disabled]="!canRedo" 
+            (click)="redoTerraDraw()"
+            title="Rehacer"
+          >
+            <span class="material-icons">redo</span>
+          </button>
+
+          <button 
+            type="button"
+            class="hud-btn hud-icon-only danger" 
+            (click)="clearDrawing()"
+            title="Borrar dibujo"
+          >
+            <span class="material-icons">delete_sweep</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Fila 2: Badge de Métricas Real-Time -->
+      <div class="hud-metrics-badge" *ngIf="realtimeAreaM2 > 0">
+        <span class="material-icons metric-icon">square_foot</span>
+        <span class="metric-value">{{ realtimeAreaM2 }} m²</span>
+        <span class="metric-separator">•</span>
+        <span class="metric-panels">~{{ estimatedPanelsCount }} paneles (600 W)</span>
+      </div>
+    </div>
+
     <!-- Botón flotante móvil para volver al panel desde el Mapa en Paso 1 -->
     <button 
       type="button"

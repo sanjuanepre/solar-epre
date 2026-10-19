@@ -9,11 +9,12 @@ import {
   AfterViewInit,
   ChangeDetectorRef,
   Component,
+  OnDestroy,
   OnInit,
 } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
-import { filter } from 'rxjs';
-import { MapService } from '../services/map.service';
+import { filter, Subject, takeUntil } from 'rxjs';
+import { MapService, TerraDrawActiveMode } from '../services/map.service';
 import { SharedService } from '../services/shared.service';
 
 @Component({
@@ -28,12 +29,21 @@ import { SharedService } from '../services/shared.service';
     ]),
   ],
 })
-export class LayoutPasosComponent implements OnInit, AfterViewInit {
+export class LayoutPasosComponent implements OnInit, AfterViewInit, OnDestroy {
   currentStep: number = 0;
   isPaso3: boolean = false;
   isCollapsed = false;
   isLoading: boolean = false;
   isMobile: boolean = false;
+
+  // Estado reactivo HUD Toolbar sobre el Mapa
+  activeMode: TerraDrawActiveMode = 'polygon';
+  realtimeAreaM2: number = 0;
+  estimatedPanelsCount: number = 0;
+  canUndo: boolean = false;
+  canRedo: boolean = false;
+  isHeatmapLoading: boolean = false;
+  private destroy$ = new Subject<void>();
 
   constructor(
     private router: Router,
@@ -77,6 +87,54 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit {
         }
       }
     });
+
+    // Subscripciones para la barra de herramientas HUD sobre el Mapa
+    this.mapService.activeMode$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((mode) => {
+        this.activeMode = mode;
+        this.cdr.detectChanges();
+      });
+
+    this.mapService.realtimeAreaM2$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((area) => {
+        this.realtimeAreaM2 = area;
+        this.cdr.detectChanges();
+      });
+
+    this.mapService.estimatedPanelsCount$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((count) => {
+        this.estimatedPanelsCount = count;
+        this.cdr.detectChanges();
+      });
+
+    this.mapService.canUndo$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((can) => {
+        this.canUndo = can;
+        this.cdr.detectChanges();
+      });
+
+    this.mapService.canRedo$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((can) => {
+        this.canRedo = can;
+        this.cdr.detectChanges();
+      });
+
+    this.mapService.heatMapLoading$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((loading) => {
+        this.isHeatmapLoading = loading;
+        this.cdr.detectChanges();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private checkIsMobile(): void {
@@ -118,4 +176,25 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit {
     this.cdr.detectChanges();
   }
 
+  // Métodos de interacción HUD Toolbar sobre el Mapa
+  setTerraDrawMode(mode: TerraDrawActiveMode) {
+    this.mapService.setTerraDrawMode(mode);
+  }
+
+  rotatePolygon(angleDegrees: number) {
+    if (this.isHeatmapLoading) return;
+    this.mapService.rotatePolygon(angleDegrees);
+  }
+
+  undoTerraDraw() {
+    this.mapService.undoTerraDraw();
+  }
+
+  redoTerraDraw() {
+    this.mapService.redoTerraDraw();
+  }
+
+  clearDrawing() {
+    this.mapService.clearDrawing();
+  }
 }
