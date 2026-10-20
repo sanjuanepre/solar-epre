@@ -150,14 +150,12 @@ export class MapService {
     
   }
   async initializeMap(mapElement: HTMLElement) {
-    console.log('Iniciando inicialización del mapa');
-    if (!window.google || !window.google.maps) {
+if (!window.google || !window.google.maps) {
       console.error('API de Google Maps no cargada');
       throw new Error('Google Maps API not loaded');
     }
 
-    console.log('Configurando opciones del mapa');
-    const mapOptions = {
+const mapOptions = {
       center: this.center,
       zoom: this.zoomInicial,
       disableDefaultUI: false,
@@ -182,22 +180,14 @@ export class MapService {
         strictBounds: false,
       },
     };
-    console.log('Opciones del mapa:', mapOptions);
-
-    console.log('Creando instancia del mapa');
     this.map = new google.maps.Map(mapElement, mapOptions);
-    console.log('Mapa creado:', this.map);
-
-    console.log('Emitiendo instancia del mapa');
     this.mapSubject.next(this.map);
 
     // Esperar a que el mapa esté en estado idle para garantizar que sus elementos DOM internos estén montados
     google.maps.event.addListenerOnce(this.map, 'idle', () => {
-      console.log('Mapa listo en estado idle, inicializando TerraDraw');
-      this.initTerraDraw();
+this.initTerraDraw();
     });
-    console.log('Inicialización del mapa completada');
-  }
+}
 
   clearPolygons() {
     this.polygons.forEach((polygon) => polygon.setMap(null));
@@ -378,28 +368,31 @@ export class MapService {
           this.polygonModeInstance,
           this.rectangleModeInstance,
           new TerraDrawSelectMode({
+            keyEvents: null,
+            dragEventThrottle: 1,
+            allowManualDeselection: false,
             flags: {
               polygon: {
                 feature: {
                   draggable: true,
-                  rotateable: true,
-                  scaleable: true,
+                  rotateable: false,
+                  scaleable: false,
                   coordinates: {
                     midpoints: true,
                     draggable: true,
-                    deletable: true,
+                    deletable: false,
                   },
                 },
               },
               rectangle: {
                 feature: {
                   draggable: true,
-                  rotateable: true,
-                  scaleable: true,
+                  rotateable: false,
+                  scaleable: false,
                   coordinates: {
                     midpoints: true,
                     draggable: true,
-                    deletable: true,
+                    deletable: false,
                   },
                 },
               },
@@ -422,7 +415,13 @@ export class MapService {
         this.updateUndoRedoStates();
         this.drawingVertexCountSubject.next(0);
         this.handleTerraDrawChange(true);
-        this.setTerraDrawMode('select');
+        if (this.activeModeSubject.value !== 'select') {
+          this.setTerraDrawMode('select');
+        } else {
+          // Ya en modo 'select': re-seleccionar el feature para mantener los vértices visibles
+          // (ocurre tras arrastrar un vértice o mover la superficie completa)
+          this.selectLastPolygonFeature(60);
+        }
       });
 
       this.terraDraw.on('change', (ids: any[], type: any) => {
@@ -446,8 +445,7 @@ export class MapService {
         }
       }
 
-      console.log('TerraDraw iniciado con éxito');
-    } catch (error) {
+} catch (error) {
       console.error('Error iniciando TerraDraw:', error);
     }
   }
@@ -499,6 +497,10 @@ export class MapService {
       } else if (mode === 'select') {
         const hasDrawn = this.polygons.length > 0 || (this.terraDraw && (this.terraDraw.getSnapshot()?.length ?? 0) > 0);
         this.drawingStateSubject.next(hasDrawn ? 'CLOSED' : 'INACTIVE');
+        // Auto-seleccionar el polígono existente para que los vértices aparezcan inmediatamente
+        if (hasDrawn) {
+          this.selectLastPolygonFeature(80);
+        }
       } else {
         this.drawingStateSubject.next('INACTIVE');
       }
@@ -556,15 +558,6 @@ export class MapService {
     if (this.map) {
       this.map.setOptions({ draggableCursor: 'crosshair' });
     }
-
-    this.snackBar.open('Toque sobre el techo en el mapa para ubicar la instalación.', 'Cancelar', {
-      duration: 10000,
-      panelClass: ['custom-snackbar'],
-      horizontalPosition: 'center',
-      verticalPosition: 'top',
-    }).onAction().subscribe(() => {
-      this.cancelQuickRoofMode();
-    });
 
     this.quickRoofClickListener = this.map.addListener('click', (e: google.maps.MapMouseEvent) => {
       if (e.latLng && this.isQuickRoofActiveSubject.value) {
@@ -643,6 +636,15 @@ export class MapService {
       this.setTerraDrawMode('select');
       this.handleTerraDrawChange(true);
       this.drawingVertexCountSubject.next(0);
+      // Seleccionar el feature explícitamente para que los vértices aparezcan de inmediato
+      const addedId = featureId as string;
+      setTimeout(() => {
+        try {
+          if (this.terraDraw && this.activeModeSubject.value === 'select' && this.terraDraw.hasFeature(addedId)) {
+            this.terraDraw.selectFeature(addedId);
+          }
+        } catch (_) {}
+      }, 120);
 
       this.snackBar.open('Superficie ubicada sobre el techo. Puede rotarla, moverla o ajustar sus esquinas.', 'Entendido', {
         duration: 3500,
@@ -712,6 +714,8 @@ export class MapService {
 
     this.terraDraw.updateFeatureGeometry(feature.id as string, feature.geometry as any);
     this.handleTerraDrawChange(true);
+    // Re-seleccionar para que los vértices se mantengan visibles tras la rotación
+    this.selectLastPolygonFeature(80);
   }
 
   private terraDrawChangeTimeout: any;
@@ -771,11 +775,12 @@ export class MapService {
         lng: coord[0],
       }));
 
-      // Crear polígono interno de referencia en Google Maps
+      // Crear polígono interno de referencia en Google Maps (no interactivo)
       this.clearPolygons();
       const polygon = new google.maps.Polygon({
         paths: path,
         visible: false,
+        clickable: false,
         map: this.map,
       });
       this.polygons.push(polygon);
@@ -850,6 +855,34 @@ export class MapService {
       this.canUndoSubject.next(this.terraDraw.canUndo());
       this.canRedoSubject.next(this.terraDraw.canRedo());
     }
+  }
+
+  private getLastPolygonFeatureId(): string | null {
+    if (!this.terraDraw) return null;
+    try {
+      const snapshot = this.terraDraw.getSnapshot();
+      if (!snapshot || snapshot.length === 0) return null;
+      const polygonFeatures = snapshot.filter(
+        (f: any) => f.geometry && (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon')
+      );
+      if (polygonFeatures.length === 0) return null;
+      return polygonFeatures[polygonFeatures.length - 1].id as string;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  private selectLastPolygonFeature(delayMs = 60) {
+    setTimeout(() => {
+      try {
+        if (this.terraDraw && this.activeModeSubject.value === 'select') {
+          const id = this.getLastPolygonFeatureId();
+          if (id) {
+            this.terraDraw.selectFeature(id);
+          }
+        }
+      } catch (_) {}
+    }, delayMs);
   }
 
   initializeDrawingManager() {
@@ -1018,6 +1051,7 @@ export class MapService {
             strokeWeight: isHeatmap ? 1.2 : 0.5,
             strokeOpacity: isHeatmap ? 0.95 : 1,
             zIndex: isHeatmap ? 20 : 5,
+            clickable: false,
             map: (isHeatmap && !this.showPanelsOnHeatmap) ? null : this.map,
           });
 
@@ -1133,6 +1167,7 @@ export class MapService {
               strokeWeight: isHeatmap ? 1.2 : 0.5,
               strokeOpacity: isHeatmap ? 0.95 : 1,
               zIndex: isHeatmap ? 20 : 5,
+              clickable: false,
               map: (isHeatmap && !this.showPanelsOnHeatmap) ? null : this.map,
             });
 
@@ -1623,8 +1658,7 @@ export class MapService {
 
     // Si ya tenemos el ráster cacheado para esta URL, renderizamos directamente sin fetch de red
     if (this.cachedSolarRaster && this.cachedSolarRaster.url === annualFluxUrl) {
-      console.log('[MapService] Reutilizando ráster GeoTIFF cacheado en memoria.');
-      this.renderHeatmapOverlayFromRaster(polygon);
+this.renderHeatmapOverlayFromRaster(polygon);
       this.heatMapLoadingSubject.next(false);
       return;
     }
@@ -1678,8 +1712,6 @@ export class MapService {
       const sw = this.utmToLatLng(zone, minX, minY, northernHemisphere);
       const ne = this.utmToLatLng(zone, maxX, maxY, northernHemisphere);
 
-      console.log(`[MapService] GeoTIFF Bounds (UTM): minX=${minX}, minY=${minY}, maxX=${maxX}, maxY=${maxY}, zone=${zone}, N=${northernHemisphere}`);
-      console.log(`[MapService] GeoTIFF Bounds (LatLng): SW=(${sw.lat}, ${sw.lng}), NE=(${ne.lat}, ${ne.lng})`);
 
       // Analizar si el GeoTIFF contiene datos de radiación válidos (distintos de -9999)
       let validPixels = 0;
@@ -1694,11 +1726,8 @@ export class MapService {
         }
       }
 
-      console.log(`[MapService] GeoTIFF decodificado: total=${values.length}, validos=${validPixels}, min=${minVal}, max=${maxVal}`);
-
-      if (validPixels === 0) {
-        console.log('[MapService] Sin píxeles de radiación válidos en el GeoTIFF.');
-        this.snackBar.open(
+if (validPixels === 0) {
+this.snackBar.open(
           'No hay datos de radiación solar detallados disponibles para esta zona específica.',
           'Entendido',
           { duration: 5000 }
@@ -1725,8 +1754,7 @@ export class MapService {
 
       // Renderizar overlay
       this.renderHeatmapOverlayFromRaster(polygon);
-      console.log('[MapService] Mapa de calor solar renderizado correctamente.');
-    } catch (error) {
+} catch (error) {
       console.error('[MapService] Error al renderizar el mapa de calor solar:', error);
       this.snackBar.open(
         'No hay datos de radiación solar detallados disponibles para esta zona específica.',

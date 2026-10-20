@@ -25,6 +25,18 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
   const formatNumero = (val: number, dec = 1) =>
     new Intl.NumberFormat('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(val || 0);
 
+  const potenciaContratadaKw = data.potenciaContratada > 200
+    ? Math.round(data.potenciaContratada / 1000)
+    : Math.round(data.potenciaContratada || 10);
+
+  const eficienciaInstalacionPct = (data.eficienciaInstalacion != null ? data.eficienciaInstalacion : 0.95) * (data.eficienciaInstalacion && data.eficienciaInstalacion > 1 ? 1 : 100);
+  const degradacionAnualPct = (data.degradacionAnualPanel != null ? data.degradacionAnualPanel : 0.005) * (data.degradacionAnualPanel && data.degradacionAnualPanel > 1 ? 1 : 100);
+  const tasaInflacionPct = (data.tasaInflacionUsd != null ? data.tasaInflacionUsd : 0.03) * (data.tasaInflacionUsd && data.tasaInflacionUsd > 1 ? 1 : 100);
+  const costoEquipoMedicion = data.costoEquipoMedicion || 350;
+  const incluyeIva = (data.categoriaTarifa || '').toUpperCase().includes('T1');
+  const aclaracionIva = incluyeIva ? '(incluye IVA).' : '(no incluye IVA).';
+  const fechaActualTexto = data.fechaActual || new Date().toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+
   const hasFinancialPage = Boolean(
     data.chartImages &&
     (data.chartImages.energiaConsumo || data.chartImages.ahorroRecupero)
@@ -245,34 +257,37 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
       background-color: #f8fafc;
       border: 1px solid #e2e8f0;
       border-radius: 8px;
-      padding: 12px 14px;
-      font-size: 8.5pt;
-      margin-bottom: 12px;
-      text-align: justify;
+      padding: 10px 14px;
+      font-size: 8pt;
+      margin-bottom: 10px;
     }
     .hipotesis-intro {
       color: #475569;
-      margin-bottom: 8px;
-      font-size: 8pt;
+      margin-bottom: 7px;
+      font-size: 7.6pt;
       line-height: 1.35;
       text-align: justify;
     }
     .hipotesis-list {
       list-style: none;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3px 14px;
     }
     .hipotesis-list li {
-      margin-bottom: 4px;
+      margin-bottom: 2px;
       color: #334155;
+      font-size: 7.6pt;
       display: flex;
       align-items: flex-start;
-      text-align: justify;
+      line-height: 1.25;
     }
     .hipotesis-list li::before {
       content: "•";
       color: #0284c7;
       font-weight: bold;
-      font-size: 11pt;
-      margin-right: 6px;
+      font-size: 9.5pt;
+      margin-right: 5px;
       line-height: 1;
     }
 
@@ -369,7 +384,7 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
     .chart-card-full .chart-img-wrapper img {
       width: 100%;
       max-width: 680px;
-      max-height: 205px;
+      max-height: 235px;
       height: auto;
       object-fit: contain;
       display: block;
@@ -456,13 +471,14 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
         <div class="card-subtext">Potencia individual: ${data.panelCapacityW} W | ${estructuraTexto}</div>
       </div>
 
-      <!-- Card 2: Ahorro en cargos por energía -->
+      <!-- Card 2: Ahorro Anual Estimado -->
       <div class="card card-accent-green">
         <div class="card-header-flex">
-          <span class="card-label">Ahorro en cargos por energía</span>
+          <span class="card-label">Ahorro Anual Estimado</span>
           <svg class="card-icon" fill="none" stroke="#059669" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
         </div>
         <div class="card-value">${formatNumero(data.ahorroEstimadoPesosAnual, 0)} USD/año</div>
+        <div class="card-subtext">Ahorro en cargos de energía</div>
       </div>
 
       <!-- Card 3: Costo Estimado de Instalación -->
@@ -492,7 +508,7 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
           <svg class="card-icon" fill="none" stroke="#0891b2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
         </div>
         <div class="card-value">${formatNumero(data.generacionAnualKwh, 0)} kWh/año</div>
-        <div class="card-subtext">Autoconsumo: ${formatNumero(data.proporcionAutoconsumo, 0)}% | Inyección a red: ${formatNumero(data.proporcionInyectada, 0)}%</div>
+        <div class="card-subtext">Autoconsumo: ${formatNumero(data.proporcionAutoconsumo, 0)} % | Inyección a red: ${formatNumero(data.proporcionInyectada, 0)} %</div>
       </div>
 
       <!-- Card 6: Impacto Ambiental -->
@@ -512,10 +528,18 @@ export function buildPdfHtml(data: GeneratePdfDto, qrBase64?: string): string {
         Los resultados de la evaluación a partir de la web "Generación Solar Distribuida San Juan" deben considerarse aproximados y no representan opinión ni dictamen técnico formal del E.P.R.E. Se reproducen a modo de referencia adoptando las siguientes hipótesis:
       </p>
       <ul class="hipotesis-list">
-        <li><strong>Categoría tarifaria seleccionada:</strong> &nbsp;${data.categoriaTarifa}</li>
-        <li><strong>Tipo de estructura de montaje:</strong> &nbsp;${estructuraTexto}</li>
-        <li><strong>Potencia contratada:</strong> &nbsp;${formatNumero(data.potenciaContratada, 1)} kW</li>
-        <li><strong>Distribución del flujo de energía:</strong> &nbsp;${formatNumero(data.proporcionAutoconsumo, 0)}% autoconsumido en sitio, ${formatNumero(data.proporcionInyectada, 0)}% inyectado a la red de distribución.</li>
+        <li><span><strong>Categoría de tarifa seleccionada:</strong> &nbsp;${data.categoriaTarifa}</span></li>
+        <li><span><strong>Tipo de estructura:</strong> &nbsp;${estructuraTexto}</span></li>
+        <li><span><strong>Potencia contratada:</strong> &nbsp;${formatNumero(potenciaContratadaKw, 0)} kW</span></li>
+        <li><span><strong>Potencia de cada panel:</strong> &nbsp;${data.panelCapacityW || 600} W</span></li>
+        <li><span><strong>Eficiencia de la instalación:</strong> &nbsp;${formatNumero(eficienciaInstalacionPct, 2)} %</span></li>
+        <li><span><strong>Degradación anual de paneles:</strong> &nbsp;${formatNumero(degradacionAnualPct, 2)} %</span></li>
+        <li><span><strong>Proporción energía autoconsumida:</strong> &nbsp;${formatNumero(data.proporcionAutoconsumo, 2)} %</span></li>
+        <li><span><strong>Proporción energía inyectada:</strong> &nbsp;${formatNumero(data.proporcionInyectada, 2)} %</span></li>
+        <li><span><strong>Equipo de medición:</strong> &nbsp;${formatNumero(costoEquipoMedicion, 0)} USD ${aclaracionIva}</span></li>
+        <li><span><strong>Mantenimiento anual:</strong> &nbsp;1 % del costo de la instalación</span></li>
+        <li><span><strong>Tasa de crecimiento tarifas y descuento (USD):</strong> &nbsp;${formatNumero(tasaInflacionPct, 2)} %</span></li>
+        <li><span><strong>Tarifas vigentes a:</strong> &nbsp;${fechaActualTexto}</span></li>
       </ul>
     </div>
 

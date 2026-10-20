@@ -27,27 +27,21 @@ export class EmisionesComponent implements OnInit, AfterViewInit, OnDestroy {
     private sharedService: SharedService,
     private cdr: ChangeDetectorRef
   ) {
-    console.log('EmisionesComponent: Constructor iniciado');
-  }
+}
 
   ngOnInit(): void {
-    console.log('EmisionesComponent: ngOnInit');
-    console.log('carbonOffsetFactorTnPerMWh:', this.carbonOffsetFactorTnPerMWh);
     
     this.sharedService.factorPotencia$
     .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
     .subscribe((newFactorPotencia: number) => {
-      console.log('Nuevo valor de factorPotencia recibido:', newFactorPotencia);
-      this.factorPotencia = newFactorPotencia;
+this.factorPotencia = newFactorPotencia;
     });
   }
 
   ngAfterViewInit(): void {
-    console.log('EmisionesComponent: ngAfterViewInit');
-    this.subscription = this.sharedService.yearlyEnergyAckWh$.subscribe(
+this.subscription = this.sharedService.yearlyEnergyAckWh$.subscribe(
       (value) => {
-        console.log('Nuevo valor de yearlyEnergyAcKwh recibido:', value);
-        this.yearlyEnergyAcKwh = value;
+this.yearlyEnergyAcKwh = value;
         this.calculateCarbonOffset();
         this.cdr.detectChanges(); 
       }
@@ -55,18 +49,13 @@ export class EmisionesComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   calculateCarbonOffset(): void {
-    console.log('Calculando carbonOffset...');
-    console.log('yearlyEnergyAcKwh:', this.yearlyEnergyAcKwh);
-    console.log('carbonOffsetFactorTnPerMWh:', this.carbonOffsetFactorTnPerMWh);
-    const result = this.yearlyEnergyAcKwh * this.carbonOffsetFactorTnPerMWh / 1000;
+const result = this.yearlyEnergyAcKwh * this.carbonOffsetFactorTnPerMWh / 1000;
     this.carbonOffset = parseFloat(result.toFixed(2));
-    console.log('Nuevo carbonOffset calculado:', this.carbonOffset);
-    this.sharedService.setCarbonOffSetTnAnual(this.carbonOffset);
+this.sharedService.setCarbonOffSetTnAnual(this.carbonOffset);
   }
 
   ngOnDestroy(): void {
-    console.log('EmisionesComponent: ngOnDestroy');
-    if (this.subscription) {
+if (this.subscription) {
       this.subscription.unsubscribe();
     }
   }

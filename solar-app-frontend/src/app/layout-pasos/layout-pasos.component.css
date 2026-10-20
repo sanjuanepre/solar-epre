@@ -469,6 +469,33 @@
   animation: bounce-chip 2s infinite ease-in-out;
 }
 
+.hud-chip-cancel-btn {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.hud-chip-cancel-btn:hover,
+.hud-chip-cancel-btn:active {
+  background: rgba(0, 0, 0, 0.6);
+  transform: scale(1.1);
+}
+
+.hud-chip-cancel-btn .material-icons {
+  font-size: 13px;
+  line-height: 1;
+}
+
 @keyframes bounce-chip {
   0%, 100% {
     transform: translateY(0);

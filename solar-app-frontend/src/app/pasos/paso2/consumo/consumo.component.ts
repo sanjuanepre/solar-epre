@@ -59,7 +59,16 @@ export class ConsumoComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.resetMesesConsumo();
+    const consumosGuardados = this.sharedService.getConsumosMensuales();
+    const tieneConsumos =
+      consumosGuardados &&
+      consumosGuardados.length > 0 &&
+      consumosGuardados.some((c) => c > 0);
+    if (!tieneConsumos) {
+      this.resetMesesConsumo();
+    }
+    // Si hay consumos guardados, el BehaviorSubject ya los restauró
+    // desde sessionStorage en el constructor — no hay que resetear
   }
 
   ngAfterViewInit(): void {}

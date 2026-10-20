@@ -177,8 +177,16 @@
 
       <!-- Fila 3: Guía rápida contextual táctil -->
       <div class="hud-guide-chip hud-guide-chip-highlight" *ngIf="isQuickRoofActive">
-        <span class="material-icons guide-icon" style="color: #f59e0b;">touch_app</span>
+        <span class="material-icons guide-icon" style="color: #fde68a;">touch_app</span>
         <span><b>Toque sobre el techo</b> en el mapa para ubicar la superficie</span>
+        <button 
+          type="button" 
+          class="hud-chip-cancel-btn" 
+          (click)="cancelQuickRoof($event)" 
+          title="Cancelar ubicación de techo"
+        >
+          <span class="material-icons">close</span>
+        </button>
       </div>
 
       <div class="hud-guide-chip" *ngIf="!isQuickRoofActive && realtimeAreaM2 === 0 && (activeMode === 'polygon' || activeMode === 'rectangle')">

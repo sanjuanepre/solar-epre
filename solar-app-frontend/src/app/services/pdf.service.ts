@@ -36,6 +36,11 @@ export interface GeneratePdfPayload {
     emisionesAcumulada?: string;
     emisionesGauge?: string;
   };
+  eficienciaInstalacion?: number;
+  degradacionAnualPanel?: number;
+  costoEquipoMedicion?: number;
+  tasaInflacionUsd?: number;
+  fechaActual?: string;
 }
 
 @Injectable({

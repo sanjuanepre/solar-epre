@@ -48,40 +48,20 @@ export class SolarApiService implements OnDestroy {
   }
 
   resetApplication() {
-    console.log('Reiniciando la aplicación');
-    // Reiniciar servicios
+// Reiniciar servicios
     this.sharedService.resetAll();
   }
 
   async calculate(panelsCount?: number, factorPotencia?: number): Promise<any> {
-    console.log(
-      'Iniciando cálculo solar - Método calculate en SolarApiService'
-    );
-    const mapService = this.getMapService();
+const mapService = this.getMapService();
 
     try {
-      console.log('Recopilando datos para el cálculo solar...');
-      const polygonCoordinates = mapService.getPolygonCoordinates();
-      console.log('Coordenadas del polígono obtenidas:', polygonCoordinates);
-
-      const polygonArea = mapService.getPolygonArea();
-      console.log('Área del polígono calculada:', polygonArea);
-
-      const categoriaSeleccionada = this.sharedService.getTarifaContratada();
-      console.log('Categoría tarifaria seleccionada:', categoriaSeleccionada);
-
-      this.annualConsumption = this.consumoService.getTotalConsumo();
-      console.log('Consumo anual obtenido:', this.annualConsumption, 'kWh');
-
-      this.potenciaMaxAsignadaW =
+const polygonCoordinates = mapService.getPolygonCoordinates();
+const polygonArea = mapService.getPolygonArea();
+const categoriaSeleccionada = this.sharedService.getTarifaContratada();
+this.annualConsumption = this.consumoService.getTotalConsumo();
+this.potenciaMaxAsignadaW =
         this.sharedService.getPotenciaMaxAsignadaW();
-      console.log(
-        'Potencia máxima asignada obtenida:',
-        this.potenciaMaxAsignadaW,
-        'W'
-      );
-
-      console.log('Verificando campos faltantes');
       const missingFields = [];
       if (!this.annualConsumption) missingFields.push('Consumo anual');
       if (!polygonCoordinates) missingFields.push('Coordenadas del polígono');
@@ -105,8 +85,7 @@ export class SolarApiService implements OnDestroy {
           ); */
 
           setTimeout(() => {
-            console.log('Reiniciando la aplicación debido a campos faltantes');
-            this.resetApplication();
+this.resetApplication();
           }, 2000);
           return;
         }
@@ -126,11 +105,8 @@ export class SolarApiService implements OnDestroy {
         factorPotencia: factorPotencia ?? 1,
         tipoEstructura: this.sharedService.getTipoEstructura(),
       };
-      console.log('Datos que se envían al endpoint:', datosCalculo);
-
-      try {
-        console.log('Iniciando solicitud al servidor');
-        const userAgent = navigator.userAgent;
+try {
+const userAgent = navigator.userAgent;
         const clientIp = await this.getClientIp();
 
         const response = await fetch(`${this.apiUrl}/solar/calculate`, {
@@ -155,8 +131,7 @@ export class SolarApiService implements OnDestroy {
         const resultados = await response.json();
         this._resultados = resultados;
 
-        console.log('Respuesta del servidor recibida:', this._resultados);
-      } catch (error) {
+} catch (error) {
         console.error('Error durante el cálculo solar:', error);
         // Manejo de errores más específico
         let mensajeError = 'Error al calcular los resultados solares';
@@ -172,15 +147,13 @@ export class SolarApiService implements OnDestroy {
 
         // Resetear la aplicación después de un breve retraso
         setTimeout(() => {
-          console.log('Reiniciando la aplicación debido a un error crítico');
-          this.resetApplication();
+this.resetApplication();
         }, 3000);
 
         /* throw error; */
       }
 
-      console.log('Procesando resultados');
-      this._resultados = this.resultadoService.generarResultados(
+this._resultados = this.resultadoService.generarResultados(
         this._resultados
       );
       this.sharedService.setIsLoading(false);
@@ -235,8 +208,7 @@ export class SolarApiService implements OnDestroy {
             .payBackMonths;
         this.sharedService.setPlazoInversion(plazoInversionInicial);
         this.sharedService.calculateAreaPanelsSelected(panelsCount);
-        console.log('Plazo de inversión inicial establecido:', plazoInversionInicial);
-        return true;
+return true;
       })
       .catch(() => {
         return false;

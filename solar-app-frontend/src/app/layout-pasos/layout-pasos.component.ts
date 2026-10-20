@@ -234,4 +234,11 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit, OnDestroy {
   createQuickRoof() {
     this.mapService.createQuickRoof();
   }
+
+  cancelQuickRoof(event?: MouseEvent) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.mapService.cancelQuickRoofMode();
+  }
 }

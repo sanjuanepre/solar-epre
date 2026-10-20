@@ -30,4 +30,9 @@ export class GeneratePdfDto {
     emisionesGauge?: string;
   };
   qrUrl?: string;
+  eficienciaInstalacion?: number;
+  degradacionAnualPanel?: number;
+  costoEquipoMedicion?: number;
+  tasaInflacionUsd?: number;
+  fechaActual?: string;
 }

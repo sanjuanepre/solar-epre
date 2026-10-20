@@ -35,7 +35,7 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
   annualFluxUrl: string = '';
   heatmapOpacity: number = 65;
   drawingState: 'INACTIVE' | 'START' | 'DRAWING' | 'CLOSED' = 'INACTIVE';
-  instructionText: string = 'Busque la ubicación prevista y luego elija una herramienta de selección (Polígono o Rectángulo) para delimitar el área de la instalación.';
+  instructionText: string = 'Busque la ubicación prevista y luego elija una herramienta de selección (Polígono, Rectángulo o Techo 1-Tap) para delimitar el área de la instalación.';
   tipoEstructura: 'coplanar' | 'optimo' = 'coplanar';
   isSidebarCollapsed: boolean = false;
 
@@ -312,9 +312,7 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
       });
     }
     try {
-      console.log(value);
-
-      const location = await this.locationService.validateLocation(
+const location = await this.locationService.validateLocation(
         value,
         this.map,
         this.marker
@@ -457,9 +455,7 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
 
   private calculateInstalledPower(): number {
     const panelCapacityW = this.sharedService.getPanelCapacityW();
-    console.log("panel capacityW en paso 1 ", panelCapacityW)
     const panelsSelectCount = this.sharedService.getPanelsSelected();
-    console.log("numero de paneles seleccionados en paso 1 ", panelsSelectCount)
     return Math.round(panelCapacityW * panelsSelectCount);
   }
 
@@ -506,13 +502,13 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
         if (this.areaMarked) {
           this.instructionText = 'Arrastre la figura para moverla o use los botones de rotación (-15°, +15°, 90°) para orientarla.';
         } else {
-          this.instructionText = 'Elija una herramienta de selección (Polígono o Rectángulo) para delimitar primero la superficie de instalación.';
+          this.instructionText = 'Elija una herramienta de selección (Polígono, Rectángulo o Techo 1-Tap) para delimitar primero la superficie de instalación.';
         }
         break;
 
       case 'static':
       default:
-        this.instructionText = 'Busque la ubicación prevista y luego elija una herramienta de selección (Polígono o Rectángulo) para delimitar el área de la instalación.';
+        this.instructionText = 'Busque la ubicación prevista y luego elija una herramienta de selección (Polígono, Rectángulo o Techo 1-Tap) para delimitar el área de la instalación.';
         break;
     }
   }
@@ -554,24 +550,21 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
     });
 
     try {
-      console.log(`[Paso1Component] Consultando dataLayers para centroide: (${lat}, ${lng}) con radio ${radiusMeters}m`);
-      const response = await this.solarApiService.getDataLayers(lat, lng, radiusMeters);
+const response = await this.solarApiService.getDataLayers(lat, lng, radiusMeters);
       
       if (response && response.annualFluxUrl) {
         this.zone.run(() => {
           this.annualFluxUrl = response.annualFluxUrl;
           this.heatmapAvailable = true;
           this.showHeatmap = true;
-          console.log('[Paso1Component] Capas térmicas obtenidas y activadas.');
-        });
+});
         const polygons = this.mapService.getPolygons();
         if (polygons.length > 0) {
           await this.mapService.fetchAndRenderSolarHeatmap(this.annualFluxUrl, polygons[0]);
         }
       } else {
         this.zone.run(() => {
-          console.log('[Paso1Component] Sin datos GeoTIFF de radiación detallada para esta zona.');
-          this.annualFluxUrl = '';
+this.annualFluxUrl = '';
           this.heatmapAvailable = false;
           this.showHeatmap = false;
           this.mapService.hideHeatmap();
