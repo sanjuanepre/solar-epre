@@ -12,7 +12,7 @@
 
     <!-- Floating HUD Bar sobre el Mapa Satelital (Paso 1) -->
     <div class="hud-container" [class.sidebar-collapsed]="isCollapsed" *ngIf="currentStep === 1 && (!isMobile || isCollapsed)">
-      <div class="hud-map-toolbar">
+      <div class="hud-map-toolbar" (wheel)="onHudToolbarWheel($event)">
         <div class="hud-group mode-selector">
           <button 
             type="button"

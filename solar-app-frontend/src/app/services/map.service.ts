@@ -363,6 +363,7 @@ this.initTerraDraw();
           lib: google.maps,
           map: this.map,
           coordinatePrecision: 6,
+          forwardMapElementEvents: true,
         }),
         modes: [
           this.polygonModeInstance,

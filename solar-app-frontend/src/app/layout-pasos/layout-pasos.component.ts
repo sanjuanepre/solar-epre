@@ -241,4 +241,12 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     this.mapService.cancelQuickRoofMode();
   }
+
+  onHudToolbarWheel(event: WheelEvent) {
+    const target = event.currentTarget as HTMLElement;
+    if (target && (event.deltaY !== 0 || event.deltaX !== 0)) {
+      event.preventDefault();
+      target.scrollLeft += event.deltaY !== 0 ? event.deltaY : event.deltaX;
+    }
+  }
 }
