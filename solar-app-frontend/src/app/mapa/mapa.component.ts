@@ -13,6 +13,7 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private activeMode: TerraDrawActiveMode = 'static';
   private drawingVertexCount: number = 0;
+  private isQuickRoofActive: boolean = false;
   private lastTapTime: number = 0;
   private lastTapPos: { x: number; y: number } = { x: 0, y: 0 };
   private destroy$ = new Subject<void>();
@@ -33,6 +34,12 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((count) => {
         this.drawingVertexCount = count;
+      });
+
+    this.mapService.isQuickRoofActive$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((active) => {
+        this.isQuickRoofActive = active;
       });
   }
 
@@ -57,8 +64,13 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     // Ejecutar fuera de Angular para máximo rendimiento de 60fps sin sobrecargar ChangeDetection
     this.zone.runOutsideAngular(() => {
       const handlePointer = (e: PointerEvent) => {
-        // Disparar destello si el usuario está en modo de dibujo o edición
-        if (this.activeMode === 'polygon' || this.activeMode === 'rectangle' || this.activeMode === 'select') {
+        // Disparar destello si el usuario está en modo de dibujo, edición o esperando ubicar el techo 1-tap
+        if (
+          this.activeMode === 'polygon' ||
+          this.activeMode === 'rectangle' ||
+          this.activeMode === 'select' ||
+          this.isQuickRoofActive
+        ) {
           this.triggerRipple(e.clientX, e.clientY);
         }
         this.checkDoubleTap(e.clientX, e.clientY);

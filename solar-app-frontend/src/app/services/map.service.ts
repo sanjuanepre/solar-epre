@@ -86,6 +86,10 @@ export class MapService {
   private drawingVertexCountSubject = new BehaviorSubject<number>(0);
   drawingVertexCount$ = this.drawingVertexCountSubject.asObservable();
 
+  private isQuickRoofActiveSubject = new BehaviorSubject<boolean>(false);
+  isQuickRoofActive$ = this.isQuickRoofActiveSubject.asObservable();
+  private quickRoofClickListener: google.maps.MapsEventListener | null = null;
+
   private activeModeSubject = new BehaviorSubject<TerraDrawActiveMode>('static');
   activeMode$ = this.activeModeSubject.asObservable();
 
@@ -480,6 +484,9 @@ export class MapService {
   setTerraDrawMode(mode: TerraDrawActiveMode) {
     if (!this.terraDraw) return;
     try {
+      if (mode !== 'static') {
+        this.cancelQuickRoofMode();
+      }
       if (mode === 'polygon' || mode === 'rectangle') {
         // Al seleccionar un nuevo modo de dibujo, limpiar dibujos anteriores para mantener una sola área
         this.clearDrawing();
@@ -534,26 +541,75 @@ export class MapService {
     window.dispatchEvent(enterEvent);
   }
 
-  createQuickRoof(customCenter?: google.maps.LatLngLiteral) {
+  startQuickRoofPlacement() {
     if (!this.map || !this.terraDraw) return;
 
-    const center = customCenter || this.map.getCenter()?.toJSON() || this.defaultCenter;
+    if (this.isQuickRoofActiveSubject.value) {
+      this.cancelQuickRoofMode();
+      return;
+    }
 
-    // Dimensiones típicas de un techo residencial/comercial: ~10m ancho x ~7m alto
-    const latRad = (center.lat * Math.PI) / 180;
+    this.cancelQuickRoofMode();
+    this.isQuickRoofActiveSubject.next(true);
+    this.setTerraDrawMode('static');
+
+    if (this.map) {
+      this.map.setOptions({ draggableCursor: 'crosshair' });
+    }
+
+    this.snackBar.open('Toque sobre el techo en el mapa para ubicar la instalación.', 'Cancelar', {
+      duration: 10000,
+      panelClass: ['custom-snackbar'],
+      horizontalPosition: 'center',
+      verticalPosition: 'top',
+    }).onAction().subscribe(() => {
+      this.cancelQuickRoofMode();
+    });
+
+    this.quickRoofClickListener = this.map.addListener('click', (e: google.maps.MapMouseEvent) => {
+      if (e.latLng && this.isQuickRoofActiveSubject.value) {
+        this.placeQuickRoofAt(e.latLng.lat(), e.latLng.lng());
+      }
+    });
+  }
+
+  cancelQuickRoofMode() {
+    this.isQuickRoofActiveSubject.next(false);
+    if (this.quickRoofClickListener) {
+      google.maps.event.removeListener(this.quickRoofClickListener);
+      this.quickRoofClickListener = null;
+    }
+    if (this.map) {
+      this.map.setOptions({ draggableCursor: '' });
+    }
+  }
+
+  createQuickRoof(customCenter?: google.maps.LatLngLiteral) {
+    if (customCenter) {
+      this.placeQuickRoofAt(customCenter.lat, customCenter.lng);
+    } else {
+      this.startQuickRoofPlacement();
+    }
+  }
+
+  placeQuickRoofAt(lat: number, lng: number) {
+    if (!this.map || !this.terraDraw) return;
+    this.cancelQuickRoofMode();
+
+    const latRad = (lat * Math.PI) / 180;
     const metersPerDegreeLat = 111320;
     const metersPerDegreeLng = 111320 * Math.cos(latRad);
 
-    const halfWidthMeters = 5.0; // total 10m
-    const halfHeightMeters = 3.5; // total 7m
+    const halfWidthMeters = 5.0; // total 10m de ancho
+    const halfHeightMeters = 3.5; // total 7m de profundidad
 
     const dLng = halfWidthMeters / metersPerDegreeLng;
     const dLat = halfHeightMeters / metersPerDegreeLat;
 
-    const west = center.lng - dLng;
-    const east = center.lng + dLng;
-    const south = center.lat - dLat;
-    const north = center.lat + dLat;
+    const west = Number((lng - dLng).toFixed(6));
+    const east = Number((lng + dLng).toFixed(6));
+    const south = Number((lat - dLat).toFixed(6));
+    const north = Number((lat + dLat).toFixed(6));
 
     const coordinates = [
       [
@@ -588,7 +644,7 @@ export class MapService {
       this.handleTerraDrawChange(true);
       this.drawingVertexCountSubject.next(0);
 
-      this.snackBar.open('Superficie creada. Puede moverla, rotarla o ajustar esquinas.', 'Entendido', {
+      this.snackBar.open('Superficie ubicada sobre el techo. Puede rotarla, moverla o ajustar sus esquinas.', 'Entendido', {
         duration: 3500,
         panelClass: ['custom-snackbar'],
         horizontalPosition: 'center',
@@ -1174,6 +1230,7 @@ export class MapService {
     this.realtimeAreaM2Subject.next(0);
     this.estimatedPanelsCountSubject.next(0);
     this.drawingVertexCountSubject.next(0);
+    this.cancelQuickRoofMode();
     this.disableDrawingMode();
     this.clearHeatmap();
     this.overlayCompleteSubject.next(false);

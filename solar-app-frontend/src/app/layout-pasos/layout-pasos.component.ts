@@ -39,6 +39,7 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit, OnDestroy {
   // Estado reactivo HUD Toolbar sobre el Mapa
   activeMode: TerraDrawActiveMode = 'polygon';
   drawingVertexCount: number = 0;
+  isQuickRoofActive: boolean = false;
   realtimeAreaM2: number = 0;
   estimatedPanelsCount: number = 0;
   canUndo: boolean = false;
@@ -132,6 +133,13 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((count) => {
         this.drawingVertexCount = count;
+        this.cdr.detectChanges();
+      });
+
+    this.mapService.isQuickRoofActive$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((active) => {
+        this.isQuickRoofActive = active;
         this.cdr.detectChanges();
       });
 

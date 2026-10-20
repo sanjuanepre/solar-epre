@@ -39,8 +39,9 @@
           <button 
             type="button"
             class="hud-btn hud-btn-quick-roof" 
+            [class.active]="isQuickRoofActive"
             (click)="createQuickRoof()"
-            title="Crear techo rectangular estándar en 1 toque"
+            title="Tocar sobre el techo en el mapa para ubicar la instalación"
           >
             <span class="material-icons">flash_on</span>
             <span class="hud-label">Techo 1-Tap</span>
@@ -175,7 +176,12 @@
       </div>
 
       <!-- Fila 3: Guía rápida contextual táctil -->
-      <div class="hud-guide-chip" *ngIf="realtimeAreaM2 === 0 && (activeMode === 'polygon' || activeMode === 'rectangle')">
+      <div class="hud-guide-chip hud-guide-chip-highlight" *ngIf="isQuickRoofActive">
+        <span class="material-icons guide-icon" style="color: #f59e0b;">touch_app</span>
+        <span><b>Toque sobre el techo</b> en el mapa para ubicar la superficie</span>
+      </div>
+
+      <div class="hud-guide-chip" *ngIf="!isQuickRoofActive && realtimeAreaM2 === 0 && (activeMode === 'polygon' || activeMode === 'rectangle')">
         <span class="material-icons guide-icon">{{ activeMode === 'polygon' ? 'polyline' : 'touch_app' }}</span>
         <span *ngIf="activeMode === 'polygon' && drawingVertexCount === 0">Toque para marcar el primer punto del techo</span>
         <span *ngIf="activeMode === 'polygon' && drawingVertexCount > 0 && drawingVertexCount < 3">{{ drawingVertexCount }} punto(s) marcados. Marque al menos 3.</span>

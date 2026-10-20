@@ -425,6 +425,23 @@
   color: #f59e0b;
 }
 
+.hud-btn.hud-btn-quick-roof.active {
+  background-color: #fef3c7;
+  border-color: #f59e0b;
+  color: #b45309;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.4);
+  animation: pulse-quick-btn 1.6s infinite ease-in-out;
+}
+
+@keyframes pulse-quick-btn {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(245, 158, 11, 0.15);
+  }
+}
+
 /* Guía rápida contextual táctil (Fila 3) */
 .hud-guide-chip {
   pointer-events: auto;
@@ -443,6 +460,22 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   white-space: nowrap;
   animation: fadeIn 0.25s ease-out;
+}
+
+.hud-guide-chip.hud-guide-chip-highlight {
+  background: rgba(180, 83, 9, 0.95);
+  border-color: #f59e0b;
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.35);
+  animation: bounce-chip 2s infinite ease-in-out;
+}
+
+@keyframes bounce-chip {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
 }
 
 .guide-icon {
