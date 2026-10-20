@@ -675,11 +675,25 @@ this.initTerraDraw();
     const snapshot = this.terraDraw.getSnapshot();
     if (!snapshot || snapshot.length === 0) return;
 
-    const feature = JSON.parse(JSON.stringify(snapshot[snapshot.length - 1]));
-    if (!feature.geometry || !feature.geometry.coordinates || !feature.geometry.coordinates[0]) return;
+    // Filtrar solo Polygon/MultiPolygon — igual que _processTerraDrawChange.
+    // Si se toma snapshot[last] sin filtrar, puede ser un Point (vértice de
+    // selección) cuyo coordinates[0] es un número, no un array → forEach falla.
+    const polygonFeatures = snapshot.filter(
+      (f) => f.geometry && (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon')
+    );
+    if (polygonFeatures.length === 0) return;
 
-    const rawCoords: number[][] = feature.geometry.coordinates[0];
-    if (rawCoords.length < 3) return;
+    const feature = JSON.parse(JSON.stringify(polygonFeatures[polygonFeatures.length - 1]));
+    if (!feature.geometry || !feature.geometry.coordinates) return;
+
+    // Para MultiPolygon, coordinates[0] es el primer polígono; para Polygon es el anillo exterior.
+    const ringSource: any = feature.geometry.type === 'MultiPolygon'
+      ? feature.geometry.coordinates[0][0]
+      : feature.geometry.coordinates[0];
+
+    if (!Array.isArray(ringSource) || ringSource.length < 3) return;
+
+    const rawCoords: number[][] = ringSource;
 
     // Calcular centroide
     let latSum = 0;
@@ -710,7 +724,11 @@ this.initTerraDraw();
       ];
     });
 
-    feature.geometry.coordinates[0] = rotatedCoords;
+    if (feature.geometry.type === 'MultiPolygon') {
+      feature.geometry.coordinates[0][0] = rotatedCoords;
+    } else {
+      feature.geometry.coordinates[0] = rotatedCoords;
+    }
 
     this.terraDraw.updateFeatureGeometry(feature.id as string, feature.geometry as any);
     this.handleTerraDrawChange(true);
