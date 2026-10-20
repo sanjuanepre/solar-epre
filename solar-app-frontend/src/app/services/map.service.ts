@@ -368,28 +368,31 @@ this.initTerraDraw();
           this.polygonModeInstance,
           this.rectangleModeInstance,
           new TerraDrawSelectMode({
+            keyEvents: null,
+            dragEventThrottle: 1,
+            allowManualDeselection: false,
             flags: {
               polygon: {
                 feature: {
                   draggable: true,
-                  rotateable: true,
-                  scaleable: true,
+                  rotateable: false,
+                  scaleable: false,
                   coordinates: {
                     midpoints: true,
                     draggable: true,
-                    deletable: true,
+                    deletable: false,
                   },
                 },
               },
               rectangle: {
                 feature: {
                   draggable: true,
-                  rotateable: true,
-                  scaleable: true,
+                  rotateable: false,
+                  scaleable: false,
                   coordinates: {
                     midpoints: true,
                     draggable: true,
-                    deletable: true,
+                    deletable: false,
                   },
                 },
               },
@@ -412,7 +415,13 @@ this.initTerraDraw();
         this.updateUndoRedoStates();
         this.drawingVertexCountSubject.next(0);
         this.handleTerraDrawChange(true);
-        this.setTerraDrawMode('select');
+        if (this.activeModeSubject.value !== 'select') {
+          this.setTerraDrawMode('select');
+        } else {
+          // Ya en modo 'select': re-seleccionar el feature para mantener los vértices visibles
+          // (ocurre tras arrastrar un vértice o mover la superficie completa)
+          this.selectLastPolygonFeature(60);
+        }
       });
 
       this.terraDraw.on('change', (ids: any[], type: any) => {
@@ -488,6 +497,10 @@ this.initTerraDraw();
       } else if (mode === 'select') {
         const hasDrawn = this.polygons.length > 0 || (this.terraDraw && (this.terraDraw.getSnapshot()?.length ?? 0) > 0);
         this.drawingStateSubject.next(hasDrawn ? 'CLOSED' : 'INACTIVE');
+        // Auto-seleccionar el polígono existente para que los vértices aparezcan inmediatamente
+        if (hasDrawn) {
+          this.selectLastPolygonFeature(80);
+        }
       } else {
         this.drawingStateSubject.next('INACTIVE');
       }
@@ -623,6 +636,15 @@ this.initTerraDraw();
       this.setTerraDrawMode('select');
       this.handleTerraDrawChange(true);
       this.drawingVertexCountSubject.next(0);
+      // Seleccionar el feature explícitamente para que los vértices aparezcan de inmediato
+      const addedId = featureId as string;
+      setTimeout(() => {
+        try {
+          if (this.terraDraw && this.activeModeSubject.value === 'select' && this.terraDraw.hasFeature(addedId)) {
+            this.terraDraw.selectFeature(addedId);
+          }
+        } catch (_) {}
+      }, 120);
 
       this.snackBar.open('Superficie ubicada sobre el techo. Puede rotarla, moverla o ajustar sus esquinas.', 'Entendido', {
         duration: 3500,
@@ -692,6 +714,8 @@ this.initTerraDraw();
 
     this.terraDraw.updateFeatureGeometry(feature.id as string, feature.geometry as any);
     this.handleTerraDrawChange(true);
+    // Re-seleccionar para que los vértices se mantengan visibles tras la rotación
+    this.selectLastPolygonFeature(80);
   }
 
   private terraDrawChangeTimeout: any;
@@ -751,11 +775,12 @@ this.initTerraDraw();
         lng: coord[0],
       }));
 
-      // Crear polígono interno de referencia en Google Maps
+      // Crear polígono interno de referencia en Google Maps (no interactivo)
       this.clearPolygons();
       const polygon = new google.maps.Polygon({
         paths: path,
         visible: false,
+        clickable: false,
         map: this.map,
       });
       this.polygons.push(polygon);
@@ -830,6 +855,34 @@ this.initTerraDraw();
       this.canUndoSubject.next(this.terraDraw.canUndo());
       this.canRedoSubject.next(this.terraDraw.canRedo());
     }
+  }
+
+  private getLastPolygonFeatureId(): string | null {
+    if (!this.terraDraw) return null;
+    try {
+      const snapshot = this.terraDraw.getSnapshot();
+      if (!snapshot || snapshot.length === 0) return null;
+      const polygonFeatures = snapshot.filter(
+        (f: any) => f.geometry && (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon')
+      );
+      if (polygonFeatures.length === 0) return null;
+      return polygonFeatures[polygonFeatures.length - 1].id as string;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  private selectLastPolygonFeature(delayMs = 60) {
+    setTimeout(() => {
+      try {
+        if (this.terraDraw && this.activeModeSubject.value === 'select') {
+          const id = this.getLastPolygonFeatureId();
+          if (id) {
+            this.terraDraw.selectFeature(id);
+          }
+        }
+      } catch (_) {}
+    }, delayMs);
   }
 
   initializeDrawingManager() {
@@ -998,6 +1051,7 @@ this.initTerraDraw();
             strokeWeight: isHeatmap ? 1.2 : 0.5,
             strokeOpacity: isHeatmap ? 0.95 : 1,
             zIndex: isHeatmap ? 20 : 5,
+            clickable: false,
             map: (isHeatmap && !this.showPanelsOnHeatmap) ? null : this.map,
           });
 
@@ -1113,6 +1167,7 @@ this.initTerraDraw();
               strokeWeight: isHeatmap ? 1.2 : 0.5,
               strokeOpacity: isHeatmap ? 0.95 : 1,
               zIndex: isHeatmap ? 20 : 5,
+              clickable: false,
               map: (isHeatmap && !this.showPanelsOnHeatmap) ? null : this.map,
             });
 
