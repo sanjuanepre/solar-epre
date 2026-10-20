@@ -318,6 +318,7 @@ button[disabled] {
     border-radius: 8px;
     position: relative;
     background-color: white;
+    overflow: hidden;
   }
 
   .titulo-general {
