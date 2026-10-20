@@ -35,7 +35,7 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
   annualFluxUrl: string = '';
   heatmapOpacity: number = 65;
   drawingState: 'INACTIVE' | 'START' | 'DRAWING' | 'CLOSED' = 'INACTIVE';
-  instructionText: string = 'Busque la ubicación prevista y luego elija una herramienta de selección (Polígono o Rectángulo) para delimitar el área de la instalación.';
+  instructionText: string = 'Busque la ubicación prevista y luego elija una herramienta de selección (Polígono, Rectángulo o Techo 1-Tap) para delimitar el área de la instalación.';
   tipoEstructura: 'coplanar' | 'optimo' = 'coplanar';
   isSidebarCollapsed: boolean = false;
 
@@ -502,13 +502,13 @@ const location = await this.locationService.validateLocation(
         if (this.areaMarked) {
           this.instructionText = 'Arrastre la figura para moverla o use los botones de rotación (-15°, +15°, 90°) para orientarla.';
         } else {
-          this.instructionText = 'Elija una herramienta de selección (Polígono o Rectángulo) para delimitar primero la superficie de instalación.';
+          this.instructionText = 'Elija una herramienta de selección (Polígono, Rectángulo o Techo 1-Tap) para delimitar primero la superficie de instalación.';
         }
         break;
 
       case 'static':
       default:
-        this.instructionText = 'Busque la ubicación prevista y luego elija una herramienta de selección (Polígono o Rectángulo) para delimitar el área de la instalación.';
+        this.instructionText = 'Busque la ubicación prevista y luego elija una herramienta de selección (Polígono, Rectángulo o Techo 1-Tap) para delimitar el área de la instalación.';
         break;
     }
   }

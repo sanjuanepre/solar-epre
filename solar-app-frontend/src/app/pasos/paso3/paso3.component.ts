@@ -403,12 +403,16 @@ this.resultadosFront = resultados;
       }
     }
 
+    const potenciaContratadaKw = this.potenciaContratadaHip > 200
+      ? Math.round(this.potenciaContratadaHip / 1000)
+      : Math.round(this.potenciaContratadaHip || 0);
+
     return {
       uniqueID: this.pdfService.uniqueID || this.pdfService.generateShortUUID(),
       categoriaTarifa: this.categoriaTarifa || this.sharedService.getTarifaContratada(),
       tipoEstructura: this.tipoEstructura,
       roofFactor: this.roofFactor,
-      potenciaContratada: this.potenciaContratadaHip || 0,
+      potenciaContratada: potenciaContratadaKw,
       panelesCantidad: panelesCant,
       panelCapacityW: panelCapW,
       costoInstalacion: costoInst,
@@ -423,6 +427,11 @@ this.resultadosFront = resultados;
       proporcionInyectada: (100 - propPct),
       textoArboles: this.graficosComponent?.textoArboles,
       chartImages,
+      eficienciaInstalacion: this.eficienciaInstalacion,
+      degradacionAnualPanel: this.degradacionAnualPanel,
+      costoEquipoMedicion: this.costoEquipoMedicion,
+      tasaInflacionUsd: this.tasaInflacionUsd,
+      fechaActual: this.fechaActual,
     };
   }
 
