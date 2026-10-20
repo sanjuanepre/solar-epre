@@ -642,6 +642,13 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
     this.mapService.setTerraDrawMode(mode);
   }
 
+  createQuickRoof() {
+    this.mapService.createQuickRoof();
+    if (this.isSidebarCollapsed || window.innerWidth < 768) {
+      this.ingresarAlMapa();
+    }
+  }
+
   setTerraDrawTheme(theme: TerraDrawTheme) {
     this.mapService.setTerraDrawTheme(theme);
   }

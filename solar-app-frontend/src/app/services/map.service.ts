@@ -80,6 +80,12 @@ export class MapService {
 
   // --- TerraDraw State ---
   private terraDraw: TerraDraw | null = null;
+  private polygonModeInstance: TerraDrawPolygonMode | null = null;
+  private rectangleModeInstance: TerraDrawRectangleMode | null = null;
+
+  private drawingVertexCountSubject = new BehaviorSubject<number>(0);
+  drawingVertexCount$ = this.drawingVertexCountSubject.asObservable();
+
   private activeModeSubject = new BehaviorSubject<TerraDrawActiveMode>('static');
   activeMode$ = this.activeModeSubject.asObservable();
 
@@ -348,6 +354,16 @@ export class MapService {
       const currentTheme = this.activeThemeSubject.value;
       const styles = this.getPolygonStyles(currentTheme);
 
+      this.polygonModeInstance = new TerraDrawPolygonMode({
+        styles: styles as any,
+        pointerDistance: 60,
+      });
+
+      this.rectangleModeInstance = new TerraDrawRectangleMode({
+        styles: styles as any,
+        drawInteraction: 'click-move-or-drag',
+      });
+
       this.terraDraw = new TerraDraw({
         adapter: new TerraDrawGoogleMapsAdapter({
           lib: google.maps,
@@ -355,12 +371,8 @@ export class MapService {
           coordinatePrecision: 6,
         }),
         modes: [
-          new TerraDrawPolygonMode({
-            styles: styles,
-          }),
-          new TerraDrawRectangleMode({
-            styles: styles,
-          }),
+          this.polygonModeInstance,
+          this.rectangleModeInstance,
           new TerraDrawSelectMode({
             flags: {
               polygon: {
@@ -404,12 +416,14 @@ export class MapService {
       // Escuchar eventos de dibujo finalizado o modificado
       this.terraDraw.on('finish', (id: any, context: any) => {
         this.updateUndoRedoStates();
+        this.drawingVertexCountSubject.next(0);
         this.handleTerraDrawChange(true);
         this.setTerraDrawMode('select');
       });
 
       this.terraDraw.on('change', (ids: any[], type: any) => {
         this.updateUndoRedoStates();
+        this.updateDrawingVertexCount();
         this.handleTerraDrawChange(false);
       });
 
@@ -454,6 +468,12 @@ export class MapService {
       fillOpacity: () => (this.isHeatmapActive() ? 0.0 : fillOpacity),
       outlineColor: mainColor,
       outlineWidth: 3.5,
+      closingPointWidth: 16,
+      closingPointColor: '#22c55e',
+      closingPointOpacity: 1,
+      closingPointOutlineWidth: 4,
+      closingPointOutlineColor: '#ffffff',
+      closingPointOutlineOpacity: 1,
     };
   }
 
@@ -466,6 +486,7 @@ export class MapService {
       }
       this.terraDraw.setMode(mode);
       this.activeModeSubject.next(mode);
+      this.drawingVertexCountSubject.next(0);
       if (mode === 'polygon' || mode === 'rectangle') {
         this.drawingStateSubject.next(mode === 'polygon' ? 'START' : 'DRAWING');
       } else if (mode === 'select') {
@@ -476,6 +497,105 @@ export class MapService {
       }
     } catch (e) {
       console.warn('Error al cambiar modo TerraDraw:', e);
+    }
+  }
+
+  private updateDrawingVertexCount() {
+    if (this.activeModeSubject.value === 'polygon' && this.polygonModeInstance) {
+      const count = (this.polygonModeInstance as any).currentCoordinate || 0;
+      this.drawingVertexCountSubject.next(count);
+    } else {
+      this.drawingVertexCountSubject.next(0);
+    }
+  }
+
+  getActiveMode(): TerraDrawActiveMode {
+    return this.activeModeSubject.getValue();
+  }
+
+  getDrawingVertexCount(): number {
+    return this.drawingVertexCountSubject.getValue();
+  }
+
+  closeCurrentPolygon() {
+    if (this.polygonModeInstance) {
+      const coordCount = (this.polygonModeInstance as any).currentCoordinate || 0;
+      if (coordCount >= 3) {
+        try {
+          (this.polygonModeInstance as any).close();
+          return;
+        } catch (e) {
+          console.warn('Error llamando close() en polygonMode:', e);
+        }
+      }
+    }
+    // Fallback: emitir tecla Enter para cerrar polígono
+    const enterEvent = new KeyboardEvent('keyup', { key: 'Enter', bubbles: true });
+    window.dispatchEvent(enterEvent);
+  }
+
+  createQuickRoof(customCenter?: google.maps.LatLngLiteral) {
+    if (!this.map || !this.terraDraw) return;
+
+    const center = customCenter || this.map.getCenter()?.toJSON() || this.defaultCenter;
+
+    // Dimensiones típicas de un techo residencial/comercial: ~10m ancho x ~7m alto
+    const latRad = (center.lat * Math.PI) / 180;
+    const metersPerDegreeLat = 111320;
+    const metersPerDegreeLng = 111320 * Math.cos(latRad);
+
+    const halfWidthMeters = 5.0; // total 10m
+    const halfHeightMeters = 3.5; // total 7m
+
+    const dLng = halfWidthMeters / metersPerDegreeLng;
+    const dLat = halfHeightMeters / metersPerDegreeLat;
+
+    const west = center.lng - dLng;
+    const east = center.lng + dLng;
+    const south = center.lat - dLat;
+    const north = center.lat + dLat;
+
+    const coordinates = [
+      [
+        [west, south],
+        [east, south],
+        [east, north],
+        [west, north],
+        [west, south],
+      ]
+    ];
+
+    this.clearDrawing();
+
+    const featureId = this.terraDraw.getFeatureId();
+    const feature: any = {
+      id: featureId,
+      type: 'Feature',
+      geometry: {
+        type: 'Polygon',
+        coordinates: coordinates,
+      },
+      properties: {
+        mode: 'polygon',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      },
+    };
+
+    try {
+      this.terraDraw.addFeatures([feature]);
+      this.setTerraDrawMode('select');
+      this.handleTerraDrawChange(true);
+      this.drawingVertexCountSubject.next(0);
+
+      this.snackBar.open('Superficie creada. Puede moverla, rotarla o ajustar esquinas.', 'Entendido', {
+        duration: 3500,
+        panelClass: ['custom-snackbar'],
+        horizontalPosition: 'center',
+        verticalPosition: 'bottom',
+      });
+    } catch (err) {
+      console.error('Error al crear techo rápido:', err);
     }
   }
 
@@ -1053,6 +1173,7 @@ export class MapService {
     this.canRedoSubject.next(false);
     this.realtimeAreaM2Subject.next(0);
     this.estimatedPanelsCountSubject.next(0);
+    this.drawingVertexCountSubject.next(0);
     this.disableDrawingMode();
     this.clearHeatmap();
     this.overlayCompleteSubject.next(false);

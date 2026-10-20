@@ -89,6 +89,14 @@
           </button>
 
           <button 
+            class="pill-btn pill-btn-quick" 
+            (click)="createQuickRoof()"
+            title="Crear un techo estándar en 1 toque y ajustar"
+          >
+            <span class="material-icons">flash_on</span> Techo 1-Tap
+          </button>
+
+          <button 
             class="pill-btn" 
             [class.active]="activeMode === 'select'" 
             (click)="setTerraDrawMode('select')"

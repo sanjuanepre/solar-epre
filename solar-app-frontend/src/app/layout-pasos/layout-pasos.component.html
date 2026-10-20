@@ -30,10 +30,20 @@
             class="hud-btn" 
             [class.active]="activeMode === 'rectangle'" 
             (click)="setTerraDrawMode('rectangle')"
-            title="Trazar rectángulo rápido"
+            title="Trazar rectángulo rápido arrastrando con el dedo"
           >
             <span class="material-icons">crop_square</span>
             <span class="hud-label">Rectángulo</span>
+          </button>
+
+          <button 
+            type="button"
+            class="hud-btn hud-btn-quick-roof" 
+            (click)="createQuickRoof()"
+            title="Crear techo rectangular estándar en 1 toque"
+          >
+            <span class="material-icons">flash_on</span>
+            <span class="hud-label">Techo 1-Tap</span>
           </button>
 
           <button 
@@ -45,6 +55,20 @@
           >
             <span class="material-icons">pan_tool</span>
             <span class="hud-label">Editar / Mover</span>
+          </button>
+        </div>
+
+        <!-- Botón destacado Cerrar Techo para Polígono (a partir del 3er vértice) -->
+        <div class="hud-group close-action" *ngIf="activeMode === 'polygon' && drawingVertexCount >= 3">
+          <div class="hud-divider"></div>
+          <button 
+            type="button"
+            class="hud-btn hud-btn-close-polygon" 
+            (click)="closePolygon()"
+            title="Cerrar figura y calcular paneles fotovoltaicos"
+          >
+            <span class="material-icons">check_circle</span>
+            <span class="hud-label-prominent">Cerrar Techo</span>
           </button>
         </div>
 
@@ -148,6 +172,15 @@
         <span class="metric-value">{{ realtimeAreaM2 }} m²</span>
         <span class="metric-separator">•</span>
         <span class="metric-panels">~{{ estimatedPanelsCount }} paneles (600 W)</span>
+      </div>
+
+      <!-- Fila 3: Guía rápida contextual táctil -->
+      <div class="hud-guide-chip" *ngIf="realtimeAreaM2 === 0 && (activeMode === 'polygon' || activeMode === 'rectangle')">
+        <span class="material-icons guide-icon">{{ activeMode === 'polygon' ? 'polyline' : 'touch_app' }}</span>
+        <span *ngIf="activeMode === 'polygon' && drawingVertexCount === 0">Toque para marcar el primer punto del techo</span>
+        <span *ngIf="activeMode === 'polygon' && drawingVertexCount > 0 && drawingVertexCount < 3">{{ drawingVertexCount }} punto(s) marcados. Marque al menos 3.</span>
+        <span *ngIf="activeMode === 'polygon' && drawingVertexCount >= 3">Toque "Cerrar Techo" o el punto verde inicial</span>
+        <span *ngIf="activeMode === 'rectangle'">Arrastre con el dedo o use "Techo 1-Tap"</span>
       </div>
     </div>
 
