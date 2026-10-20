@@ -557,15 +557,6 @@ export class MapService {
       this.map.setOptions({ draggableCursor: 'crosshair' });
     }
 
-    this.snackBar.open('Toque sobre el techo en el mapa para ubicar la instalación.', 'Cancelar', {
-      duration: 10000,
-      panelClass: ['custom-snackbar'],
-      horizontalPosition: 'center',
-      verticalPosition: 'top',
-    }).onAction().subscribe(() => {
-      this.cancelQuickRoofMode();
-    });
-
     this.quickRoofClickListener = this.map.addListener('click', (e: google.maps.MapMouseEvent) => {
       if (e.latLng && this.isQuickRoofActiveSubject.value) {
         this.placeQuickRoofAt(e.latLng.lat(), e.latLng.lng());
