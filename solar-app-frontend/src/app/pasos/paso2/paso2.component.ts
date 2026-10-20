@@ -101,16 +101,25 @@ export class Paso2Component implements OnInit, OnDestroy {
       this.router
         .getCurrentNavigation()
         ?.previousNavigation?.finalUrl?.toString() === '/pasos/1';
-    const urlFromPaso3 =
-      this.router.url === '/pasos/2' &&
-      this.router
-        .getCurrentNavigation()
-        ?.previousNavigation?.finalUrl?.toString() === '/pasos/3';
-    if (urlFromPaso1) {
+
+    // Verificar directamente el estado guardado en SharedService
+    // (más robusto que depender de getCurrentNavigation que puede ser null)
+    const tarifaGuardada = this.sharedService.getTarifaContratada();
+    const consumosGuardados = this.sharedService.getConsumosMensuales();
+    const tieneConsumos =
+      consumosGuardados &&
+      consumosGuardados.length > 0 &&
+      consumosGuardados.some((c) => c > 0);
+
+    if (urlFromPaso1 || (!tarifaGuardada && !tieneConsumos)) {
+      // Viene de paso1 o no hay ningún dato previo: resetear todo
       this.consumoComponent?.resetMesesConsumo();
-    } else if (urlFromPaso3) {
+    } else if (tieneConsumos && tarifaGuardada) {
+      // Viene de paso3 (o hay datos guardados): restaurar estado de UI
       this.allFieldsFilled = true;
       this.isCategorySelected = true;
+      this.isFieldsDisabled = false;
+      // Los datos ya están cargados vía BehaviorSubject — no resetear
     }
 
     this.driverObjInit = driver({
