@@ -92,52 +92,37 @@ export class Paso3Component implements OnInit, OnDestroy {
     private pdfService: PdfService,
     private cdr: ChangeDetectorRef
   ) {
-    console.log('Iniciando constructor de Paso3Component');
-
-    this.actualizarFecha();
-    console.log('Fecha actualizada:', this.fechaActual);
-  }
+this.actualizarFecha();
+}
 
   ngOnInit(): void {
-    console.log('Iniciando ngOnInit de Paso3Component');
-    this.showPanels = !this.mapService.isHeatmapActive();
+this.showPanels = !this.mapService.isHeatmapActive();
     this.sharedService.isLoading$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe({
         next: (value) => {
-          console.log('Valor de isLoading actualizado:', value);
-          this.isLoading = value;
+this.isLoading = value;
         },
       });
     this.subscribeToSharedServiceData();
-    console.log('Suscripción a SharedService completada');
-
-    this.sharedService.setIsLoading(true);
-    console.log('IsLoading establecido a true');
-    this.cdr.detectChanges();
+this.sharedService.setIsLoading(true);
+this.cdr.detectChanges();
     setTimeout(() => {
-      console.log('Recentrando mapa a área visible');
-      this.mapService.recenterMapToVisibleArea();
+this.mapService.recenterMapToVisibleArea();
     }, 300);
 
     this.setTimestamp();
-    console.log('Timestamp establecido:', this.timestamp);
-
-    console.log('Iniciando cálculo solar integral...');
     this.solarService
       .calculate()
       .then((resultados) => {
-        console.log('Resultados obtenidos:', resultados);
-        this.resultadosFront = resultados;
+this.resultadosFront = resultados;
       })
       .then(() => {
-        console.log('Cargando campos iniciales');
-        this.initialLoadFields();
+this.initialLoadFields();
         this.cdr.detectChanges();
       })
       .then(() => {
-        console.log('Cálculo completado, estableciendo isLoading a false');
-        this.sharedService.setIsLoading(false);
+this.sharedService.setIsLoading(false);
         this.cdr.detectChanges();
       })
       .catch((error) => {
@@ -165,53 +150,37 @@ export class Paso3Component implements OnInit, OnDestroy {
   }
 
   private initializeGeneralData(): void {
-    console.log('Iniciando initializeGeneralData');
-    try {
+try {
       this.periodoVeinteanalEmisionesGEIEvitadasOriginal = this.resultadosFront.periodoVeinteanalEmisionesGEIEvitadas;
       this.isCategoriaTarifaT1 = this.sharedService.getTarifaContratada().includes('T1-R');
       // Obtener configuraciones anuales o usar un array vacío si no existen
       /* const yearlyAnualConfigurations =
         this.resultadosFront.solarData.panels.yearlysAnualConfigurations ?? [];
-      console.log('Configuraciones anuales:', yearlyAnualConfigurations);
- */
+*/
       // Establecer resultados frontales en el servicio compartido
       this.sharedService.setResultadosFront(this.resultadosFront);
-      console.log('Resultados frontales establecidos en sharedService');
-
-      // Establecer configuraciones anuales si existen
+// Establecer configuraciones anuales si existen
       /* if ((yearlyAnualConfigurations as any[]).length > 0) {
         this.sharedService.setYearlysAnualConfigurations(
           yearlyAnualConfigurations
         );
-        console.log('Configuraciones anuales establecidas en sharedService');
-      } else {
-        console.log('No se encontraron configuraciones anuales');
-      } */
+} else {
+} */
 
       // Calcular y establecer la energía anual predeterminada
       this.yearlyEnergyAckWhDefault = parseFloat(
         this.resultadosFront.solarData.yearlyEnergyAcKwh.toFixed(0)
       );
-      console.log(
-        'Energía anual predeterminada:',
-        this.yearlyEnergyAckWhDefault
-      );
-
-      // Establecer la energía inicial igual a la predeterminada
+// Establecer la energía inicial igual a la predeterminada
       this.yearlyEnergyInitial = this.yearlyEnergyAckWhDefault;
       this.sharedService.setYearlyEnergyAckWh(this.yearlyEnergyInitial);
-      console.log(
-        'Energía anual inicial establecida:',
-        this.yearlyEnergyInitial
-      );
-      this.sharedService.calculateAreaPanelsSelected(this.panelesCantidad);
+this.sharedService.calculateAreaPanelsSelected(this.panelesCantidad);
     } catch (error) {
       console.error('Error en initializeGeneralData:', error);
 
       this.handleInitializationGeneralDataError(error);
     }
-    console.log('Finalizado initializeGeneralData');
-  }
+}
 
 
   private handleInitializationGeneralDataError(error: unknown): void {
@@ -237,18 +206,12 @@ export class Paso3Component implements OnInit, OnDestroy {
 
   private initializePanelData(): void {
     try {
-      console.log('Iniciando initializePanelData');
-
-      this.panelesCantidad =
+this.panelesCantidad =
         this.resultadosFront.solarData.panels.panelsSelected ??
         this.resultadosFront.solarData.panels.panelsCountApi;
-      console.log('Cantidad de paneles:', this.panelesCantidad);
-
-      // Usar la capacidad elegida en sharedService (por defecto 600 W)
+// Usar la capacidad elegida en sharedService (por defecto 600 W)
       this.panelCapacityW = this.sharedService.getPanelCapacityW() || 600;
       this.dimensionPanel = this.sharedService.getDimensionByCapacity(this.panelCapacityW);
-      console.log('Capacidad del panel en W:', this.panelCapacityW);
-      console.log('Dimensiones del panel:', this.dimensionPanel);
 
       this.sharedService.setPanelsCountSelected(this.panelesCantidad);
       this.sharedService.setDimensionPanels(this.dimensionPanel);
@@ -257,12 +220,9 @@ export class Paso3Component implements OnInit, OnDestroy {
       const eficienciaInstalacion =
         this.resultadosFront.parametros?.caracteristicasSistema
           .eficienciaInstalacion || 0.95;
-      console.log('Eficiencia de instalación:', eficienciaInstalacion);
+this.sharedService.setEficienciaInstalacion(eficienciaInstalacion);
 
-      this.sharedService.setEficienciaInstalacion(eficienciaInstalacion);
-
-      console.log('initializePanelData completado con éxito');
-    } catch (error) {
+} catch (error) {
       console.error('Error en initializePanelData:', error);
       // Aquí puedes agregar lógica adicional para manejar el error, como mostrar un mensaje al usuario
       this.handleInitializationPanelDataError(error);
@@ -290,33 +250,18 @@ export class Paso3Component implements OnInit, OnDestroy {
 
   private initializeFinancialData(): void {
     try {
-      console.log('Iniciando initializeFinancialData');
-
-      this.costoInstalacion =
+this.costoInstalacion =
         this.resultadosFront.resultadosFinancieros.casoConCapitalPropio[0].inversiones;
-      console.log('Costo de instalación:', this.costoInstalacion);
-
-      this.sharedService.setCostoInstalacion(this.costoInstalacion);
-      console.log('Costo de instalación establecido en sharedService');
-
-      const plazoInversionInicial =
+this.sharedService.setCostoInstalacion(this.costoInstalacion);
+const plazoInversionInicial =
         this.resultadosFront.resultadosFinancieros.indicadoresFinancieros
           .payBackMonths;
       this.sharedService.setPlazoInversion(plazoInversionInicial);
-      console.log('Plazo de inversión inicial establecido:', plazoInversionInicial);
-
-      this.periodoVeinteanalCasoConCapitalPropioInitial =
+this.periodoVeinteanalCasoConCapitalPropioInitial =
         this.resultadosFront.resultadosFinancieros.casoConCapitalPropio;
-      console.log(
-        'Periodo veintenal caso con capital propio inicial establecido'
-      );
-
-      const cargos = this.resultadosFront.periodoVeinteanalProyeccionTarifas[0];
+const cargos = this.resultadosFront.periodoVeinteanalProyeccionTarifas[0];
       const tarifaIntercambio = cargos.cargoVariableConsumoUsdkWh;
       this.sharedService.setTarifaIntercambioUsdkWh(tarifaIntercambio);
-      console.log('Tarifa de intercambio establecida:', tarifaIntercambio);
-
-      console.log('initializeFinancialData completado con éxito');
     } catch (error) {
       console.error('Error en initializeFinancialData:', error);
       this.handleInitializationFinancialDataError(error);
@@ -344,61 +289,28 @@ export class Paso3Component implements OnInit, OnDestroy {
 
   private initializeSystemParameters(): void {
     try {
-      console.log('Iniciando initializeSystemParameters');
-
-      this.carbonOffsetFactorTnPerMWh = parseFloat(
+this.carbonOffsetFactorTnPerMWh = parseFloat(
         (
           this.resultadosFront.solarData.carbonOffsetFactorKgPerMWh / 1000
         ).toFixed(3)
       );
-      console.log(
-        'Factor de compensación de carbono:',
-        this.carbonOffsetFactorTnPerMWh
-      );
-
-      const parametros: ParametrosFront = this.resultadosFront.parametros!;
-      console.log('Parámetros obtenidos:', parametros);
-
-      this.tipoEstructura = this.sharedService.getTipoEstructura();
-      console.log('Tipo de estructura cargada:', this.tipoEstructura);
-
-      this.roofFactor = this.resultadosFront.roofFactor || 1.0;
-      console.log('Factor de techo cargado:', this.roofFactor);
-
-      this.eficienciaInstalacion =
+const parametros: ParametrosFront = this.resultadosFront.parametros!;
+this.tipoEstructura = this.sharedService.getTipoEstructura();
+this.roofFactor = this.resultadosFront.roofFactor || 1.0;
+this.eficienciaInstalacion =
         parametros.caracteristicasSistema.eficienciaInstalacion || 0.95;
-      console.log('Eficiencia de instalación:', this.eficienciaInstalacion);
-
-      this.degradacionAnualPanel =
+this.degradacionAnualPanel =
         parametros.caracteristicasSistema.degradacionAnualPanel;
-      console.log('Degradación anual del panel:', this.degradacionAnualPanel);
-
-      this.proporcionAutoconsumo =
+this.proporcionAutoconsumo =
         parametros.caracteristicasSistema.proporcionAutoconsumo;
-      console.log('Proporción de autoconsumo:', this.proporcionAutoconsumo);
-
-      this.proporcionInyectada =
+this.proporcionInyectada =
         parametros.caracteristicasSistema.proporcionInyeccion;
-      console.log('Proporción inyectada:', this.proporcionInyectada);
-
-      this.costoEquipoMedicion = this.sharedService.getCostoEquipoDeMedicion()!;
-      console.log('Costo del equipo de medición:', this.costoEquipoMedicion);
-
-      this.costoMantenimiento =
+this.costoEquipoMedicion = this.sharedService.getCostoEquipoDeMedicion()!;
+this.costoMantenimiento =
         parametros.inversionCostos.costoDeMantenimientoInicialUsd;
-      console.log('Costo de mantenimiento:', this.costoMantenimiento);
-
-      this.tasaInflacionUsd = parametros.economicas.tasaInflacionUsd;
-      console.log('Tasa de crecimiento tarifas y de descuento USD:', this.tasaInflacionUsd);
-
-      this.potenciaContratadaHip =
+this.tasaInflacionUsd = parametros.economicas.tasaInflacionUsd;
+this.potenciaContratadaHip =
         this.sharedService.getPotenciaMaxAsignadaW();
-      console.log(
-        'Potencia contratada hipotética:',
-        this.potenciaContratadaHip
-      );
-
-      console.log('initializeSystemParameters completado con éxito');
     } catch (error) {
       console.error('Error en initializeSystemParameters:', error);
       this.handleInitializationSystemParametersError(error);
@@ -409,16 +321,14 @@ export class Paso3Component implements OnInit, OnDestroy {
     if (this.tipoEstructura === tipo || this.isCalculating) {
       return;
     }
-    console.log(`[Paso3Component] Cambiando estructura a: ${tipo}`);
-    this.isCalculating = true;
+this.isCalculating = true;
     this.sharedService.setIsLoading(true);
     this.sharedService.setTipoEstructura(tipo);
     this.tipoEstructura = tipo;
 
     try {
       const resultados = await this.solarService.calculate();
-      console.log('[Paso3Component] Recálculo exitoso tras cambio de estructura:', resultados);
-      this.resultadosFront = resultados;
+this.resultadosFront = resultados;
       this.sharedService.setResultadosFront(resultados);
       
       // Volver a inicializar los datos en base a los nuevos resultados
@@ -657,8 +567,7 @@ export class Paso3Component implements OnInit, OnDestroy {
         );
       }
     } catch {
-      console.log('this.resultadosFront no disponible');
-    }
+}
   }
 
   togglePanelsVisibility() {
@@ -727,45 +636,38 @@ export class Paso3Component implements OnInit, OnDestroy {
   }
 
   private subscribeToSharedServiceData() {
-    console.log('Iniciando suscripciones en Paso 3');
-
-    this.sharedService.tarifaContratada$
+this.sharedService.tarifaContratada$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe({
         next: (tarifa) => {
           this.categoriaTarifa = tarifa;
-          console.log('Paso 3: Tarifa contratada actualizada:', tarifa);
-        },
+},
       });
 
     this.sharedService.potenciaMaxAsignadaW$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((potencia) => {
         this.potenciaMaxAsignadaW = potencia;
-        console.log('Paso 3: Potencia máxima asignada actualizada:', potencia);
-      });
+});
 
     this.sharedService.panelsCountSelected$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((panels) => {
         this.panelesCantidad = panels;
-        console.log('Paso 3: Cantidad de paneles actualizada:', panels);
-      });
+});
 
     this.sharedService.potenciaInstalacionW$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((potencia) => {
         this.potenciaInstalacionW = potencia;
-        console.log('Paso 3: Potencia de instalación actualizada:', potencia);
-      });
+});
 
     this.consumoService.totalConsumo$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe({
         next: (value) => {
           this.consumoTotalAnual = value;
-          console.log('Paso 3: Consumo total anual actualizado:', value);
-        },
+},
       });
 
     this.sharedService.panelCapacityW$
@@ -774,8 +676,7 @@ export class Paso3Component implements OnInit, OnDestroy {
         next: (capacity) => {
           this.potenciaPanelHip = capacity;
           this.panelCapacityW = capacity;
-          console.log('Paso 3: Capacidad de panel W actualizada:', capacity);
-          this.cdr.detectChanges();
+this.cdr.detectChanges();
         },
       });
 
@@ -784,25 +685,21 @@ export class Paso3Component implements OnInit, OnDestroy {
       .subscribe({
         next: (dimension) => {
           this.dimensionPanel = dimension;
-          console.log('Paso 3: Dimensiones del panel actualizadas:', dimension);
-          this.cdr.detectChanges();
+this.cdr.detectChanges();
         },
       });
 
 
-    console.log('Suscripciones en Paso 3 completadas');
-  }
+}
 
   onRecalculoIniciado(event: boolean): void {
-    console.log('Recalculo iniciado, mostrando loader:', event);
-    if (!this.isLoading) {
+if (!this.isLoading) {
       this.isCalculating = event; // Muestra el loader
     }
   }
 
   // Método que se ejecuta cuando el recalculo termina
   onRecalculoTerminado(event: boolean): void {
-    console.log('Recalculo terminado, ocultando loader:', event);
-    this.isCalculating = event; // Oculta el loader
+this.isCalculating = event; // Oculta el loader
   }
 }

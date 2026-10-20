@@ -312,9 +312,7 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
       });
     }
     try {
-      console.log(value);
-
-      const location = await this.locationService.validateLocation(
+const location = await this.locationService.validateLocation(
         value,
         this.map,
         this.marker
@@ -457,9 +455,7 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
 
   private calculateInstalledPower(): number {
     const panelCapacityW = this.sharedService.getPanelCapacityW();
-    console.log("panel capacityW en paso 1 ", panelCapacityW)
     const panelsSelectCount = this.sharedService.getPanelsSelected();
-    console.log("numero de paneles seleccionados en paso 1 ", panelsSelectCount)
     return Math.round(panelCapacityW * panelsSelectCount);
   }
 
@@ -554,24 +550,21 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
     });
 
     try {
-      console.log(`[Paso1Component] Consultando dataLayers para centroide: (${lat}, ${lng}) con radio ${radiusMeters}m`);
-      const response = await this.solarApiService.getDataLayers(lat, lng, radiusMeters);
+const response = await this.solarApiService.getDataLayers(lat, lng, radiusMeters);
       
       if (response && response.annualFluxUrl) {
         this.zone.run(() => {
           this.annualFluxUrl = response.annualFluxUrl;
           this.heatmapAvailable = true;
           this.showHeatmap = true;
-          console.log('[Paso1Component] Capas térmicas obtenidas y activadas.');
-        });
+});
         const polygons = this.mapService.getPolygons();
         if (polygons.length > 0) {
           await this.mapService.fetchAndRenderSolarHeatmap(this.annualFluxUrl, polygons[0]);
         }
       } else {
         this.zone.run(() => {
-          console.log('[Paso1Component] Sin datos GeoTIFF de radiación detallada para esta zona.');
-          this.annualFluxUrl = '';
+this.annualFluxUrl = '';
           this.heatmapAvailable = false;
           this.showHeatmap = false;
           this.mapService.hideHeatmap();

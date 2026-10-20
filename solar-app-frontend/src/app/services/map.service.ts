@@ -150,14 +150,12 @@ export class MapService {
     
   }
   async initializeMap(mapElement: HTMLElement) {
-    console.log('Iniciando inicialización del mapa');
-    if (!window.google || !window.google.maps) {
+if (!window.google || !window.google.maps) {
       console.error('API de Google Maps no cargada');
       throw new Error('Google Maps API not loaded');
     }
 
-    console.log('Configurando opciones del mapa');
-    const mapOptions = {
+const mapOptions = {
       center: this.center,
       zoom: this.zoomInicial,
       disableDefaultUI: false,
@@ -182,22 +180,14 @@ export class MapService {
         strictBounds: false,
       },
     };
-    console.log('Opciones del mapa:', mapOptions);
-
-    console.log('Creando instancia del mapa');
     this.map = new google.maps.Map(mapElement, mapOptions);
-    console.log('Mapa creado:', this.map);
-
-    console.log('Emitiendo instancia del mapa');
     this.mapSubject.next(this.map);
 
     // Esperar a que el mapa esté en estado idle para garantizar que sus elementos DOM internos estén montados
     google.maps.event.addListenerOnce(this.map, 'idle', () => {
-      console.log('Mapa listo en estado idle, inicializando TerraDraw');
-      this.initTerraDraw();
+this.initTerraDraw();
     });
-    console.log('Inicialización del mapa completada');
-  }
+}
 
   clearPolygons() {
     this.polygons.forEach((polygon) => polygon.setMap(null));
@@ -446,8 +436,7 @@ export class MapService {
         }
       }
 
-      console.log('TerraDraw iniciado con éxito');
-    } catch (error) {
+} catch (error) {
       console.error('Error iniciando TerraDraw:', error);
     }
   }
@@ -1614,8 +1603,7 @@ export class MapService {
 
     // Si ya tenemos el ráster cacheado para esta URL, renderizamos directamente sin fetch de red
     if (this.cachedSolarRaster && this.cachedSolarRaster.url === annualFluxUrl) {
-      console.log('[MapService] Reutilizando ráster GeoTIFF cacheado en memoria.');
-      this.renderHeatmapOverlayFromRaster(polygon);
+this.renderHeatmapOverlayFromRaster(polygon);
       this.heatMapLoadingSubject.next(false);
       return;
     }
@@ -1669,8 +1657,6 @@ export class MapService {
       const sw = this.utmToLatLng(zone, minX, minY, northernHemisphere);
       const ne = this.utmToLatLng(zone, maxX, maxY, northernHemisphere);
 
-      console.log(`[MapService] GeoTIFF Bounds (UTM): minX=${minX}, minY=${minY}, maxX=${maxX}, maxY=${maxY}, zone=${zone}, N=${northernHemisphere}`);
-      console.log(`[MapService] GeoTIFF Bounds (LatLng): SW=(${sw.lat}, ${sw.lng}), NE=(${ne.lat}, ${ne.lng})`);
 
       // Analizar si el GeoTIFF contiene datos de radiación válidos (distintos de -9999)
       let validPixels = 0;
@@ -1685,11 +1671,8 @@ export class MapService {
         }
       }
 
-      console.log(`[MapService] GeoTIFF decodificado: total=${values.length}, validos=${validPixels}, min=${minVal}, max=${maxVal}`);
-
-      if (validPixels === 0) {
-        console.log('[MapService] Sin píxeles de radiación válidos en el GeoTIFF.');
-        this.snackBar.open(
+if (validPixels === 0) {
+this.snackBar.open(
           'No hay datos de radiación solar detallados disponibles para esta zona específica.',
           'Entendido',
           { duration: 5000 }
@@ -1716,8 +1699,7 @@ export class MapService {
 
       // Renderizar overlay
       this.renderHeatmapOverlayFromRaster(polygon);
-      console.log('[MapService] Mapa de calor solar renderizado correctamente.');
-    } catch (error) {
+} catch (error) {
       console.error('[MapService] Error al renderizar el mapa de calor solar:', error);
       this.snackBar.open(
         'No hay datos de radiación solar detallados disponibles para esta zona específica.',

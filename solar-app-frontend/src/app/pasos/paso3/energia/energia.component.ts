@@ -36,26 +36,16 @@ export class EnergiaComponent implements OnInit, AfterViewInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    console.log('ngOnInit: Inicializando componente EnergiaComponent');
-    
-    this.sharedService.tipoEstructura$
+this.sharedService.tipoEstructura$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((tipo) => {
         this.tipoEstructura = tipo || 'coplanar';
         this.cdr.detectChanges();
       });
-    console.log(
-      'Valor inicial de yearlyEnergyAckWhInitial:',
-      this.yearlyEnergyAckWhInitial
-    );
-    this.sharedService.factorPotencia$
+this.sharedService.factorPotencia$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((newFactorPotencia: number) => {
-        console.log(
-          'Nuevo valor de factorPotencia recibido:',
-          newFactorPotencia
-        );
-        this.factorPotencia = newFactorPotencia;
+this.factorPotencia = newFactorPotencia;
       });
     // Asignamos el valor inicial de energía anual
     this.sharedService.yearlyEnergyAckWh$
@@ -69,43 +59,26 @@ export class EnergiaComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Obtenemos la potencia original de la instalación desde el servicio
     this.potenciaOriginalW = this.sharedService.getPotenciaInstalacionW();
-    console.log(
-      'potenciaOriginalW obtenida desde sharedService:',
-      this.potenciaOriginalW
-    );
-  }
+}
 
   ngAfterViewInit(): void {
-    console.log('ngAfterViewInit: La vista ha sido inicializada');
-
-    // Nos suscribimos al observable de potencia de instalación (cantidad de paneles)
+// Nos suscribimos al observable de potencia de instalación (cantidad de paneles)
     this.sharedService.panelsCountSelected$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((panelsCountSelected) => {
-        console.log(
-          'Suscripción panelsCountSelected$: Recibido nueva potencia:',
-          panelsCountSelected
-        );
-        this.updateYearlyEnergy();
+this.updateYearlyEnergy();
       });
 
     // Nos suscribimos al observable de capacidad de panel para actualizar la energía al cambiar la potencia
     this.sharedService.panelCapacityW$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((panelCapacity) => {
-        console.log(
-          'Suscripción panelCapacityW$: Recibido nueva capacidad:',
-          panelCapacity
-        );
-        this.updateYearlyEnergy();
+this.updateYearlyEnergy();
       });
   }
 
   ngOnDestroy(): void {
-    console.log(
-      'ngOnDestroy: Componente EnergiaComponent destruido, limpiando suscripciones'
-    );
-    this.destroy$.next();
+this.destroy$.next();
     this.destroy$.complete();
   }
 
@@ -120,11 +93,9 @@ export class EnergiaComponent implements OnInit, AfterViewInit, OnDestroy {
       .recalculateyearlyEnergyACkWh(panelsCount, factorPotencia)
       .then((recalculoOk) => {
         this.cdr.detectChanges();
-        console.log('recalculoOk:', recalculoOk);
-      })
+})
       .catch((recalculoFail) => {
-        console.log('recalculoFail:', recalculoFail);
-      })
+})
       .finally(() => {
         this.recalculoTerminado.emit(false);
       });

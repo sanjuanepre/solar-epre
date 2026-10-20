@@ -32,8 +32,7 @@ export class GmailService {
           })
         )
       );
-      console.log('[GmailService] Email con PDF adjunto enviado exitosamente.');
-    } catch (error) {
+} catch (error) {
       console.error('[GmailService] Error al enviar el email:', error);
       throw error;
     }
@@ -45,7 +44,7 @@ export class GmailService {
         `${this.apiUrl}/gmail/send-email-change?newPanelCapacityW=${newPanelCapacityW}`
       )
       .subscribe({
-        next: () => console.log('[GmailService] Notificación de actualización enviada...'),
+        next: () => {},
         error: (error) => console.error('[GmailService] Error:', error),
       });
   }

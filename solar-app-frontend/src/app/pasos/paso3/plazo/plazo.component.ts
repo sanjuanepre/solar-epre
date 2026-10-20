@@ -33,11 +33,7 @@ export class PlazoComponent implements OnInit, AfterViewInit, OnDestroy {
     this.sharedService.factorPotencia$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((newFactorPotencia: number) => {
-        console.log(
-          'Nuevo valor de factorPotencia recibido:',
-          newFactorPotencia
-        );
-        this.factorPotencia = newFactorPotencia;
+this.factorPotencia = newFactorPotencia;
       });
 
     this.sharedService.plazoInversion$

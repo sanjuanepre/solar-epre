@@ -15,10 +15,7 @@ export class CalculatePredefinedCoordService {
     try {
       return this.generarResultados(nearbyLocation);
     } catch (error) {
-      console.log(
-        'error al generar los resultados con las coordenadas definidas'
-      );
-    }
+}
   }
 
   generarResultados(nearbyLocation: any): ResultadosFrontDTO {
