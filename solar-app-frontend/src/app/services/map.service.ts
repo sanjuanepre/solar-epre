@@ -369,8 +369,8 @@ this.initTerraDraw();
           this.polygonModeInstance,
           this.rectangleModeInstance,
           new TerraDrawSelectMode({
+            pointerDistance: 60,
             keyEvents: null,
-            dragEventThrottle: 1,
             allowManualDeselection: false,
             flags: {
               polygon: {
@@ -379,7 +379,7 @@ this.initTerraDraw();
                   rotateable: false,
                   scaleable: false,
                   coordinates: {
-                    midpoints: true,
+                    midpoints: false,
                     draggable: true,
                     deletable: false,
                   },
@@ -391,7 +391,7 @@ this.initTerraDraw();
                   rotateable: false,
                   scaleable: false,
                   coordinates: {
-                    midpoints: true,
+                    midpoints: false,
                     draggable: true,
                     deletable: false,
                   },
@@ -403,6 +403,10 @@ this.initTerraDraw();
               selectedPolygonFillOpacity: () => (this.isHeatmapActive() ? 0.0 : 0.25),
               selectedPolygonOutlineColor: styles.outlineColor,
               selectedPolygonOutlineWidth: 3.5,
+              selectionPointColor: '#ffffff',
+              selectionPointWidth: 6,
+              selectionPointOutlineColor: styles.outlineColor,
+              selectionPointOutlineWidth: 3,
             },
           }),
         ],
