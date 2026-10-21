@@ -3,11 +3,18 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
+  cursor: default;
 }
 
 #map {
   height: calc(100vh - 90px); 
   width: 100vw; 
+  cursor: default;
+}
+
+::ng-deep #map .gm-style,
+::ng-deep #map .gm-style > div {
+  cursor: inherit;
 }
 
 .ripple-layer {
@@ -16,7 +23,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  pointer-events: none;
+  pointer-events: none !important;
   z-index: 1000;
   overflow: hidden;
 }
