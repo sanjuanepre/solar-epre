@@ -363,7 +363,6 @@ this.initTerraDraw();
           lib: google.maps,
           map: this.map,
           coordinatePrecision: 6,
-          forwardMapElementEvents: true,
         }),
         modes: [
           this.polygonModeInstance,
@@ -578,7 +577,7 @@ this.initTerraDraw();
       this.quickRoofClickListener = null;
     }
     if (this.map) {
-      this.map.setOptions({ draggableCursor: '' });
+      this.map.setOptions({ draggableCursor: null });
     }
   }
 

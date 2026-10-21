@@ -64,16 +64,19 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     // Ejecutar fuera de Angular para máximo rendimiento de 60fps sin sobrecargar ChangeDetection
     this.zone.runOutsideAngular(() => {
       const handlePointer = (e: PointerEvent) => {
-        // Disparar destello si el usuario está en modo de dibujo, edición o esperando ubicar el techo 1-tap
-        if (
-          this.activeMode === 'polygon' ||
-          this.activeMode === 'rectangle' ||
-          this.activeMode === 'select' ||
-          this.isQuickRoofActive
-        ) {
-          this.triggerRipple(e.clientX, e.clientY);
+        // Disparar destello táctil ÚNICAMENTE en eventos táctiles (touch o pen).
+        // En mouse de escritorio, el puntero del cursor es visible y no debe generar destellos ni interferir con drags.
+        if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+          if (
+            this.activeMode === 'polygon' ||
+            this.activeMode === 'rectangle' ||
+            this.activeMode === 'select' ||
+            this.isQuickRoofActive
+          ) {
+            requestAnimationFrame(() => this.triggerRipple(e.clientX, e.clientY));
+          }
+          this.checkDoubleTap(e.clientX, e.clientY);
         }
-        this.checkDoubleTap(e.clientX, e.clientY);
       };
 
       el.addEventListener('pointerdown', handlePointer, { passive: true });
