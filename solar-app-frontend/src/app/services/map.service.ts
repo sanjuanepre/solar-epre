@@ -363,6 +363,12 @@ this.initTerraDraw();
           lib: google.maps,
           map: this.map,
           coordinatePrecision: 6,
+          // forwardMapElementEvents habilita setPointerCapture en el overlay de Google Maps,
+          // garantizando que los eventos pointermove lleguen a TerraDraw incluso cuando el
+          // cursor se mueve fuera del límite del polígono durante el drag de toda la figura.
+          // El bug previo con vértices se debía a dragEventThrottle=1 y al destello DOM
+          // sincrónico en pointerdown (ya corregidos); este flag es necesario para el drag.
+          forwardMapElementEvents: true,
         }),
         modes: [
           this.polygonModeInstance,
