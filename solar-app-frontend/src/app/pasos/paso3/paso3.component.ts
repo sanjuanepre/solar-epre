@@ -107,9 +107,6 @@ this.isLoading = value;
     this.subscribeToSharedServiceData();
 this.sharedService.setIsLoading(true);
 this.cdr.detectChanges();
-    setTimeout(() => {
-this.mapService.recenterMapToVisibleArea();
-    }, 300);
 
     this.setTimestamp();
     this.solarService
