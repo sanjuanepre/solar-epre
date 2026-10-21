@@ -203,6 +203,12 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isCollapsed = false;
     this.sharedService.setSidebarCollapsed(this.isCollapsed);
     this.cdr.detectChanges();
+    // Recentrar tras la animación de apertura del panel (transition: 350ms)
+    if (this.mapService.getPolygons().length > 0) {
+      setTimeout(() => {
+        this.mapService.recenterMapToVisibleArea();
+      }, 380);
+    }
   }
 
   // Métodos de interacción HUD Toolbar sobre el Mapa
