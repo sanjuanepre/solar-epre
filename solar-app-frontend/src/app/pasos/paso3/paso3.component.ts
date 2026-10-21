@@ -96,7 +96,7 @@ this.actualizarFecha();
 }
 
   ngOnInit(): void {
-this.showPanels = !this.mapService.isHeatmapActive();
+    this.showPanels = this.mapService.getPanelsVisibility();
     this.sharedService.isLoading$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe({

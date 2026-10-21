@@ -633,6 +633,9 @@ this.annualFluxUrl = '';
 
   setTerraDrawMode(mode: TerraDrawActiveMode) {
     this.mapService.setTerraDrawMode(mode);
+    if (this.isSidebarCollapsed || window.innerWidth < 768) {
+      this.ingresarAlMapa();
+    }
   }
 
   createQuickRoof() {

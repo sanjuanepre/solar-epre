@@ -56,6 +56,7 @@ export class MapService {
   } | null = null;
 
   private showPanelsOnHeatmap: boolean = true;
+  private panelsVisible: boolean = true;
   private heatmapOpacity: number = 0.65;
 
   setShowPanelsOnHeatmap(show: boolean) {
@@ -65,6 +66,13 @@ export class MapService {
 
   getShowPanelsOnHeatmap(): boolean {
     return this.showPanelsOnHeatmap;
+  }
+
+  getPanelsVisibility(): boolean {
+    if (this.isHeatmapActive()) {
+      return this.showPanelsOnHeatmap && this.panelsVisible;
+    }
+    return this.panelsVisible;
   }
 
   setHeatmapOpacity(opacity: number) {
@@ -661,7 +669,7 @@ this.initTerraDraw();
         } catch (_) {}
       }, 120);
 
-      this.snackBar.open('Superficie ubicada sobre el techo. Puede rotarla, moverla o ajustar sus esquinas.', 'Entendido', {
+      this.snackBar.open('Superficie definida. Puede rotarla, moverla o ajustar sus vértices.', 'Entendido', {
         duration: 3500,
         panelClass: ['custom-snackbar'],
         horizontalPosition: 'center',
@@ -1085,7 +1093,7 @@ this.initTerraDraw();
             strokeOpacity: isHeatmap ? 0.95 : 1,
             zIndex: isHeatmap ? 20 : 5,
             clickable: false,
-            map: (isHeatmap && !this.showPanelsOnHeatmap) ? null : this.map,
+            map: (!this.panelsVisible || (isHeatmap && !this.showPanelsOnHeatmap)) ? null : this.map,
           });
 
           this.panels.push(panelRectangle);
@@ -1201,7 +1209,7 @@ this.initTerraDraw();
               strokeOpacity: isHeatmap ? 0.95 : 1,
               zIndex: isHeatmap ? 20 : 5,
               clickable: false,
-              map: (isHeatmap && !this.showPanelsOnHeatmap) ? null : this.map,
+              map: (!this.panelsVisible || (isHeatmap && !this.showPanelsOnHeatmap)) ? null : this.map,
             });
 
             this.panels.push(panelRectangle);
@@ -1345,6 +1353,10 @@ this.initTerraDraw();
    * Modifica la visibilidad de los paneles vectoriales dibujados en el mapa.
    */
   setPanelsVisibility(visible: boolean) {
+    this.panelsVisible = visible;
+    if (this.isHeatmapActive()) {
+      this.showPanelsOnHeatmap = visible;
+    }
     if (this.panels && this.panels.length > 0) {
       if (!visible) {
         this.panels.forEach((panel) => panel.setMap(null));
