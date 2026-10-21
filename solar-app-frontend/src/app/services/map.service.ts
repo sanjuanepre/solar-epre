@@ -374,7 +374,12 @@ this.initTerraDraw();
           this.polygonModeInstance,
           this.rectangleModeInstance,
           new TerraDrawSelectMode({
-            pointerDistance: 60,
+            // pointerDistance controla cuántos píxeles alrededor de cada vértice activan
+            // el drag de coordenada en lugar del drag de toda la figura.
+            // Con 60px (valor anterior) los 4 vértices cubrían todo el interior de polígonos
+            // pequeños (techos), impidiendo el feature-drag. 16px da zona cómoda en touch/mouse
+            // y deja el centro libre para arrastrar toda el área.
+            pointerDistance: 16,
             keyEvents: null,
             allowManualDeselection: false,
             flags: {
