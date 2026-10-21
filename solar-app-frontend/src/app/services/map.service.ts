@@ -358,7 +358,13 @@ this.initTerraDraw();
 
       this.polygonModeInstance = new TerraDrawPolygonMode({
         styles: styles as any,
-        pointerDistance: 60,
+        // pointerDistance controla el radio en px alrededor del punto inicial y del último punto
+        // que activa el cierre automático del polígono. Con 60px (valor anterior), en techos
+        // pequeños (ej. 16 m² / 4 paneles) los 3 primeros vértices están a menos de 60px entre sí,
+        // por lo que al intentar poner un 4to vértice el sistema lo cerraba automáticamente como triángulo.
+        // Reducir a 12px permite marcar vértices contiguos muy cercanos (áreas pequeñas) con total precisión,
+        // dejando el cierre manual tocando el punto inicial verde o pulsando el botón "Cerrar Área".
+        pointerDistance: 12,
       });
 
       this.rectangleModeInstance = new TerraDrawRectangleMode({
@@ -493,10 +499,10 @@ this.initTerraDraw();
       fillOpacity: () => (this.isHeatmapActive() ? 0.0 : fillOpacity),
       outlineColor: mainColor,
       outlineWidth: 3.5,
-      closingPointWidth: 16,
+      closingPointWidth: 8,
       closingPointColor: '#22c55e',
       closingPointOpacity: 1,
-      closingPointOutlineWidth: 4,
+      closingPointOutlineWidth: 2.5,
       closingPointOutlineColor: '#ffffff',
       closingPointOutlineOpacity: 1,
     };
