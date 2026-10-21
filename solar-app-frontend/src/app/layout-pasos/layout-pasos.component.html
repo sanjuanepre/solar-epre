@@ -138,26 +138,6 @@
         <div class="hud-group history-actions">
           <button 
             type="button"
-            class="hud-btn hud-icon-only" 
-            [disabled]="!canUndo" 
-            (click)="undoTerraDraw()"
-            title="Deshacer"
-          >
-            <span class="material-icons">undo</span>
-          </button>
-
-          <button 
-            type="button"
-            class="hud-btn hud-icon-only" 
-            [disabled]="!canRedo" 
-            (click)="redoTerraDraw()"
-            title="Rehacer"
-          >
-            <span class="material-icons">redo</span>
-          </button>
-
-          <button 
-            type="button"
             class="hud-btn hud-icon-only danger" 
             (click)="clearDrawing()"
             title="Borrar dibujo"
