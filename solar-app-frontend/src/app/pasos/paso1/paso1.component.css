@@ -39,7 +39,7 @@
   }
 
   .advertencia #recomendacion {
-    text-align: left;
+    text-align: justify;
     color: var(--font-light);
     font-size: 14px;
     font-family: 'Sodo Sans', sans-serif;

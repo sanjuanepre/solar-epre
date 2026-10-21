@@ -388,6 +388,24 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
       },
       colors: colors,
       series: series,
+      grid: {
+        show: true,
+        borderColor: forExport ? '#64748b' : '#cbd5e1',
+        strokeDashArray: forExport ? 0 : 3,
+        position: 'back',
+        xaxis: {
+          lines: { show: false },
+        },
+        yaxis: {
+          lines: { show: true },
+        },
+        padding: {
+          top: 10,
+          right: 20,
+          bottom: 10,
+          left: 10,
+        },
+      },
       xaxis: {
         categories: [['Consumo total', 'anual'], ['Generación', 'anual FV']],
         labels: {
@@ -401,6 +419,16 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
             colors: ['#475569', '#475569'],
           },
         },
+        axisBorder: {
+          show: true,
+          color: forExport ? '#334155' : '#64748b',
+          height: forExport ? 2 : 1.5,
+        },
+        axisTicks: {
+          show: true,
+          color: forExport ? '#334155' : '#64748b',
+          height: 6,
+        },
       },
       yaxis: {
         min: 0,
@@ -411,6 +439,16 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         labels: {
           style: { fontSize: forExport ? '18px' : '12.5px', fontFamily: 'sodo sans, sans-serif' },
           formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE') : '0',
+        },
+        axisBorder: {
+          show: true,
+          color: forExport ? '#334155' : '#64748b',
+          width: forExport ? 2 : 1.5,
+        },
+        axisTicks: {
+          show: true,
+          color: forExport ? '#334155' : '#64748b',
+          width: 6,
         },
       },
       plotOptions: {
@@ -592,6 +630,24 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
           borderRadius: 3,
         },
       },
+      grid: {
+        show: true,
+        borderColor: forExport ? '#64748b' : '#cbd5e1',
+        strokeDashArray: forExport ? 0 : 3,
+        position: 'back',
+        xaxis: {
+          lines: { show: false },
+        },
+        yaxis: {
+          lines: { show: true },
+        },
+        padding: {
+          top: 10,
+          right: 20,
+          bottom: 10,
+          left: 10,
+        },
+      },
       xaxis: {
         categories: categories,
         tickAmount: forExport ? categories.length : 10,
@@ -607,8 +663,8 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
             colors: '#475569',
           },
         },
-        axisBorder: { show: true, color: '#e2e8f0' },
-        axisTicks: { show: true, color: '#cbd5e1' },
+        axisBorder: { show: true, color: forExport ? '#334155' : '#64748b', height: forExport ? 2 : 1.5 },
+        axisTicks: { show: true, color: forExport ? '#334155' : '#64748b', height: 6 },
       },
       yaxis: [
         {
@@ -621,6 +677,8 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
             formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE', { maximumFractionDigits: 0 }) : '0',
             style: { fontSize: forExport ? '16px' : '12px', fontFamily: 'sodo sans, sans-serif' },
           },
+          axisBorder: { show: true, color: forExport ? '#334155' : '#64748b', width: forExport ? 2 : 1.5 },
+          axisTicks: { show: true, color: forExport ? '#334155' : '#64748b', width: 6 },
         },
         {
           seriesName: 'Ingreso por inyección',
@@ -637,6 +695,8 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
             formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE', { maximumFractionDigits: 0 }) : '0',
             style: { fontSize: forExport ? '16px' : '12px', fontFamily: 'sodo sans, sans-serif' },
           },
+          axisBorder: { show: true, color: '#008ae3', width: forExport ? 2 : 1.5 },
+          axisTicks: { show: true, color: '#008ae3', width: 6 },
         },
       ],
       tooltip: {
@@ -890,6 +950,15 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
           strokeWidth: 2,
           hover: { size: 6 },
         },
+        grid: {
+          show: true,
+          borderColor: forExport ? '#64748b' : '#cbd5e1',
+          strokeDashArray: forExport ? 0 : 3,
+          position: 'back',
+          xaxis: { lines: { show: false } },
+          yaxis: { lines: { show: true } },
+          padding: { top: 10, right: 20, bottom: 10, left: 10 },
+        },
         xaxis: {
           categories: categories,
           tickAmount: forExport ? 10 : 10,
@@ -899,8 +968,8 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
             hideOverlappingLabels: true,
             style: { fontSize: forExport ? '17px' : '12.5px', fontFamily: 'sodo sans, sans-serif', colors: '#475569' },
           },
-          axisBorder: { show: true, color: '#e2e8f0' },
-          axisTicks: { show: true, color: '#cbd5e1' },
+          axisBorder: { show: true, color: forExport ? '#334155' : '#64748b', height: forExport ? 2 : 1.5 },
+          axisTicks: { show: true, color: forExport ? '#334155' : '#64748b', height: 6 },
         },
         yaxis: {
           title: {
@@ -911,6 +980,8 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
             formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '0',
             style: { fontSize: forExport ? '16px' : '12px', fontFamily: 'sodo sans, sans-serif' },
           },
+          axisBorder: { show: true, color: forExport ? '#334155' : '#64748b', width: forExport ? 2 : 1.5 },
+          axisTicks: { show: true, color: forExport ? '#334155' : '#64748b', width: 6 },
         },
         tooltip: {
           enabled: !forExport,
@@ -975,6 +1046,15 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
           },
         },
         dataLabels: { enabled: false },
+        grid: {
+          show: true,
+          borderColor: forExport ? '#64748b' : '#cbd5e1',
+          strokeDashArray: forExport ? 0 : 3,
+          position: 'back',
+          xaxis: { lines: { show: false } },
+          yaxis: { lines: { show: true } },
+          padding: { top: 10, right: 20, bottom: 10, left: 10 },
+        },
         xaxis: {
           categories: categories,
           tickAmount: forExport ? 10 : 10,
@@ -984,8 +1064,8 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
             hideOverlappingLabels: true,
             style: { fontSize: forExport ? '17px' : '12.5px', fontFamily: 'sodo sans, sans-serif', colors: '#475569' },
           },
-          axisBorder: { show: true, color: '#e2e8f0' },
-          axisTicks: { show: true, color: '#cbd5e1' },
+          axisBorder: { show: true, color: forExport ? '#334155' : '#64748b', height: forExport ? 2 : 1.5 },
+          axisTicks: { show: true, color: forExport ? '#334155' : '#64748b', height: 6 },
         },
         yaxis: {
           title: {
@@ -996,6 +1076,8 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
             formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '0',
             style: { fontSize: forExport ? '16px' : '12px', fontFamily: 'sodo sans, sans-serif' },
           },
+          axisBorder: { show: true, color: forExport ? '#334155' : '#64748b', width: forExport ? 2 : 1.5 },
+          axisTicks: { show: true, color: forExport ? '#334155' : '#64748b', width: 6 },
         },
         legend: {
           position: 'bottom',
@@ -1069,6 +1151,15 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
           strokeWidth: 2,
           hover: { size: 6 },
         },
+        grid: {
+          show: true,
+          borderColor: forExport ? '#64748b' : '#cbd5e1',
+          strokeDashArray: forExport ? 0 : 3,
+          position: 'back',
+          xaxis: { lines: { show: false } },
+          yaxis: { lines: { show: true } },
+          padding: { top: 10, right: 20, bottom: 10, left: 10 },
+        },
         xaxis: {
           categories: categories,
           tickAmount: forExport ? 10 : 10,
@@ -1078,8 +1169,8 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
             hideOverlappingLabels: true,
             style: { fontSize: forExport ? '17px' : '12.5px', fontFamily: 'sodo sans, sans-serif', colors: '#475569' },
           },
-          axisBorder: { show: true, color: '#e2e8f0' },
-          axisTicks: { show: true, color: '#cbd5e1' },
+          axisBorder: { show: true, color: forExport ? '#334155' : '#64748b', height: forExport ? 2 : 1.5 },
+          axisTicks: { show: true, color: forExport ? '#334155' : '#64748b', height: 6 },
         },
         yaxis: {
           title: {
@@ -1090,6 +1181,8 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
             formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '0',
             style: { fontSize: forExport ? '16px' : '12px', fontFamily: 'sodo sans, sans-serif' },
           },
+          axisBorder: { show: true, color: forExport ? '#334155' : '#64748b', width: forExport ? 2 : 1.5 },
+          axisTicks: { show: true, color: forExport ? '#334155' : '#64748b', width: 6 },
         },
         tooltip: {
           enabled: !forExport,
