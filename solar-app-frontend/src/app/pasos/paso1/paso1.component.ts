@@ -162,10 +162,21 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
       this.zone.run(() => (this.canRedo = redo));
     });
 
-    this.mapService.clearDrawing();
-    this.areaMarked = false;
-    this.heatmapAvailable = false;
-    this.showHeatmap = false;
+    if (this.mapService.hasExistingDrawing()) {
+      this.areaMarked = true;
+      this.heatmapAvailable = true;
+      this.drawingState = 'CLOSED';
+      this.updateInstructionText('CLOSED');
+      this.mapService.restoreExistingDrawing();
+      this.updateInstalledPower();
+      this.updateAreaAndPanelCount();
+    } else {
+      this.areaMarked = false;
+      this.heatmapAvailable = false;
+      this.showHeatmap = false;
+      this.drawingState = 'INACTIVE';
+      this.updateInstructionText('INACTIVE');
+    }
   }
 
   ngOnDestroy(): void {
@@ -180,7 +191,16 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
           .then(() => {
             this.initializeAutocomplete();
             this.mapService.initializeDrawingManager();
-            if (!this.tutorialShown) {
+            if (this.areaMarked || this.mapService.hasExistingDrawing()) {
+              this.mapService.restoreExistingDrawing();
+              this.areaMarked = true;
+              this.heatmapAvailable = true;
+              this.updateInstalledPower();
+              this.updateAreaAndPanelCount();
+              setTimeout(() => {
+                this.mapService.recenterMapToVisibleArea();
+              }, 150);
+            } else if (!this.tutorialShown) {
               setTimeout(() => this.showTutorial(), 500);
             }
             resolve();
@@ -493,10 +513,11 @@ const location = await this.locationService.validateLocation(
     this.updateAreaAndPanelCount();
 
     const polygons = this.mapService.getPolygons();
-    polygons[0].setEditable(false);
+    if (polygons.length > 0) {
+      polygons[0].setEditable(false);
+    }
     this.mapService.disableDrawingMode();
 
-    this.sharedService.setTarifaContratada('');
     this.router.navigate(['/pasos/2']);
   }
 
