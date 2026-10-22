@@ -279,6 +279,22 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
     }
     const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
     container.scrollTop = Math.max(0, Math.min(desired, maxScroll));
+    container.scrollLeft = 0;
+    this.resetHorizontalScroll();
+  }
+
+  private resetHorizontalScroll(): void {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ left: 0, top: window.scrollY, behavior: 'instant' as any });
+      if (document.documentElement) document.documentElement.scrollLeft = 0;
+      if (document.body) document.body.scrollLeft = 0;
+      const containers = document.querySelectorAll(
+        '.contenido-general, .content-total, .paso, .paso-router-outlet-wrapper, .content, .info-container, .informacion'
+      );
+      containers.forEach((el) => {
+        if (el) (el as HTMLElement).scrollLeft = 0;
+      });
+    }
   }
 
   private refreshSpotlight(driverObj: ReturnType<typeof driver>, element?: Element): void {
@@ -288,6 +304,7 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
         try {
           if (!driverObj.isActive()) return;
           if (element) this.scrollElementIntoContainer(element);
+          this.resetHorizontalScroll();
           driverObj.refresh();
         } catch (_) {}
       }, ms)
@@ -316,11 +333,21 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
         if (element) {
           this.scrollElementIntoContainer(element);
         }
+        this.resetHorizontalScroll();
       },
       onHighlighted: (element) => {
         if (element) {
           this.refreshSpotlight(driverObj, element);
         }
+        this.resetHorizontalScroll();
+      },
+      onDestroyStarted: () => {
+        this.resetHorizontalScroll();
+      },
+      onDestroyed: () => {
+        this.resetHorizontalScroll();
+        setTimeout(() => this.resetHorizontalScroll(), 50);
+        setTimeout(() => this.resetHorizontalScroll(), 200);
       },
       steps: [
         {
@@ -429,8 +456,8 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
             title: 'Siguiente paso',
             description:
               'Una vez delimitada la superficie de instalación, presione este botón para avanzar al análisis de consumo y tarifas.',
-            side: defaultSide,
-            align: 'start',
+            side: isMobile ? 'top' : defaultSide,
+            align: isMobile ? 'center' : 'start',
           },
         },
       ],

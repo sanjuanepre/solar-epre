@@ -184,6 +184,17 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit, OnDestroy {
       )
       .subscribe(() => {
         this.updateCurrentStepFromUrl(true);
+        if (typeof window !== 'undefined') {
+          window.scrollTo({ left: 0, top: 0, behavior: 'instant' as any });
+          if (document.documentElement) document.documentElement.scrollLeft = 0;
+          if (document.body) document.body.scrollLeft = 0;
+          const containers = document.querySelectorAll(
+            '.contenido-general, .content-total, .paso, .paso-router-outlet-wrapper, .content, .info-container, .informacion'
+          );
+          containers.forEach((el) => {
+            if (el) (el as HTMLElement).scrollLeft = 0;
+          });
+        }
         this.cdr.detectChanges();
       });
   }

@@ -95,6 +95,57 @@ export class Paso2Component implements OnInit, OnDestroy {
       });
   }
 
+  private getScrollParent(el: HTMLElement): HTMLElement | null {
+    let node: HTMLElement | null = el.parentElement;
+    while (node && node !== document.body) {
+      const oy = getComputedStyle(node).overflowY;
+      if ((oy === 'auto' || oy === 'scroll') && node.scrollHeight > node.clientHeight + 1) {
+        return node;
+      }
+      node = node.parentElement;
+    }
+    return null;
+  }
+
+  private scrollElementIntoContainer(targetEl?: Element | null): void {
+    const target = targetEl as HTMLElement | null;
+    if (!target) return;
+    const container = this.getScrollParent(target);
+    if (!container) return;
+
+    container.style.scrollBehavior = 'auto';
+
+    const cRect = container.getBoundingClientRect();
+    const tRect = target.getBoundingClientRect();
+    const topInContainer = tRect.top - cRect.top + container.scrollTop;
+
+    const visibleHeight = tRect.height;
+    let desired: number;
+    if (visibleHeight > container.clientHeight * 0.4) {
+      desired = topInContainer - 8;
+    } else {
+      desired = topInContainer - (container.clientHeight - tRect.height) / 2;
+    }
+    const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
+    container.scrollTop = Math.max(0, Math.min(desired, maxScroll));
+    container.scrollLeft = 0;
+    this.resetHorizontalScroll();
+  }
+
+  private resetHorizontalScroll(): void {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ left: 0, top: window.scrollY, behavior: 'instant' as any });
+      if (document.documentElement) document.documentElement.scrollLeft = 0;
+      if (document.body) document.body.scrollLeft = 0;
+      const containers = document.querySelectorAll(
+        '.contenido-general, .content-total, .paso, .paso-router-outlet-wrapper, .content, .info-container, .informacion'
+      );
+      containers.forEach((el) => {
+        if (el) (el as HTMLElement).scrollLeft = 0;
+      });
+    }
+  }
+
   ngAfterViewInit(): void {
     // Verificar directamente el estado guardado en SharedService
     const tarifaGuardada = this.sharedService.getTarifaContratada();
@@ -118,15 +169,43 @@ export class Paso2Component implements OnInit, OnDestroy {
       this.consumoComponent?.resetMesesConsumo();
     }
 
+    const isMobile = window.innerWidth < 768;
+    const defaultSide: 'bottom' | 'left' = isMobile ? 'bottom' : 'left';
+
     this.driverObjInit = driver({
       showProgress: false,
+      animate: false,
+      smoothScroll: false,
+      stagePadding: 8,
+      stageRadius: 8,
+      allowClose: true,
+      onHighlightStarted: (element) => {
+        if (element) {
+          this.scrollElementIntoContainer(element);
+        }
+        this.resetHorizontalScroll();
+      },
+      onHighlighted: (element) => {
+        this.resetHorizontalScroll();
+        [0, 50, 150].forEach((ms) => {
+          setTimeout(() => this.resetHorizontalScroll(), ms);
+        });
+      },
+      onDestroyStarted: () => {
+        this.resetHorizontalScroll();
+      },
+      onDestroyed: () => {
+        this.resetHorizontalScroll();
+        setTimeout(() => this.resetHorizontalScroll(), 50);
+        setTimeout(() => this.resetHorizontalScroll(), 200);
+      },
       steps: [
         {
           element: '#titulo',
           popover: {
             title: 'Consumo',
             description: 'Aquí puede configurar su consumo energético.',
-            side: 'left',
+            side: defaultSide,
             align: 'start',
             nextBtnText: 'Siguiente',
             prevBtnText: 'Anterior',
@@ -139,7 +218,7 @@ export class Paso2Component implements OnInit, OnDestroy {
             title: 'Aquí seleccione su tarifa contratada',
             description:
               'Al seleccionar su tarifa, se establecerán consumos mensuales predeterminados.',
-            side: 'left',
+            side: defaultSide,
             align: 'start',
             nextBtnText: 'Siguiente',
             prevBtnText: 'Anterior',
@@ -152,7 +231,7 @@ export class Paso2Component implements OnInit, OnDestroy {
             title: 'Cuadro de consumos mensuales',
             description:
               'Estos valores se encuentran predefinidos. Podrá modificarlos habilitando la carga manual.',
-            side: 'left',
+            side: defaultSide,
             align: 'start',
             nextBtnText: 'Siguiente',
             prevBtnText: 'Anterior',
@@ -165,7 +244,7 @@ export class Paso2Component implements OnInit, OnDestroy {
             title: 'Carga Manual',
             description:
               'Puede activar esta opción para ingresar manualmente su consumo mensual.',
-            side: 'left',
+            side: defaultSide,
             align: 'start',
             nextBtnText: 'Siguiente',
             prevBtnText: 'Anterior',
@@ -178,8 +257,8 @@ export class Paso2Component implements OnInit, OnDestroy {
             title: 'Siguiente Paso',
             description:
               'Cuando haya completado todos los campos, presione este botón para continuar.',
-            side: 'left',
-            align: 'start',
+            side: isMobile ? 'top' : 'left',
+            align: isMobile ? 'center' : 'start',
             prevBtnText: 'Anterior',
             doneBtnText: 'Terminar',
           },
@@ -219,11 +298,13 @@ export class Paso2Component implements OnInit, OnDestroy {
   }
 
   goBack() {
+    this.resetHorizontalScroll();
     this.sharedService.setTutorialShown(true);
     this.router.navigate(['pasos/1'], { replaceUrl: true });
   }
 
   goToPaso3() {
+    this.resetHorizontalScroll();
     if (this.allFieldsFilled && this.isCategorySelected) {
       this.router.navigate(['pasos/3']);
 } else {
