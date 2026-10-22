@@ -418,7 +418,7 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
           popover: {
             title: 'Estructura de montaje',
             description:
-              'Elija entre montaje Coplanar (sigue la inclinación natural de la superficie) o con Inclinación a 30° al Norte (incrementa la generación anual en un +12%).',
+              'Elija entre montaje "Coplanar" o "Ángulo óptimo (30º al norte)".',
             side: defaultSide,
             align: 'start',
           },
