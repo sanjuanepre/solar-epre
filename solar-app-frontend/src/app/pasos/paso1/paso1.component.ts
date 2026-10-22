@@ -303,8 +303,7 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
     const defaultSide: 'bottom' | 'left' = isMobile ? 'bottom' : 'left';
 
     const driverObj = driver({
-      showProgress: true,
-      progressText: '{{current}} de {{total}}',
+      showProgress: false,
       animate: false,
       smoothScroll: false,
       stagePadding: 8,
@@ -369,7 +368,7 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
           popover: {
             title: 'Rectángulo Rápido',
             description:
-              'Haga clic y arrastre sobre el mapa para marcar dos esquinas opuestas en superficies regulares simples.',
+              'Haga clic y arrastre sobre el mapa para marcar dos vértices opuestos en superficies regulares simples.',
             side: defaultSide,
             align: 'start',
           },
@@ -379,7 +378,7 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
           popover: {
             title: 'Área 1 clic',
             description:
-              'Toque la herramienta y luego presione directamente sobre el mapa para posicionar un área prediseñada al instante.',
+              'Toque la herramienta y luego presione directamente sobre el mapa para posicionar un área prediseñada.',
             side: defaultSide,
             align: 'start',
           },

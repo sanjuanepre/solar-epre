@@ -587,6 +587,10 @@ button[disabled] {
   justify-content: space-between;
 }
 
+.driver-popover-progress-text {
+  display: none !important;
+}
+
 .driver-popover-footer button {
   all: unset;
   display: inline-block;
