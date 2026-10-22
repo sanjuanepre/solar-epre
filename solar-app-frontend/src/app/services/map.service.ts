@@ -682,7 +682,7 @@ this.initTerraDraw();
         verticalPosition: 'bottom',
       });
     } catch (err) {
-      console.error('Error al crear techo rápido:', err);
+      console.error('Error al crear área 1 clic:', err);
     }
   }
 

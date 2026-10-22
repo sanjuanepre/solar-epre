@@ -244,11 +244,11 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
           },
         },
         {
-          element: '#marcar',
+          element: '#herramientas-superficie',
           popover: {
-            title: 'Selección manual de la ubicación',
+            title: 'Herramientas de selección',
             description:
-              'Presione para activar el selector de ubicación en el mapa. Puede marcar y ajustar los vértices del lugar donde se instalaría los paneles fotovoltaicos.',
+              'Puede utilizar una de las siguientes herramientas para definir el área donde se instalarían los paneles fotovoltaicos.',
             side: 'left',
             align: 'start',
             nextBtnText: 'Siguiente',
@@ -259,9 +259,9 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
         {
           element: '#borrar',
           popover: {
-            title: 'Selección manual de la ubicación',
+            title: 'Borrar dibujo',
             description:
-              'Presione para borrar la selección y realizar una nueva.',
+              'Presione para borrar la selección actual y realizar una nueva.',
             side: 'right',
             align: 'end',
             nextBtnText: 'Siguiente',
