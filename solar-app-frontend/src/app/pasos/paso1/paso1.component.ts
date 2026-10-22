@@ -213,35 +213,65 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  private scrollElementIntoContainer(targetEl?: Element | null): void {
-    if (!targetEl) return;
-    const container = document.querySelector('.informacion') as HTMLElement;
-    const htmlTarget = targetEl as HTMLElement;
-    if (!container || !htmlTarget) return;
-
-    if (container.contains(htmlTarget)) {
-      const containerRect = container.getBoundingClientRect();
-      const targetRect = htmlTarget.getBoundingClientRect();
-      const currentScroll = container.scrollTop;
-      const targetTopRelativeToContainer = (targetRect.top - containerRect.top) + currentScroll;
-      
-      let desiredScroll = 0;
-      // Si el elemento es mediano o grande, posicionarlo 16px por debajo del borde superior del contenedor
-      // para que su título y cuerpo se visualicen completos de arriba a abajo.
-      if (htmlTarget.offsetHeight > container.clientHeight * 0.35) {
-        desiredScroll = targetTopRelativeToContainer - 16;
-      } else {
-        // Para botones o ítems individuales, centrarlo verticalmente
-        desiredScroll = targetTopRelativeToContainer - (container.clientHeight / 2) + (htmlTarget.offsetHeight / 2);
+  /** Devuelve el ancestro con scroll vertical real más cercano al elemento. */
+  private getScrollParent(el: HTMLElement): HTMLElement | null {
+    let node: HTMLElement | null = el.parentElement;
+    while (node && node !== document.body) {
+      const oy = getComputedStyle(node).overflowY;
+      if ((oy === 'auto' || oy === 'scroll') && node.scrollHeight > node.clientHeight + 1) {
+        return node;
       }
-      
-      const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
-      container.scrollTop = Math.max(0, Math.min(desiredScroll, maxScroll));
-    } else if (htmlTarget.id === 'sub-titulo') {
-      container.scrollTop = 0;
-    } else if (htmlTarget.id === 'boton-siguiente' || htmlTarget.id === 'boton-volver') {
-      container.scrollTop = container.scrollHeight;
+      node = node.parentElement;
     }
+    return null;
+  }
+
+  /**
+   * Posiciona el scroll del panel lateral para que el elemento del paso quede
+   * completamente visible, de forma instantánea (sin smooth) y determinista.
+   * Para las herramientas se ancla al inicio de la tarjeta completa (con su título).
+   */
+  private scrollElementIntoContainer(targetEl?: Element | null): void {
+    const target = targetEl as HTMLElement | null;
+    if (!target) return;
+    const container = this.getScrollParent(target);
+    if (!container) return;
+
+    container.style.scrollBehavior = 'auto';
+
+    let anchor: HTMLElement = target;
+    if (target.id === 'herramientas-superficie') {
+      anchor = (target.closest('.info-inicio') as HTMLElement) || target;
+    }
+
+    const cRect = container.getBoundingClientRect();
+    const aRect = anchor.getBoundingClientRect();
+    const topInContainer = aRect.top - cRect.top + container.scrollTop;
+
+    const visibleHeight = target.id === 'herramientas-superficie'
+      ? (target.getBoundingClientRect().bottom - aRect.top)
+      : aRect.height;
+    let desired: number;
+    if (visibleHeight > container.clientHeight * 0.4) {
+      desired = topInContainer - 8;
+    } else {
+      desired = topInContainer - (container.clientHeight - aRect.height) / 2;
+    }
+    const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
+    container.scrollTop = Math.max(0, Math.min(desired, maxScroll));
+  }
+
+  private refreshSpotlight(driverObj: ReturnType<typeof driver>, element?: Element): void {
+    // Reaplica el scroll (el navegador/driver pudo reubicarlo) y recalcula el foco
+    [0, 60, 180, 400].forEach((ms) =>
+      setTimeout(() => {
+        try {
+          if (!driverObj.isActive()) return;
+          if (element) this.scrollElementIntoContainer(element);
+          driverObj.refresh();
+        } catch (_) {}
+      }, ms)
+    );
   }
 
   showTutorial() {
@@ -268,12 +298,10 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
           this.scrollElementIntoContainer(element);
         }
       },
-      onHighlighted: () => {
-        requestAnimationFrame(() => {
-          try {
-            driverObj.refresh();
-          } catch (_) {}
-        });
+      onHighlighted: (element) => {
+        if (element) {
+          this.refreshSpotlight(driverObj, element);
+        }
       },
       steps: [
         {
