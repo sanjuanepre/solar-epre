@@ -674,13 +674,6 @@ this.initTerraDraw();
           }
         } catch (_) {}
       }, 120);
-
-      this.snackBar.open('Superficie definida. Puede rotarla, moverla o ajustar sus vértices.', 'Entendido', {
-        duration: 3500,
-        panelClass: ['custom-snackbar'],
-        horizontalPosition: 'center',
-        verticalPosition: 'bottom',
-      });
     } catch (err) {
       console.error('Error al crear área 1 clic:', err);
     }
