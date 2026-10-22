@@ -38,6 +38,10 @@
     -webkit-overflow-scrolling: touch;
   }
 
+  .informacion > * {
+    flex-shrink: 0;
+  }
+
   .advertencia #recomendacion {
     text-align: justify;
     color: var(--font-light);
