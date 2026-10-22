@@ -96,6 +96,11 @@ this.actualizarFecha();
 }
 
   ngOnInit(): void {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ left: 0, top: 0, behavior: 'instant' as any });
+      if (document.documentElement) document.documentElement.scrollLeft = 0;
+      if (document.body) document.body.scrollLeft = 0;
+    }
     this.showPanels = this.mapService.getPanelsVisibility();
     this.sharedService.isLoading$
       .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
