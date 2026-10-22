@@ -214,33 +214,49 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
   }
 
   showTutorial() {
+    if (this.isSidebarCollapsed && window.innerWidth >= 768) {
+      this.sharedService.setSidebarCollapsed(false);
+    }
+
+    const isMobile = window.innerWidth < 768;
+    const defaultSide: 'bottom' | 'left' = isMobile ? 'bottom' : 'left';
+
     const driverObj = driver({
-      showProgress: false,
+      showProgress: true,
+      progressText: '{{current}} de {{total}}',
+      smoothScroll: false,
+      stagePadding: 6,
+      stageRadius: 8,
+      allowClose: true,
+      nextBtnText: 'Siguiente',
+      prevBtnText: 'Anterior',
+      doneBtnText: 'Finalizar',
+      onHighlightStarted: (element) => {
+        if (element) {
+          try {
+            element.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' });
+          } catch (_) {}
+        }
+      },
       steps: [
         {
           element: '#sub-titulo',
           popover: {
             title: 'Información importante',
             description:
-              'Lugar donde se instalaría los paneles fotovoltaicos. Seleccione el lugar donde estaría ubicada la instalación.',
-            side: 'left',
+              'Lugar donde se instalarían los módulos fotovoltaicos. Seleccione en el mapa el sitio donde proyecta la instalación.',
+            side: defaultSide,
             align: 'start',
-            nextBtnText: 'Siguiente',
-            prevBtnText: 'Anterior',
-            doneBtnText: 'Terminar',
           },
         },
         {
           element: '#pac-input',
           popover: {
-            title: 'Ubicación',
+            title: 'Búsqueda de ubicación',
             description:
-              'Debe indicar el lugar donde instalaría los paneles fotovoltaicos. Puede buscar la dirección del lugar, o seleccionar en el mapa.',
-            side: 'left',
+              'Indique la dirección exacta o coordenadas geográficas del lugar y presione Buscar, o navegue manualmente por el mapa satelital.',
+            side: defaultSide,
             align: 'start',
-            nextBtnText: 'Siguiente',
-            prevBtnText: 'Anterior',
-            doneBtnText: 'Terminar',
           },
         },
         {
@@ -249,11 +265,48 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
             title: 'Herramientas de selección',
             description:
               'Puede utilizar una de las siguientes herramientas para definir el área donde se instalarían los paneles fotovoltaicos.',
-            side: 'left',
+            side: defaultSide,
             align: 'start',
-            nextBtnText: 'Siguiente',
-            prevBtnText: 'Anterior',
-            doneBtnText: 'Terminar',
+          },
+        },
+        {
+          element: '#herramienta-poligono',
+          popover: {
+            title: 'Polígono Libre',
+            description:
+              'Marque los vértices de la superficie haciendo clics sobre el mapa y presione «Cerrar Área» o toque el punto inicial para completar la figura.',
+            side: defaultSide,
+            align: 'start',
+          },
+        },
+        {
+          element: '#herramienta-rectangulo',
+          popover: {
+            title: 'Rectángulo Rápido',
+            description:
+              'Haga clic y arrastre sobre el mapa para marcar dos esquinas opuestas en superficies regulares simples.',
+            side: defaultSide,
+            align: 'start',
+          },
+        },
+        {
+          element: '#herramienta-area-1clic',
+          popover: {
+            title: 'Área 1 clic',
+            description:
+              'Toque la herramienta y luego presione directamente sobre el mapa para posicionar un área prediseñada al instante.',
+            side: defaultSide,
+            align: 'start',
+          },
+        },
+        {
+          element: '#herramienta-mover-rotar',
+          popover: {
+            title: 'Mover / Rotar',
+            description:
+              'Desplace o rote la superficie definida en el mapa. Para editar los vértices haga doble clic sobre el perímetro.',
+            side: defaultSide,
+            align: 'start',
           },
         },
         {
@@ -261,24 +314,39 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
           popover: {
             title: 'Borrar dibujo',
             description:
-              'Presione para borrar la selección actual y realizar una nueva.',
-            side: 'right',
-            align: 'end',
-            nextBtnText: 'Siguiente',
-            prevBtnText: 'Anterior',
-            doneBtnText: 'Terminar',
+              'Presione para borrar la selección actual del mapa y realizar una nueva delimitación.',
+            side: defaultSide,
+            align: 'start',
+          },
+        },
+        {
+          element: '#seccion-mapa-calor',
+          popover: {
+            title: 'Mapa de calor solar',
+            description:
+              'Permite visualizar la radiación solar anual en la superficie y sus alrededores para evaluar la mejor ubicación para los paneles fotovoltaicos.',
+            side: defaultSide,
+            align: 'start',
+          },
+        },
+        {
+          element: '#seccion-estructura-montaje',
+          popover: {
+            title: 'Estructura de montaje',
+            description:
+              'Elija entre montaje Coplanar (sigue la inclinación natural de la superficie) o con Inclinación a 30° al Norte (incrementa la generación anual en un +12%).',
+            side: defaultSide,
+            align: 'start',
           },
         },
         {
           element: '#boton-siguiente',
           popover: {
-            title: 'Advertencia',
+            title: 'Siguiente paso',
             description:
-              'Para poder continuar al siguiente paso, debe tener seleccionada una zona de instalación.',
-            side: 'left',
+              'Una vez delimitada la superficie de instalación, presione este botón para avanzar al análisis de consumo y tarifas.',
+            side: defaultSide,
             align: 'start',
-            prevBtnText: 'Anterior',
-            doneBtnText: 'Terminar',
           },
         },
       ],
@@ -599,6 +667,15 @@ this.annualFluxUrl = '';
    * Prende o apaga la visualización de la capa del mapa de calor solar.
    */
   async toggleHeatmap() {
+    if (!this.areaMarked) {
+      this.snackBar.open(
+        'Debe delimitar una superficie en el mapa para activar el mapa de calor.',
+        'Entendido',
+        { duration: 4000 }
+      );
+      this.showHeatmap = false;
+      return;
+    }
     if (this.showHeatmap) {
       if (!this.annualFluxUrl) {
         await this.loadSolarHeatmap();
