@@ -73,6 +73,7 @@
         <!-- Botones de Modo en Panel -->
         <div id="herramientas-superficie" class="modo-pills-container">
           <button 
+            id="herramienta-poligono"
             class="pill-btn" 
             [class.active]="activeMode === 'polygon'" 
             (click)="setTerraDrawMode('polygon')"
@@ -81,6 +82,7 @@
           </button>
 
           <button 
+            id="herramienta-rectangulo"
             class="pill-btn" 
             [class.active]="activeMode === 'rectangle'" 
             (click)="setTerraDrawMode('rectangle')"
@@ -89,6 +91,7 @@
           </button>
 
           <button 
+            id="herramienta-area-1clic"
             class="pill-btn pill-btn-quick" 
             (click)="createQuickRoof()"
             title="Crear un área estándar en 1 clic y ajustar"
@@ -97,6 +100,7 @@
           </button>
 
           <button 
+            id="herramienta-mover-rotar"
             class="pill-btn" 
             [class.active]="activeMode === 'select'" 
             (click)="setTerraDrawMode('select')"
@@ -131,7 +135,7 @@
       </div>
 
       <!-- Análisis y Configuración de la Instalación -->
-      <div class="info-inicio card-analisis-config" *ngIf="areaMarked">
+      <div id="card-analisis-config" class="info-inicio card-analisis-config">
         <div class="titulo-container">
           <div class="icono-inicio text-analisis-icon">
             <span class="material-icons font-icon-large">dashboard_customize</span>
@@ -142,18 +146,21 @@
         </div>
 
         <!-- 1. Control de Radiación Solar (Mapa de Calor) -->
-        <div class="seccion-config solar-control">
+        <div id="seccion-mapa-calor" class="seccion-config solar-control">
           <div class="heatmap-toggle-container">
             <div class="toggle-text">
               <span class="seccion-subtitle">Mapa de calor solar</span>
               <p class="seccion-desc-lite">Visualiza la radiación solar anual en la superficie y sus alrededores para evaluar la mejor ubicación.</p>
+              <p class="seccion-desc-lite" *ngIf="!areaMarked" style="color: #64748b; font-size: 11.5px; margin-top: 2px;">
+                (Se activa al delimitar una superficie en el mapa)
+              </p>
             </div>
             <label class="switch">
               <input 
                 type="checkbox" 
                 [(ngModel)]="showHeatmap" 
                 (change)="toggleHeatmap()"
-                [disabled]="isHeatmapLoading"
+                [disabled]="!areaMarked || isHeatmapLoading"
               />
               <span class="slider round"></span>
             </label>
@@ -216,7 +223,7 @@
         <hr class="config-divider" />
 
         <!-- 2. Selección de Estructura de Montaje -->
-        <div class="seccion-config estructura-control">
+        <div id="seccion-estructura-montaje" class="seccion-config estructura-control">
           <span class="seccion-subtitle">Estructura de montaje</span>
           <p class="seccion-desc-lite select-margin">Elija el tipo de estructura e inclinación de los módulos.</p>
 
