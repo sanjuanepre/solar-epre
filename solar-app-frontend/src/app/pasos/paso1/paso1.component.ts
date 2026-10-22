@@ -213,6 +213,37 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  private scrollElementIntoContainer(targetEl?: Element | null): void {
+    if (!targetEl) return;
+    const container = document.querySelector('.informacion') as HTMLElement;
+    const htmlTarget = targetEl as HTMLElement;
+    if (!container || !htmlTarget) return;
+
+    if (container.contains(htmlTarget)) {
+      const containerRect = container.getBoundingClientRect();
+      const targetRect = htmlTarget.getBoundingClientRect();
+      const currentScroll = container.scrollTop;
+      const targetTopRelativeToContainer = (targetRect.top - containerRect.top) + currentScroll;
+      
+      let desiredScroll = 0;
+      // Si el elemento es mediano o grande, posicionarlo 16px por debajo del borde superior del contenedor
+      // para que su título y cuerpo se visualicen completos de arriba a abajo.
+      if (htmlTarget.offsetHeight > container.clientHeight * 0.35) {
+        desiredScroll = targetTopRelativeToContainer - 16;
+      } else {
+        // Para botones o ítems individuales, centrarlo verticalmente
+        desiredScroll = targetTopRelativeToContainer - (container.clientHeight / 2) + (htmlTarget.offsetHeight / 2);
+      }
+      
+      const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
+      container.scrollTop = Math.max(0, Math.min(desiredScroll, maxScroll));
+    } else if (htmlTarget.id === 'sub-titulo') {
+      container.scrollTop = 0;
+    } else if (htmlTarget.id === 'boton-siguiente' || htmlTarget.id === 'boton-volver') {
+      container.scrollTop = container.scrollHeight;
+    }
+  }
+
   showTutorial() {
     if (this.isSidebarCollapsed && window.innerWidth >= 768) {
       this.sharedService.setSidebarCollapsed(false);
@@ -224,8 +255,9 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
     const driverObj = driver({
       showProgress: true,
       progressText: '{{current}} de {{total}}',
+      animate: false,
       smoothScroll: false,
-      stagePadding: 6,
+      stagePadding: 8,
       stageRadius: 8,
       allowClose: true,
       nextBtnText: 'Siguiente',
@@ -233,10 +265,15 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
       doneBtnText: 'Finalizar',
       onHighlightStarted: (element) => {
         if (element) {
-          try {
-            element.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' });
-          } catch (_) {}
+          this.scrollElementIntoContainer(element);
         }
+      },
+      onHighlighted: () => {
+        requestAnimationFrame(() => {
+          try {
+            driverObj.refresh();
+          } catch (_) {}
+        });
       },
       steps: [
         {
