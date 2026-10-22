@@ -518,6 +518,7 @@ export class GraficosComponent implements OnInit, OnChanges, AfterViewInit, OnDe
               },
               labels: {
                 style: { fontSize: '11.5px' },
+                formatter: (val: number): string => (val != null && !isNaN(val)) ? val.toLocaleString('de-DE', { maximumFractionDigits: 0 }) : '0',
               },
             },
             dataLabels: {
