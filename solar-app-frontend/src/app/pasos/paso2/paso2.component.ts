@@ -96,14 +96,7 @@ export class Paso2Component implements OnInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    const urlFromPaso1 =
-      this.router.url === '/pasos/2' &&
-      this.router
-        .getCurrentNavigation()
-        ?.previousNavigation?.finalUrl?.toString() === '/pasos/1';
-
     // Verificar directamente el estado guardado en SharedService
-    // (más robusto que depender de getCurrentNavigation que puede ser null)
     const tarifaGuardada = this.sharedService.getTarifaContratada();
     const consumosGuardados = this.sharedService.getConsumosMensuales();
     const tieneConsumos =
@@ -111,15 +104,18 @@ export class Paso2Component implements OnInit, OnDestroy {
       consumosGuardados.length > 0 &&
       consumosGuardados.some((c) => c > 0);
 
-    if (urlFromPaso1 || (!tarifaGuardada && !tieneConsumos)) {
-      // Viene de paso1 o no hay ningún dato previo: resetear todo
-      this.consumoComponent?.resetMesesConsumo();
-    } else if (tieneConsumos && tarifaGuardada) {
-      // Viene de paso3 (o hay datos guardados): restaurar estado de UI
+    if (tieneConsumos && tarifaGuardada) {
+      // Viene de paso3 o de volver a paso1 y avanzar: restaurar estado de UI
       this.allFieldsFilled = true;
       this.isCategorySelected = true;
       this.isFieldsDisabled = false;
-      // Los datos ya están cargados vía BehaviorSubject — no resetear
+      const panelsSelected = this.sharedService.getPanelsSelected();
+      if (panelsSelected > 0) {
+        this.mapService.reDrawPanels(panelsSelected);
+      }
+    } else {
+      // Primera vez o sin datos previos: resetear consumos
+      this.consumoComponent?.resetMesesConsumo();
     }
 
     this.driverObjInit = driver({
@@ -223,10 +219,6 @@ export class Paso2Component implements OnInit, OnDestroy {
   }
 
   goBack() {
-    this.sharedService.setPotenciaMaxAsignadaW(0);
-    this.sharedService.setPanelsCountSelected(0);
-    this.sharedService.setPotenciaInstalacionW(0);
-    this.sharedService.setTarifaContratada('');
     this.sharedService.setTutorialShown(true);
     this.router.navigate(['pasos/1'], { replaceUrl: true });
   }

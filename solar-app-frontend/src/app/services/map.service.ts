@@ -1319,6 +1319,58 @@ this.initTerraDraw();
     this.areaSubject.next(0);
   }
 
+  hasExistingDrawing(): boolean {
+    if (this.polygons && this.polygons.length > 0) return true;
+    if (this.terraDraw && (this.terraDraw.getSnapshot()?.length ?? 0) > 0) return true;
+    try {
+      if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('solar_map_feature')) return true;
+    } catch (_) {}
+    return false;
+  }
+
+  restoreExistingDrawing(): boolean {
+    if (this.polygons && this.polygons.length > 0) {
+      const polygon = this.polygons[0];
+      const coordinates = polygon.getPath().getArray().map((latLng) => ({
+        lat: latLng.lat(),
+        lng: latLng.lng(),
+      }));
+      const areaM2 = google.maps.geometry.spherical.computeArea(coordinates);
+      const areaReducida = areaM2 * 0.9;
+      const panelArea = this.panelArea > 0 ? this.panelArea : 2.0;
+      const estimatedPanels = Math.max(0, Math.floor(areaReducida / panelArea));
+
+      this.realtimeAreaM2Subject.next(Math.round(areaM2));
+      this.estimatedPanelsCountSubject.next(estimatedPanels);
+      this.drawPanels(polygon);
+      this.overlayCompleteSubject.next(true);
+      this.drawingStateSubject.next('CLOSED');
+      this.setTerraDrawMode('select');
+      return true;
+    }
+
+    if (typeof sessionStorage !== 'undefined') {
+      try {
+        const savedFeature = sessionStorage.getItem('solar_map_feature');
+        if (savedFeature && this.terraDraw) {
+          const parsed = JSON.parse(savedFeature);
+          if (parsed && parsed.geometry) {
+            if ((this.terraDraw.getSnapshot()?.length ?? 0) === 0) {
+              this.terraDraw.addFeatures([parsed]);
+            }
+            this.handleTerraDrawChange(true);
+            this.setTerraDrawMode('select');
+            return true;
+          }
+        }
+      } catch (e) {
+        console.warn('Error al restaurar feature en restoreExistingDrawing:', e);
+      }
+    }
+
+    return false;
+  }
+
   /**
    * Actualiza el estilo y visibilidad de los paneles según si el mapa de calor está activo o no.
    */
