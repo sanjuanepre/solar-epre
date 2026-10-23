@@ -280,7 +280,6 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
     const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
     container.scrollTop = Math.max(0, Math.min(desired, maxScroll));
     container.scrollLeft = 0;
-    this.resetHorizontalScroll();
   }
 
   private resetHorizontalScroll(): void {
@@ -304,7 +303,6 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
         try {
           if (!driverObj.isActive()) return;
           if (element) this.scrollElementIntoContainer(element);
-          this.resetHorizontalScroll();
           driverObj.refresh();
         } catch (_) {}
       }, ms)
@@ -333,16 +331,11 @@ export class Paso1Component implements OnInit, OnDestroy, AfterViewInit {
         if (element) {
           this.scrollElementIntoContainer(element);
         }
-        this.resetHorizontalScroll();
       },
       onHighlighted: (element) => {
         if (element) {
           this.refreshSpotlight(driverObj, element);
         }
-        this.resetHorizontalScroll();
-      },
-      onDestroyStarted: () => {
-        this.resetHorizontalScroll();
       },
       onDestroyed: () => {
         this.resetHorizontalScroll();

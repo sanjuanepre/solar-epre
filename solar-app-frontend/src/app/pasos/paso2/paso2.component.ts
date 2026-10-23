@@ -129,7 +129,6 @@ export class Paso2Component implements OnInit, OnDestroy {
     const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
     container.scrollTop = Math.max(0, Math.min(desired, maxScroll));
     container.scrollLeft = 0;
-    this.resetHorizontalScroll();
   }
 
   private resetHorizontalScroll(): void {
@@ -183,16 +182,6 @@ export class Paso2Component implements OnInit, OnDestroy {
         if (element) {
           this.scrollElementIntoContainer(element);
         }
-        this.resetHorizontalScroll();
-      },
-      onHighlighted: (element) => {
-        this.resetHorizontalScroll();
-        [0, 50, 150].forEach((ms) => {
-          setTimeout(() => this.resetHorizontalScroll(), ms);
-        });
-      },
-      onDestroyStarted: () => {
-        this.resetHorizontalScroll();
       },
       onDestroyed: () => {
         this.resetHorizontalScroll();
