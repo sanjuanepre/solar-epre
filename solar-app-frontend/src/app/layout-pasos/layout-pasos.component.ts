@@ -5,10 +5,12 @@ import {
   transition,
   trigger,
 } from '@angular/animations';
+import { PlatformLocation } from '@angular/common';
 import {
   AfterViewInit,
   ChangeDetectorRef,
   Component,
+  NgZone,
   OnDestroy,
   OnInit,
 } from '@angular/core';
@@ -51,7 +53,9 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit, OnDestroy {
     private router: Router,
     private mapService: MapService,
     private sharedService: SharedService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private zone: NgZone,
+    private platformLocation: PlatformLocation
   ) {
     this.checkIsMobile();
     this.sharedService.isLoading$.subscribe({
@@ -75,6 +79,10 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.checkIsMobile();
     this.updateCurrentStepFromUrl();
     this.isCollapsed = this.sharedService.getSidebarCollapsed();
+
+    this.platformLocation.onPopState((event) => {
+      this.handlePopState(event);
+    });
 
     window.addEventListener('resize', () => {
       this.checkIsMobile();
@@ -177,6 +185,7 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.updateCurrentStepFromUrl(false);
+    this.pushHistorySentinel();
     this.router.events
       .pipe(
         filter((event) => event instanceof NavigationEnd),
@@ -184,6 +193,7 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit, OnDestroy {
       )
       .subscribe(() => {
         this.updateCurrentStepFromUrl(true);
+        this.pushHistorySentinel();
         if (typeof window !== 'undefined') {
           window.scrollTo({ left: 0, top: 0, behavior: 'instant' as any });
           if (document.documentElement) document.documentElement.scrollLeft = 0;
@@ -197,6 +207,62 @@ export class LayoutPasosComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         this.cdr.detectChanges();
       });
+  }
+
+  private pushHistorySentinel(): void {
+    if (typeof window !== 'undefined' && window.history) {
+      const currentState = window.history.state;
+      if (!currentState || currentState.solarStepSentinel !== this.currentStep) {
+        window.history.pushState(
+          { solarStepSentinel: this.currentStep },
+          '',
+          window.location.href
+        );
+      }
+    }
+  }
+
+  private handlePopState(event: any): void {
+    // Interceptar la navegación hacia atrás generada por gestos nativos o botón Atrás del celular
+    if (this.currentStep === 3) {
+      this.zone.run(() => {
+        this.sharedService.setTutorialShown(true);
+        this.router.navigate(['/pasos/2']);
+      });
+      return;
+    }
+
+    if (this.currentStep === 2) {
+      this.zone.run(() => {
+        this.sharedService.setTutorialShown(true);
+        this.router.navigate(['/pasos/1']);
+      });
+      return;
+    }
+
+    if (this.currentStep === 1) {
+      // Si en móvil el panel estaba colapsado viendo el mapa en pantalla completa,
+      // el gesto de atrás vuelve a abrir el panel lateral con los datos antes de salir
+      if (this.isMobile && this.isCollapsed) {
+        this.zone.run(() => {
+          this.expandComponent();
+          this.pushHistorySentinel();
+        });
+        return;
+      }
+      this.zone.run(() => {
+        this.sharedService.setTutorialShown(true);
+        this.router.navigate(['/pasos/0']);
+      });
+      return;
+    }
+
+    if (this.currentStep === 0) {
+      this.zone.run(() => {
+        this.router.navigate(['/']);
+      });
+      return;
+    }
   }
 
   toggleCollapse() {

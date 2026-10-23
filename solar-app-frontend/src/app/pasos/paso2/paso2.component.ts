@@ -289,7 +289,7 @@ export class Paso2Component implements OnInit, OnDestroy {
   goBack() {
     this.resetHorizontalScroll();
     this.sharedService.setTutorialShown(true);
-    this.router.navigate(['pasos/1'], { replaceUrl: true });
+    this.router.navigate(['/pasos/1']);
   }
 
   goToPaso3() {
